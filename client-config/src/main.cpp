@@ -4,7 +4,8 @@
 #include <DNSServer.h>
 #include <WiFiManager.h>
 #include <espnow.h>
-
+#define MODE_CONFIG 1
+#define MODE_RUN 2
 
 typedef struct struct_message {
     char a[32];
@@ -22,7 +23,6 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   if (myData.d == "Timer") {
     if (timerCounter)
     timerCounter = myData.b;
-
   }
 
 }
