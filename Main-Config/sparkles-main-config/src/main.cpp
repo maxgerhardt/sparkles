@@ -65,6 +65,7 @@ void setup() {
 }
 
 void loop() {
+// analog read on analog read
 
 }
 
