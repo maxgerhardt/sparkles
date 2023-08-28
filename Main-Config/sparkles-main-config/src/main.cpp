@@ -9,6 +9,7 @@
 #define USING_TIM_DIV1 true
 volatile uint32_t lastMillis = 0;
 ESP8266Timer ITimer;
+int timerCounter = 0;
 
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 typedef struct struct_message {
@@ -21,6 +22,9 @@ typedef struct struct_message {
 
 void IRAM_ATTR TimerHandler()
 {
+  timerCounter++;
+  myData.d = "Timer";
+  myData.b = timerCounter;
   esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
 
 }

@@ -21,7 +21,7 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&myData, incomingData, sizeof(myData));
   if (myData.d == "Timer") {
     if (timerCounter +1 != myData.b) {
-      Serial.println("Missed "+String(timerCounter));
+      Serial.println("Missed "+(timerCounter));
     }
     timerCounter = myData.b;
 
