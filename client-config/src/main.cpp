@@ -5,8 +5,9 @@
 #include <WiFiManager.h>
 #include <espnow.h>
 #define MODE_CONFIG 1
-#define MODE_RUN 2
-
+#define MODE_RTRV_VALUES 2
+#define MODE_RUN 3
+int mode = 0;
 typedef struct struct_message {
     char a[32];
     int b;
@@ -21,9 +22,25 @@ int timerCounter = 0;
 void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&myData, incomingData, sizeof(myData));
   if (myData.d == "Timer") {
+    if (mode != MODE_CONFIG) {
+      mode = MODE_CONFIG;
+    }
     if (timerCounter)
     timerCounter = myData.b;
   }
+  if (myData.d == "END_TIMER") {
+    mode = 0;
+  }
+  if (myData.d == "SEND_TIMES") {
+    if (mode != MODE_RTRV_VALUES) {
+      mode = MODE_RTRV_VALUES;
+    }
+    sendTimes(myData.b);
+  }
+
+}
+
+void sendTimes(int index) {
 
 }
 
@@ -44,5 +61,7 @@ void setup() {
 }
 
 void loop() {
-  
+  if (mode == MODE_CONFIG) {
+    //analogRead
+  }
 }
