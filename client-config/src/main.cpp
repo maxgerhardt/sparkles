@@ -8,8 +8,9 @@
 #define MODE_RTRV_VALUES 2
 #define MODE_RUN 3
 int mode = 0;
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 typedef struct struct_message {
-    char a[32];
+    uint8_t a[6];
     int b;
     float c;
     String d;
@@ -18,6 +19,16 @@ typedef struct struct_message {
 
 struct_message myData;
 int timerCounter = 0;
+uint8_t mainAddress[6];
+float times[100];
+
+void sendTimes(int index) {
+  struct_message returnData;
+  returnData.d = "RETURN";
+  returnData.b = index;
+  returnData.c = times[index];
+  esp_now_send(mainAddress, (uint8_t *) &returnData, sizeof(returnData));
+}
 
 void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&myData, incomingData, sizeof(myData));
@@ -25,8 +36,10 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
     if (mode != MODE_CONFIG) {
       mode = MODE_CONFIG;
     }
-    if (timerCounter)
+    if (timerCounter != myData.b){
     timerCounter = myData.b;
+    }
+    memcpy (&mainAddress, myData.a, sizeof(myData.a));
   }
   if (myData.d == "END_TIMER") {
     mode = 0;
@@ -37,10 +50,9 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
     }
     sendTimes(myData.b);
   }
+  if (myData.d == "MAIN_ADDRESS") { 
 
-}
-
-void sendTimes(int index) {
+  }
 
 }
 

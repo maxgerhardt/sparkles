@@ -10,10 +10,11 @@
 volatile uint32_t lastMillis = 0;
 ESP8266Timer ITimer;
 int timerCounter = 0;
+int mode = 0;
 
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 typedef struct struct_message {
-  char a[32];
+  uint8_t a[6];
   int b;
   float c;
   String d;
@@ -22,9 +23,9 @@ typedef struct struct_message {
 
 void IRAM_ATTR TimerHandler()
 {
-  timerCounter++;
   myData.d = "Timer";
   myData.b = timerCounter;
+  timerCounter++;
   esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
 
 }
@@ -48,7 +49,8 @@ void setup() {
   if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
   {
     lastMillis = millis();
-    Serial.print(F("Starting  ITimer OK, millis() = ")); Serial.println(lastMillis);
+    Serial.print(F("Starting  ITimer OK, millis() = ")); 
+    Serial.println(lastMillis);
   }
   else 
     Serial.println(F("Can't set ITimer correctly. Select another freq. or interval")); 
@@ -57,15 +59,10 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-
+  WiFi.macAddress(myData.a); 
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
   esp_now_register_send_cb(OnDataSent);
   esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
-  strcpy(myData.a, "THIS IS A CHAR");
-  myData.b = random(1,20);
-  myData.c = 1.2;
-  myData.d = "Hello";
-  myData.e = false;
 }
 
 void loop() {
