@@ -21,6 +21,8 @@ struct_message myData;
 int timerCounter = 0;
 uint8_t mainAddress[6];
 float times[100];
+bool addressReceived = false;
+int myID = 0;
 
 void sendTimes(int index) {
   struct_message returnData;
@@ -30,9 +32,12 @@ void sendTimes(int index) {
   esp_now_send(mainAddress, (uint8_t *) &returnData, sizeof(returnData));
 }
 
-void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
-  memcpy(&myData, incomingData, sizeof(myData));
-  if (myData.d == "Timer") {
+void OnDataRecv(uint8_t * mac, uint8_t  *incomingData, uint8_t len) {
+  if (len == sizeof(myData)) {
+    memcpy(&myData, incomingData, sizeof(myData));
+  }
+
+  if (myData.d == "TIMER") {
     if (mode != MODE_CONFIG) {
       mode = MODE_CONFIG;
     }
@@ -50,8 +55,15 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
     }
     sendTimes(myData.b);
   }
-  if (myData.d == "MAIN_ADDRESS") { 
-
+  if (myData.d == "SEND_ADDRESS") { 
+    if (myID == 0) {
+      struct_message returnData;
+      WiFi.macAddress(returnData.a);
+      esp_now_send(myData.a, (uint8_t *) &returnData, sizeof(returnData));
+    }
+  }
+  if (myData.d == "ASSIGN_ID") {
+    myID = myData.b;
   }
 
 }
