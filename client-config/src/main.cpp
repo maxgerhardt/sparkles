@@ -1,9 +1,6 @@
 #include <Arduino.h>
-#include "ESP8266WiFi.h"
-#include <ESP8266WebServer.h>
-#include <DNSServer.h>
-#include <WiFiManager.h>
-#include <espnow.h>
+#include <esp_now.h>
+#include <WiFi.h>
 #define SEND_ADDRESS 1
 #define CALIBRATE 2
 #define RETRIEVE_TIMES 3
@@ -19,14 +16,19 @@ typedef struct struct_message {
   int mode;
   bool truefalse;
 } struct_message;
-
+int lastTime = 0;
 struct_message myData;
 int timerCounter = 0;
 uint8_t mainAddress[6];
 float times[100];
 bool addressReceived = false;
 int myID = 0;
-
+int microphonePin = A0;
+int sensorValue = 0;
+int lastClap = 0;
+uint32_t lastBeep = 0;
+uint32_t loopcount = 0;
+int timeNow;
 void sendTimes(int index) {
   struct_message returnData;
   returnData.mode = RETURN;
@@ -35,26 +37,30 @@ void sendTimes(int index) {
   esp_now_send(mainAddress, (uint8_t *) &returnData, sizeof(returnData));
 }
 
-void OnDataRecv(uint8_t * mac, uint8_t  *incomingData, uint8_t len) {
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+
   Serial.println("Received");
   if (len == sizeof(myData)) {
     memcpy(&myData, incomingData, sizeof(myData));
   }
-  Serial.println(myData.mode);
+  //Serial.println(myData.mode);
+  lastTime = micros();
   if (myData.mode == CALIBRATE) {
     if (mode != CALIBRATE) {
       mode = CALIBRATE;
     }
     if (timerCounter != myData.counter){
     timerCounter = myData.counter;
+    timerCounter++;
     }
     memcpy (&mainAddress, myData.address, sizeof(myData.address));
     String out;
-    WiFi.macAddress(broadcastAddress);
+    /*WiFi.macAddress(broadcastAddress);
   for (int i = 0; i<sizeof(broadcastAddress);i++){
       out = out+":"+String(broadcastAddress[i]);    
     }
     Serial.println(out);
+    */
   }
   if (myData.mode == END_CALIBRATION) {
     mode = 0;
@@ -90,12 +96,40 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
   esp_now_register_recv_cb(OnDataRecv);  
 }
 
 void loop() {
+/*
+ WiFi.macAddress(broadcastAddress);
+  String out;
+  for (int i = 0; i<sizeof(broadcastAddress);i++){
+      out = out+":"+String(broadcastAddress[i]);    
+    }
+    Serial.println(out);
+  */
+  sensorValue = analogRead(microphonePin);
+  if (sensorValue < 50 and timerCounter > lastClap) {
+    Serial.print ("Clap at Counter: ");
+    Serial.print (timerCounter);
+    timeNow = micros();
+    Serial.print (" time difference ");
+    Serial.println(timeNow-lastTime);
+    lastClap = timerCounter;
+  }
+  if (timerCounter > lastClap) {
+    Serial.println(sensorValue);
+    lastClap = timerCounter;
+    delay(500);
+  }
   if (mode == CALIBRATE) {
     //analogRead
+  }
+   sensorValue = analogRead(microphonePin);
+  loopcount++;
+  if (sensorValue < 50 and loopcount > lastBeep+2000) {
+    Serial.print ("Beep ");
+    lastBeep = loopcount;
+    Serial.println(lastBeep);
   }
 }
