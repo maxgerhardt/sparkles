@@ -7,16 +7,19 @@
 #define END_CALIBRATION 4
 #define ASSIGN_ID 5
 #define RETURN 6
-int mode = 0;
-uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+#define DEBUG 1
+int mode = CALIBRATE;
+//uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t broadcastAddress[] = {0xB4,0xE6,0x2D,0xE9,0x3C,0x21};
 typedef struct struct_message {
   uint8_t address[6];
   int counter;
+  int microtime;
   float timing;
   int mode;
   bool truefalse;
 } struct_message;
-int lastTime = 0;
+int timeOfLastMessage = 0;
 struct_message myData;
 int timerCounter = 0;
 uint8_t mainAddress[6];
@@ -29,6 +32,8 @@ int lastClap = 0;
 uint32_t lastBeep = 0;
 uint32_t loopcount = 0;
 int timeNow;
+//master address
+
 void sendTimes(int index) {
   struct_message returnData;
   returnData.mode = RETURN;
@@ -38,29 +43,41 @@ void sendTimes(int index) {
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-
-  Serial.println("Received");
+  //Serial.println("Received")
   if (len == sizeof(myData)) {
     memcpy(&myData, incomingData, sizeof(myData));
   }
-  //Serial.println(myData.mode);
-  lastTime = micros();
+  Serial.println("Sending Message Back") ;
+  esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+  if (DEBUG == 1) {
+    Serial.print("Mode ");
+    Serial.println(myData.mode);
+    Serial.print("TImer Counter ");
+    Serial.println(myData.counter);
+    Serial.print("Microtime : ");
+    Serial.println(myData.microtime);
+  }
+  timeOfLastMessage = micros();
   if (myData.mode == CALIBRATE) {
     if (mode != CALIBRATE) {
       mode = CALIBRATE;
     }
     if (timerCounter != myData.counter){
     timerCounter = myData.counter;
-    timerCounter++;
+    //Serial.println(timerCounter);
     }
     memcpy (&mainAddress, myData.address, sizeof(myData.address));
+
+     //print out local mac address
+     /*
     String out;
-    /*WiFi.macAddress(broadcastAddress);
+    WiFi.macAddress(broadcastAddress);
   for (int i = 0; i<sizeof(broadcastAddress);i++){
       out = out+":"+String(broadcastAddress[i]);    
     }
     Serial.println(out);
     */
+    
   }
   if (myData.mode == END_CALIBRATION) {
     mode = 0;
@@ -100,36 +117,19 @@ void setup() {
 }
 
 void loop() {
-/*
- WiFi.macAddress(broadcastAddress);
-  String out;
-  for (int i = 0; i<sizeof(broadcastAddress);i++){
-      out = out+":"+String(broadcastAddress[i]);    
+  if (mode == CALIBRATE or true) {
+    sensorValue = analogRead(microphonePin);
+    if (sensorValue < 50 and timerCounter > lastClap) {
+      Serial.print ("Clap at Counter: ");
+      Serial.print (timerCounter);
+      timeNow = micros();
+      Serial.print (" time difference ");
+      Serial.println(timeNow-timeOfLastMessage);
+      lastClap = timerCounter;
     }
-    Serial.println(out);
-  */
-  sensorValue = analogRead(microphonePin);
-  if (sensorValue < 50 and timerCounter > lastClap) {
-    Serial.print ("Clap at Counter: ");
-    Serial.print (timerCounter);
-    timeNow = micros();
-    Serial.print (" time difference ");
-    Serial.println(timeNow-lastTime);
-    lastClap = timerCounter;
   }
-  if (timerCounter > lastClap) {
-    Serial.println(sensorValue);
-    lastClap = timerCounter;
-    delay(500);
-  }
-  if (mode == CALIBRATE) {
-    //analogRead
-  }
-   sensorValue = analogRead(microphonePin);
-  loopcount++;
-  if (sensorValue < 50 and loopcount > lastBeep+2000) {
-    Serial.print ("Beep ");
-    lastBeep = loopcount;
-    Serial.println(lastBeep);
+  if (DEBUG == 2) {
+    Serial.println(analogRead(microphonePin));
+    delay(100);
   }
 }
