@@ -1,7 +1,7 @@
-#h1 Overall documentation
+# Overall documentation
 Here goes everything documentation for the coding process. nothing final, just thoughts
 
-#h2 Messaging flow chart
+## Messaging flow chart
 
 - Client boots: 
     - boot client in vicinity of master
@@ -40,7 +40,7 @@ Here goes everything documentation for the coding process. nothing final, just t
 
 
 
-#h2 differences master - client
+## differences master - client
 - Master has no LED
 - Master might have bigger antenna(?)
 - master needs clock
