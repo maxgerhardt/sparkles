@@ -11,7 +11,7 @@
 #define HELLO 0
 #define WAIT_FOR_CALIBRATE 3
 #define CALIBRATE 4
-#define SEND_CLAP_TIMES 5
+#define SEND_CLAP_TIME 5
 #define CLAP 6
 
 //Network
@@ -27,14 +27,14 @@ struct timer_message {
   uint16_t counter;
   uint16_t sendTime;
   uint16_t lastDelay;
-} ;
+} timerMessage, oldMessage;
 
 //3 ints 1 float 1 address 1 string 1 bool?
 
 struct mode_change {
   uint8_t messageType;
   uint8_t mode;
-} ;
+} modeChange;
 
 int messageArriveTime;
 int lastTime = 0;
@@ -45,9 +45,6 @@ int timeOffset;
 //general setup
 int mode = HELLO;
 
-timer_message timerMessage; 
-mode_change modeChange;
-timer_message oldMessage;
 
 //calibration stuff
 int sensorValue;
@@ -60,9 +57,15 @@ struct clap_time {
   int clapCounter;
   int timerCounter;
   int timeStamp;
-};
-clap_time claps[100];
+} claps[100];
+
 bool clapSent = false;
+
+struct send_clap {
+  uint8_t messageType = SEND_CLAP_TIME;
+  uint8_t address[6];
+  uint8_t clapIndex;
+} sendClap ;
 
 //address sending
 int addressReceived = false;
@@ -70,8 +73,7 @@ int addressSending = 0;
 struct address_message {
   uint8_t messageType = HELLO;
   uint8_t address[6];
-} ;
-address_message addressMessage;
+} addressMessage;
 
 //timer stuff
 ESP32Timer ITimer(0);
@@ -80,8 +82,8 @@ struct timer_received_message {
   uint8_t messageType = WAIT_FOR_TIMER;
   uint8_t address[6];
   uint8_t timerOffset;
-} ;
-timer_received_message timerReceivedMessage;
+} timerReceivedMessage;
+
 bool IRAM_ATTR TimerHandler(void * timerNo)
 { 
   timerCounter++;
@@ -93,14 +95,8 @@ void sendAddress() {
   esp_now_send(broadcastAddress, (uint8_t *) &addressMessage, sizeof(addressMessage));
 }
 
-void sendClapTimes() {
-  for (int i = 0; i<=clapCounter; i++ ){
-    esp_now_send(broadcastAddress, (uint8_t *) &claps[i], sizeof(claps[i]));
-    delay(50);
-    if (clapSent == false) {
-      i--;
-    }
-  }
+void sendClapTime(int clapIndex) {
+  esp_now_send(broadcastAddress, (uint8_t *) &claps[clapIndex], sizeof(claps[clapIndex]));
 }
 
 void receiveTimer(int messageArriveTime) {
@@ -127,9 +123,10 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     case CALIBRATE: 
       mode = incomingData[1];
       break;
-    case SEND_CLAP_TIMES: 
-      mode = SEND_CLAP_TIMES;
-      sendClapTimes();
+    case SEND_CLAP_TIME: 
+      mode = SEND_CLAP_TIME;
+      memcpy(&sendClap,incomingData,sizeof(sendClap));
+      sendClapTime(sendClap.clapIndex);
       break;
 
     default: 
@@ -152,7 +149,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
     if (ESP_NOW_SEND_SUCCESS == true) {
       mode = WAIT_FOR_CALIBRATE;
     }
-  else if (mode == SEND_CLAP_TIMES) {
+  else if (mode == SEND_CLAP_TIME) {
     if (ESP_NOW_SEND_SUCCESS == false) {
       clapSent = false;
     }

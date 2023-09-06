@@ -6,11 +6,12 @@
 #define USING_TIM_DIV1 true
 #define TIMER_CALIBRATION 2
 #define WAIT_FOR_TIMER 1
-#define SEND_CLAP_TIMES 5
+#define SEND_CLAP_TIME 5
 #define CLAP 6
 #define HELLO 0
 #define WAIT_FOR_CALIBRATE 3
 #define CALIBRATE 4
+#define ANIMATE 7
 int mode = HELLO;
 
 /*
@@ -29,7 +30,7 @@ TODO:
 //uint8_t broadcastAddress[] = {0x34,0x85,0x18,0x5,0x88,0xb0};
 //CLIENT ESP32
 uint8_t broadcastAddress[] = {0x7c,0x87,0xce,0x2d,0xcf,0x98};
-
+uint8_t emptyAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 esp_now_peer_info_t peerInfo;
 //-------
 //message types
@@ -39,27 +40,20 @@ struct timer_message {
   uint16_t counter;
   uint16_t sendTime;
   uint16_t lastDelay;
-} ;
+} timerMessage ;
 typedef struct mode_change {
   uint8_t messageType;
   uint8_t mode;
-} mode_change;
+} modeChange;
 
-struct set_address {
-  uint8_t messageType;
-  uint8_t address[6];
-};
 
 struct timer_received_message {
   uint8_t messageType = WAIT_FOR_TIMER;
   uint8_t address[6];
   uint8_t timerOffset;
-} ;
-timer_received_message timerReceivedMessage;
+} timerReceivedMessage;
 
-timer_message timerMessage;
-mode_change modeChange;
-set_address clientAddress;
+
 
 //-----------
 //Timer config variables
@@ -75,7 +69,39 @@ int newMsgTime;
 int lastDelay = 0;
 uint32_t timerCounter = 0;
 
+int sensorValue;
+int microphonePin = A0;
+int clapCoutner = 0;
+int lastClap = 0;
 
+struct clap_time {
+  uint8_t messageType = CLAP;
+  int clapCounter;
+  int timerCounter;
+  int timeStamp;
+} claps[100];
+
+struct client_address {
+  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  int id;
+  float xLoc;
+  float yLoc;
+  float zLoc;
+} clientAddresses[200];
+
+struct address_message {
+  uint8_t messageType = HELLO;
+  uint8_t address[6];
+} addressMessage;
+
+int addressCounter = 0;
+
+struct send_clap {
+  uint8_t messageType = SEND_CLAP_TIME;
+  uint8_t address[6];
+  uint8_t clapIndex;
+} sendClap ;
+int clapCounter = 0;
 
 bool IRAM_ATTR TimerHandler(void * timerNo)
 { 
@@ -87,7 +113,7 @@ bool IRAM_ATTR TimerHandler(void * timerNo)
       timerMessage.sendTime = msgSendTime;
       timerMessage.counter = timerCounter;
       timerMessage.lastDelay = lastDelay;
-      esp_err_t result = esp_now_send(clientAddress.address, (uint8_t *) &timerMessage, sizeof(timerMessage));
+      esp_err_t result = esp_now_send(clientAddresses[addressCounter-1].address, (uint8_t *) &timerMessage, sizeof(timerMessage));
       newMsgSent = true;
     }
 
@@ -98,7 +124,17 @@ bool IRAM_ATTR TimerHandler(void * timerNo)
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int lenn) {
   if (mode == HELLO) {
     if (incomingData[0] == HELLO) { 
-      memcpy(&clientAddress,incomingData,sizeof(clientAddress));
+      memcpy(&addressMessage,incomingData,sizeof(addressMessage));
+      for (int i = 0; i < sizeof(clientAddresses); i++) {
+        if (clientAddresses[i].address == emptyAddress) {
+          memcpy(&clientAddresses[i].address, addressMessage.address, sizeof(addressMessage.address));
+          addressCounter++;
+          break;
+        }
+        else if (clientAddresses[i].address == addressMessage.address) {
+          break;
+        }
+      }
     }
     else if (incomingData[0] == WAIT_FOR_TIMER) {
       //check if incomingdata[1] can be in accordance with current Timer
@@ -152,16 +188,31 @@ void setup() {
 }
 
 void loop() {
-  if (newMsgSent == true) { 
-  Serial.print("Message Sent. Timer: ");
-  Serial.print(timerMessage.counter);
-  Serial.print(" SendTime: ");
-  Serial.print(timerMessage.sendTime);
-  Serial.print(" LastDelay: ");
-  Serial.println(timerMessage.lastDelay);
-  newMsgSent = false;
+  if (mode == CALIBRATE) {
+    sensorValue = analogRead(microphonePin);
+    if (sensorValue < 50 and millis() > lastClap+1000) {
+      claps[clapCounter].timerCounter = timerCounter;
+      claps[clapCounter].timeStamp = micros();
+      lastClap = millis();
+      clapCounter++;
+    }
   }
+  else if (mode == SEND_CLAP_TIME) {
+    for (int i =0; i < sizeof(clientAddresses); i++) {
+      if (clientAddresses[i].address == emptyAddress) {
+        mode = ANIMATE;
+        break;
+      }
+      else { 
+        for (int j = 0; j < clapCounter; j++) {;
+          sendClap.clapIndex = j;
+          memcpy(&sendClap.address, clientAddresses[i].address, sizeof(clientAddresses[i].address));
 
+          esp_now_send(clientAddresses[i].address, (uint8_t *) &sendClap, sizeof(sendClap) );
+        }
+      }
+    }
+  }
 // analog read on analog read
 
 }
