@@ -1,7 +1,7 @@
 # Overall documentation
 Here goes everything documentation for the coding process. nothing final, just thoughts
 
-## Messaging flow chart
+## Messaging flow
 
 - Client boots: 
     - boot client in vicinity of master
