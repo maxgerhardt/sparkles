@@ -4,9 +4,14 @@
 #include "ESP32TimerInterrupt.h"
 #define TIMER_INTERVAL_MS       1000
 #define USING_TIM_DIV1 true
-#define TIMER_CALIBRATION 1
-int mode = TIMER_CALIBRATION;
-
+#define TIMER_CALIBRATION 2
+#define WAIT_FOR_TIMER 1
+#define SEND_CLAP_TIMES 5
+#define CLAP 6
+#define HELLO 0
+#define WAIT_FOR_CALIBRATE 3
+#define CALIBRATE 4
+int mode = HELLO;
 
 /*
 TODO: 
@@ -45,10 +50,16 @@ struct set_address {
   uint8_t address[6];
 };
 
+struct timer_received_message {
+  uint8_t messageType = WAIT_FOR_TIMER;
+  uint8_t address[6];
+  uint8_t timerOffset;
+} ;
+timer_received_message timerReceivedMessage;
 
 timer_message timerMessage;
 mode_change modeChange;
-set_address setAddress;
+set_address clientAddress;
 
 //-----------
 //Timer config variables
@@ -69,13 +80,14 @@ uint32_t timerCounter = 0;
 bool IRAM_ATTR TimerHandler(void * timerNo)
 { 
     timerCounter++;
+    //wait for timer vs wait for calibrate
     if (mode == TIMER_CALIBRATION and timerCounter < 100) {
       msgSendTime = micros();
-      timerMessage.messageType = 0;
+      timerMessage.messageType = TIMER_CALIBRATION;
       timerMessage.sendTime = msgSendTime;
       timerMessage.counter = timerCounter;
       timerMessage.lastDelay = lastDelay;
-      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &timerMessage, sizeof(timerMessage));
+      esp_err_t result = esp_now_send(clientAddress.address, (uint8_t *) &timerMessage, sizeof(timerMessage));
       newMsgSent = true;
     }
 
@@ -84,8 +96,15 @@ bool IRAM_ATTR TimerHandler(void * timerNo)
 
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int lenn) {
-  msgReceiveTime = micros();
-  newMsgReceived = true;
+  if (mode == HELLO) {
+    if (incomingData[0] == HELLO) { 
+      memcpy(&clientAddress,incomingData,sizeof(clientAddress));
+    }
+    else if (incomingData[0] == WAIT_FOR_TIMER) {
+      //check if incomingdata[1] can be in accordance with current Timer
+      mode = TIMER_CALIBRATION;
+    }
+  }
 
 }
 

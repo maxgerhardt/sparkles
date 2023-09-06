@@ -5,14 +5,19 @@
 #define TIMER_INTERVAL_MS       1000
 #define USING_TIM_DIV1 true
 
-#define SET_TIME_OFFSET 1
+#define WAIT_FOR_TIMER 1
+#define TIMER_CALIBRATION 2
 #define PRINT_MODE -1
-#define WAIT_FOR_INSTRUCTIONS 0
-#define CALIBRATE 2
+#define HELLO 0
+#define WAIT_FOR_CALIBRATE 3
+#define CALIBRATE 4
+#define SEND_CLAP_TIMES 5
+#define CLAP 6
 
 //Network
 //uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t broadcastAddress[] = {0xB4,0xE6,0x2D,0xE9,0x3C,0x21};
+uint8_t myAddress[6];
 esp_now_peer_info_t peerInfo;
 
 
@@ -31,7 +36,6 @@ struct mode_change {
   uint8_t mode;
 } ;
 
-
 int messageArriveTime;
 int lastTime = 0;
 
@@ -39,7 +43,7 @@ int lastTime = 0;
 int timeOffset;
 
 //general setup
-int mode = SET_TIME_OFFSET;
+int mode = HELLO;
 
 timer_message timerMessage; 
 mode_change modeChange;
@@ -51,28 +55,60 @@ int microphonePin = A0;
 int clapCounter = 0;
 int lastClap;
 //make sure 
-struct clap {
+struct clap_time {
+  uint8_t messageType = CLAP;
+  int clapCounter;
   int timerCounter;
   int timeStamp;
 };
-clap claps[100];
+clap_time claps[100];
+bool clapSent = false;
+
+//address sending
+int addressReceived = false;
+int addressSending = 0;
+struct address_message {
+  uint8_t messageType = HELLO;
+  uint8_t address[6];
+} ;
+address_message addressMessage;
 
 //timer stuff
 ESP32Timer ITimer(0);
 uint32_t timerCounter = 0;
-
-
+struct timer_received_message {
+  uint8_t messageType = WAIT_FOR_TIMER;
+  uint8_t address[6];
+  uint8_t timerOffset;
+} ;
+timer_received_message timerReceivedMessage;
 bool IRAM_ATTR TimerHandler(void * timerNo)
 { 
-    timerCounter++;
+  timerCounter++;
   return true;
 }
 
 
+void sendAddress() {
+  esp_now_send(broadcastAddress, (uint8_t *) &addressMessage, sizeof(addressMessage));
+}
+
+void sendClapTimes() {
+  for (int i = 0; i<=clapCounter; i++ ){
+    esp_now_send(broadcastAddress, (uint8_t *) &claps[i], sizeof(claps[i]));
+    delay(50);
+    if (clapSent == false) {
+      i--;
+    }
+  }
+}
+
 void receiveTimer(int messageArriveTime) {
   if (abs(messageArriveTime - lastTime-1000000) < 300 and abs(timerMessage.lastDelay) <1500) {
     timeOffset = lastTime-oldMessage.sendTime;
-    mode = PRINT_MODE;
+    WiFi.macAddress(timerReceivedMessage.address);
+    timerReceivedMessage.timerOffset = timeOffset;
+    esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
   }
   else {
     lastTime = messageArriveTime;
@@ -83,7 +119,7 @@ void receiveTimer(int messageArriveTime) {
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   switch (incomingData[0]) {
-    case SET_TIME_OFFSET: 
+    case TIMER_CALIBRATION:  
       messageArriveTime = micros();
       memcpy(&timerMessage,incomingData,sizeof(timerMessage));
       receiveTimer(messageArriveTime);
@@ -91,12 +127,15 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     case CALIBRATE: 
       mode = incomingData[1];
       break;
+    case SEND_CLAP_TIMES: 
+      mode = SEND_CLAP_TIMES;
+      sendClapTimes();
+      break;
+
+    default: 
       Serial.println("Data type not recognized");
   }
   
-  if (mode == SET_TIME_OFFSET) {
-
-  }
   if (mode == 0 ){
 
   }
@@ -104,7 +143,28 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  messageArriveTime = ESP_NOW_SEND_SUCCESS ? micros() : 0;
+  if (mode == HELLO) {
+    if (ESP_NOW_SEND_SUCCESS == true) {
+      mode = WAIT_FOR_TIMER;
+    }
+  }
+  else if (mode == TIMER_CALIBRATION) {
+    if (ESP_NOW_SEND_SUCCESS == true) {
+      mode = WAIT_FOR_CALIBRATE;
+    }
+  else if (mode == SEND_CLAP_TIMES) {
+    if (ESP_NOW_SEND_SUCCESS == false) {
+      clapSent = false;
+    }
+    else {
+      clapSent = true;
+    }
+  }
+    else {
+      esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
+    }
+  }
+
 }
 
 
@@ -123,7 +183,7 @@ void setup() {
   
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-
+  WiFi.macAddress(addressMessage.address);
 
 
   // Init ESP-NOW
@@ -146,14 +206,9 @@ void setup() {
 }
 
 void loop() {
-  if (mode == -1 ){
-    mode = 0;
-    Serial.print("Time: ");
-    Serial.println(timerMessage.sendTime);
-    Serial.print("Counter: ");
-    Serial.println(timerMessage.counter);
-    Serial.print("Difference ");
-    Serial.println(timeOffset);
+  if (mode == HELLO) { 
+    sendAddress();
+    delay(50);
   }
   if (mode == CALIBRATE) {
     sensorValue = analogRead(microphonePin);
