@@ -4,21 +4,17 @@
 #include "ESP32TimerInterrupt.h"
 #define TIMER_INTERVAL_MS       1000
 #define USING_TIM_DIV1 true
-#define TIMER_CALIBRATION 2
-#define WAIT_FOR_TIMER 1
-#define SEND_CLAP_TIME 5
-#define CLAP 6
+
 #define HELLO 0
+#define WAIT_FOR_TIMER 1
+#define TIMER_CALIBRATION 2
 #define WAIT_FOR_CALIBRATE 3
 #define CALIBRATE 4
+#define ASK_CLAP_TIME 5
+#define SEND_CLAP_TIME 6
 #define ANIMATE 7
 int mode = HELLO;
 
-/*
-TODO: 
-- safeguard that a reboot of master will somehow cause the clients to restart their timer
-- 
-*/
 
 //----------
 //wifi stuff
@@ -32,27 +28,53 @@ TODO:
 uint8_t broadcastAddress[] = {0x7c,0x87,0xce,0x2d,0xcf,0x98};
 uint8_t emptyAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 esp_now_peer_info_t peerInfo;
+
 //-------
 //message types
 //--------
-struct timer_message {
+struct message_timer {
   uint8_t messageType;
   uint16_t counter;
   uint16_t sendTime;
   uint16_t lastDelay;
-} timerMessage ;
-typedef struct mode_change {
+} timerMessage;
+typedef struct message_mode_change {
   uint8_t messageType;
   uint8_t mode;
 } modeChange;
 
-
-struct timer_received_message {
+struct message_timer_received {
   uint8_t messageType = WAIT_FOR_TIMER;
   uint8_t address[6];
   uint8_t timerOffset;
 } timerReceivedMessage;
 
+struct message_clap_time {
+  uint8_t messageType = SEND_CLAP_TIME;
+  int clapCounter;
+  int timerCounter;
+  int timeStamp;
+} claps[100];
+
+struct message_send_clap {
+  uint8_t messageType = ASK_CLAP_TIME;
+  uint8_t address[6];
+  uint8_t clapIndex;
+} sendClap ;
+struct message_address{
+  uint8_t messageType = HELLO;
+  uint8_t address[6];
+} addressMessage;
+
+
+
+struct client_address {
+  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  int id;
+  float xLoc;
+  float yLoc;
+  float zLoc;
+} clientAddresses[200];
 
 
 //-----------
@@ -69,39 +91,15 @@ int newMsgTime;
 int lastDelay = 0;
 uint32_t timerCounter = 0;
 
+//calibration
 int sensorValue;
 int microphonePin = A0;
-int clapCoutner = 0;
+int clapCounter = 0;
 int lastClap = 0;
 
-struct clap_time {
-  uint8_t messageType = CLAP;
-  int clapCounter;
-  int timerCounter;
-  int timeStamp;
-} claps[100];
 
-struct client_address {
-  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  int id;
-  float xLoc;
-  float yLoc;
-  float zLoc;
-} clientAddresses[200];
-
-struct address_message {
-  uint8_t messageType = HELLO;
-  uint8_t address[6];
-} addressMessage;
-
+//receive addresses
 int addressCounter = 0;
-
-struct send_clap {
-  uint8_t messageType = SEND_CLAP_TIME;
-  uint8_t address[6];
-  uint8_t clapIndex;
-} sendClap ;
-int clapCounter = 0;
 
 bool IRAM_ATTR TimerHandler(void * timerNo)
 { 
@@ -140,6 +138,12 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int lenn) {
       //check if incomingdata[1] can be in accordance with current Timer
       mode = TIMER_CALIBRATION;
     }
+    else if (incomingData[0] == WAIT_FOR_CALIBRATE) {
+      mode = HELLO;
+    }
+    //how to actually store the clap data?
+    
+
   }
 
 }
@@ -197,8 +201,9 @@ void loop() {
       clapCounter++;
     }
   }
-  else if (mode == SEND_CLAP_TIME) {
-    for (int i =0; i < sizeof(clientAddresses); i++) {
+  else if (mode == ASK_CLAP_TIME) {
+    //make sure claps actually correspond, in case one got lost or so?
+    for (int i =0; i <= addressCounter; i++) {
       if (clientAddresses[i].address == emptyAddress) {
         mode = ANIMATE;
         break;
@@ -207,13 +212,11 @@ void loop() {
         for (int j = 0; j < clapCounter; j++) {;
           sendClap.clapIndex = j;
           memcpy(&sendClap.address, clientAddresses[i].address, sizeof(clientAddresses[i].address));
-
           esp_now_send(clientAddresses[i].address, (uint8_t *) &sendClap, sizeof(sendClap) );
         }
       }
     }
   }
-// analog read on analog read
 
 }
 
