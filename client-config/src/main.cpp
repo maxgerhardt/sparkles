@@ -11,8 +11,10 @@
 #define HELLO 0
 #define WAIT_FOR_CALIBRATE 3
 #define CALIBRATE 4
-#define SEND_CLAP_TIME 5
-#define CLAP 6
+#define ASK_CLAP_TIME 5
+#define SEND_CLAP_TIME 6 
+int mode;
+
 
 //Network
 //uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -22,28 +24,54 @@ esp_now_peer_info_t peerInfo;
 
 
 //Variables for Time Offset
-struct timer_message {
+struct message_timer {
   uint8_t messageType;
   uint16_t counter;
   uint16_t sendTime;
   uint16_t lastDelay;
 } timerMessage, oldMessage;
 
-//3 ints 1 float 1 address 1 string 1 bool?
-
-struct mode_change {
+struct message_mode {
   uint8_t messageType;
   uint8_t mode;
 } modeChange;
 
+struct message_timer_received {
+  uint8_t messageType = WAIT_FOR_CALIBRATE;
+  uint8_t address[6];
+  uint8_t timerOffset;
+} timerReceivedMessage;
+
+struct message_clap_time {
+  uint8_t messageType = SEND_CLAP_TIME;
+  int clapCounter;
+  int timerCounter;
+  int timeStamp;
+} claps[100];
+
+struct message_send_clap {
+  uint8_t messageType = ASK_CLAP_TIME;
+  uint8_t address[6];
+  uint8_t clapIndex;
+} sendClap ;
+
+struct message_address {
+  uint8_t messageType = HELLO;
+  uint8_t address[6];
+} addressMessage;
+
+
+
+
+
+//timer stuff
+int timeOffset;
 int messageArriveTime;
 int lastTime = 0;
 
-//message_struct testmsg;
-int timeOffset;
 
 //general setup
-int mode = HELLO;
+
 
 
 //calibration stuff
@@ -51,38 +79,17 @@ int sensorValue;
 int microphonePin = A0;
 int clapCounter = 0;
 int lastClap;
-//make sure 
-struct clap_time {
-  uint8_t messageType = CLAP;
-  int clapCounter;
-  int timerCounter;
-  int timeStamp;
-} claps[100];
-
 bool clapSent = false;
-
-struct send_clap {
-  uint8_t messageType = SEND_CLAP_TIME;
-  uint8_t address[6];
-  uint8_t clapIndex;
-} sendClap ;
 
 //address sending
 int addressReceived = false;
 int addressSending = 0;
-struct address_message {
-  uint8_t messageType = HELLO;
-  uint8_t address[6];
-} addressMessage;
+
 
 //timer stuff
 ESP32Timer ITimer(0);
 uint32_t timerCounter = 0;
-struct timer_received_message {
-  uint8_t messageType = WAIT_FOR_TIMER;
-  uint8_t address[6];
-  uint8_t timerOffset;
-} timerReceivedMessage;
+
 
 bool IRAM_ATTR TimerHandler(void * timerNo)
 { 
@@ -123,8 +130,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     case CALIBRATE: 
       mode = incomingData[1];
       break;
-    case SEND_CLAP_TIME: 
-      mode = SEND_CLAP_TIME;
+    case ASK_CLAP_TIME: 
+      mode = ASK_CLAP_TIME;
       memcpy(&sendClap,incomingData,sizeof(sendClap));
       sendClapTime(sendClap.clapIndex);
       break;
@@ -149,7 +156,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
     if (ESP_NOW_SEND_SUCCESS == true) {
       mode = WAIT_FOR_CALIBRATE;
     }
-  else if (mode == SEND_CLAP_TIME) {
+  else if (mode == ASK_CLAP_TIME) {
     if (ESP_NOW_SEND_SUCCESS == false) {
       clapSent = false;
     }
@@ -182,13 +189,11 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.macAddress(addressMessage.address);
 
-
   // Init ESP-NOW
   if (esp_now_init() != 0) {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
   peerInfo.channel = 0;  
   peerInfo.encrypt = false;
@@ -199,7 +204,7 @@ void setup() {
   }
   esp_now_register_recv_cb(OnDataRecv);  
   esp_now_register_send_cb(OnDataSent);
-
+  mode = HELLO;
 }
 
 void loop() {
