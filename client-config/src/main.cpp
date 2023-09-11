@@ -13,6 +13,7 @@
 #define CALIBRATE 4
 #define ASK_CLAP_TIME 5
 #define SEND_CLAP_TIME 6 
+#define NOCLAPFOUND -1
 int mode;
 
 
@@ -60,6 +61,11 @@ struct message_address {
   uint8_t address[6];
 } addressMessage;
 
+struct no_clap_found {
+  uint8_t messageType = NOCLAPFOUND;
+  uint8_t address[6];
+  uint8_t clapIndex;
+} noClapFound;
 
 
 
@@ -103,7 +109,14 @@ void sendAddress() {
 }
 
 void sendClapTime(int clapIndex) {
-  esp_now_send(broadcastAddress, (uint8_t *) &claps[clapIndex], sizeof(claps[clapIndex]));
+  for (int i = 0; i <= clapCounter; i++) {
+    if (claps[i].timerCounter < clapCounter+2 or claps[i].timerCounter > clapCounter-2) { 
+      esp_now_send(broadcastAddress, (uint8_t *) &claps[i], sizeof(claps[i]));
+      break;
+    }
+  }
+  esp_now_send(broadcastAddress, (uint8_t *) &noClapFound, sizeof(noClapFound));
+
 }
 
 void receiveTimer(int messageArriveTime) {

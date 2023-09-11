@@ -13,6 +13,7 @@
 #define ASK_CLAP_TIME 5
 #define SEND_CLAP_TIME 6
 #define ANIMATE 7
+#define NOCLAPFOUND -1
 int mode = HELLO;
 
 
@@ -141,8 +142,16 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int lenn) {
     else if (incomingData[0] == WAIT_FOR_CALIBRATE) {
       mode = HELLO;
     }
+    else if (incomingData[0] == NOCLAPFOUND) {
+      Serial.print("No Clap Found for index");
+      Serial.println(incomingData[7]);
+    }
+    else if (incomingData[0] == ASK_CLAP_TIME) {
+      // how to save this?
+      // use current address counter
+    }
     //how to actually store the clap data?
-    
+
 
   }
 
@@ -210,7 +219,7 @@ void loop() {
       }
       else { 
         for (int j = 0; j < clapCounter; j++) {;
-          sendClap.clapIndex = j;
+          sendClap.clapIndex = claps[j].timerCounter;
           memcpy(&sendClap.address, clientAddresses[i].address, sizeof(clientAddresses[i].address));
           esp_now_send(clientAddresses[i].address, (uint8_t *) &sendClap, sizeof(sendClap) );
         }
