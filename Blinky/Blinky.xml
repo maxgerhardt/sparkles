@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>/Users/julian/Library/CloudStorage/Dropbox/My Mac (JULIANs-Air)/Documents/Blinky/Blinky.kicad_sch</source>
+    <date>2023 September 26, Tuesday 15:59:14</date>
+    <tool>Eeschema 7.0.7</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>Blinky.kicad_sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="1k1">
+      <value>R</value>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Resistor"/>
+      <property name="ki_keywords" value="R res resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a71911bb-f058-4e19-8cd4-8d238520d98a</tstamps>
+    </comp>
+    <comp ref="2k1">
+      <value>R</value>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Resistor"/>
+      <property name="ki_keywords" value="R res resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>14fc2ea5-b9df-4867-8f27-1574e9dc9134</tstamps>
+    </comp>
+    <comp ref="BT1">
+      <value>Battery</value>
+      <libsource lib="Device" part="Battery" description="Multiple-cell battery"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Multiple-cell battery"/>
+      <property name="ki_keywords" value="batt voltage-source cell"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>521b577c-d2e3-4a66-ab1f-c74f1f57686c</tstamps>
+    </comp>
+    <comp ref="IC1">
+      <value>PAM8303CBSC</value>
+      <footprint>SOP65P490X110-8N</footprint>
+      <datasheet>https://componentsearchengine.com/Datasheets/1/PAM8303CBSC.pdf</datasheet>
+      <fields>
+        <field name="Arrow Part Number">PAM8303CBSC</field>
+        <field name="Arrow Price/Stock">https://www.arrow.com/en/products/pam8303cbsc/diodes-incorporated?region=nac</field>
+        <field name="Height">1.1</field>
+        <field name="Manufacturer_Name">Diodes Inc.</field>
+        <field name="Manufacturer_Part_Number">PAM8303CBSC</field>
+        <field name="Mouser Part Number">621-PAM8303CBSC</field>
+        <field name="Mouser Price/Stock">https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/PAM8303CBSC?qs=%252BSlWJf1dfkJSwgtz94g8zQ%3D%3D</field>
+      </fields>
+      <libsource lib="PAM8303CBSC" part="PAM8303CBSC" description="DiodesZetex PAM8303CBSC Audio Amplifier, Class-D Mono 40dB, 8-Pin MSOP"/>
+      <property name="Height" value="1.1"/>
+      <property name="Manufacturer_Name" value="Diodes Inc."/>
+      <property name="Manufacturer_Part_Number" value="PAM8303CBSC"/>
+      <property name="Mouser Part Number" value="621-PAM8303CBSC"/>
+      <property name="Mouser Price/Stock" value="https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/PAM8303CBSC?qs=%252BSlWJf1dfkJSwgtz94g8zQ%3D%3D"/>
+      <property name="Arrow Part Number" value="PAM8303CBSC"/>
+      <property name="Arrow Price/Stock" value="https://www.arrow.com/en/products/pam8303cbsc/diodes-incorporated?region=nac"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="DiodesZetex PAM8303CBSC Audio Amplifier, Class-D Mono 40dB, 8-Pin MSOP"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f137a3df-e76d-4912-999e-9dadbb3b1591</tstamps>
+    </comp>
+    <comp ref="J1">
+      <value>TP4056</value>
+      <footprint>SOIC127P600X175-9N</footprint>
+      <datasheet>https://dlnmh9ip6v2uc.cloudfront.net/datasheets/Prototyping/TP4056.pdf</datasheet>
+      <fields>
+        <field name="Height">1.75</field>
+        <field name="Manufacturer_Name">NanJing Top Power</field>
+        <field name="Manufacturer_Part_Number">TP4056</field>
+      </fields>
+      <libsource lib="TP4056" part="TP4056" description="1A Standalone Linear Li-lon Battery Charger, SOP-8"/>
+      <property name="Height" value="1.75"/>
+      <property name="Manufacturer_Name" value="NanJing Top Power"/>
+      <property name="Manufacturer_Part_Number" value="TP4056"/>
+      <property name="Mouser Part Number" value=""/>
+      <property name="Mouser Price/Stock" value=""/>
+      <property name="Arrow Part Number" value=""/>
+      <property name="Arrow Price/Stock" value=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="1A Standalone Linear Li-lon Battery Charger, SOP-8"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>0eb16087-1971-44ea-b9b8-a12536b0fcf9</tstamps>
+    </comp>
+    <comp ref="J2">
+      <value>Battery Connector</value>
+      <libsource lib="Connector_Generic" part="Conn_01x02" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="ki_keywords" value="connector"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ae78572f-d485-47b4-89ff-bec9767ff2df</tstamps>
+    </comp>
+    <comp ref="J3">
+      <value>Speaker Connector</value>
+      <libsource lib="Connector_Generic" part="Conn_01x02" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="ki_keywords" value="connector"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>cd887070-fa50-40d7-ac80-cf7cabece961</tstamps>
+    </comp>
+    <comp ref="J4">
+      <value>USB_B_Micro</value>
+      <libsource lib="Connector" part="USB_B_Micro" description="USB Micro Type B connector"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="USB Micro Type B connector"/>
+      <property name="ki_keywords" value="connector USB micro"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5c1db9d8-458f-4bd8-8d0f-6586c01ada63</tstamps>
+    </comp>
+    <comp ref="J5">
+      <value>Charging Notches</value>
+      <libsource lib="Connector" part="Conn_01x02_Pin" description="Generic connector, single row, 01x02, script generated"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x02, script generated"/>
+      <property name="ki_keywords" value="connector"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>77592b9c-63b4-44a4-b2d2-383f09db2e62</tstamps>
+    </comp>
+    <comp ref="SW1">
+      <value>SW_Push</value>
+      <libsource lib="Switch" part="SW_Push" description="Push button switch, generic, two pins"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="Push button switch, generic, two pins"/>
+      <property name="ki_keywords" value="switch normally-open pushbutton push-button"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>01d8f39f-153e-4b44-8ba2-9a1a5622e5b3</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>ESP32-S2-WROVER</value>
+      <footprint>RF_Module:ESP32-S2-WROVER</footprint>
+      <datasheet>https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf</datasheet>
+      <libsource lib="RF_Module" part="ESP32-S2-WROVER" description="RF Module, ESP32-D0WDQ6 SoC, Wi-Fi 802.11b/g/n, 32-bit, 2.7-3.6V, onboard antenna, SMD"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="RF Module, ESP32-D0WDQ6 SoC, Wi-Fi 802.11b/g/n, 32-bit, 2.7-3.6V, onboard antenna, SMD"/>
+      <property name="ki_keywords" value="RF Radio ESP ESP32 Espressif onboard PCB antenna"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e7dd0e6d-bc3b-4be7-91fa-24ce738c8b23</tstamps>
+    </comp>
+    <comp ref="ZTS6156">
+      <value>Microphone</value>
+      <footprint>SPU0414HR5H-SB</footprint>
+      <datasheet>juergen.daeubler@te.com</datasheet>
+      <fields>
+        <field name="Manufacturer_Name">Knowles</field>
+        <field name="Manufacturer_Part_Number">SPU0410HR5H-PB</field>
+        <field name="Mouser Part Number">721-SPU0410HR5H-PB</field>
+        <field name="Mouser Price/Stock">https://www.mouser.co.uk/ProductDetail/Knowles/SPU0410HR5H-PB?qs=ZBAH5PeHI6s9%2F%252BusLaBdzw%3D%3D</field>
+      </fields>
+      <libsource lib="SPU0410HR5H-PB" part="SPU0410HR5H-PB" description="MEMS Microphones MIC MEMS ANALOG OMNI -42DB"/>
+      <property name="Height" value=""/>
+      <property name="Mouser Part Number" value="721-SPU0410HR5H-PB"/>
+      <property name="Mouser Price/Stock" value="https://www.mouser.co.uk/ProductDetail/Knowles/SPU0410HR5H-PB?qs=ZBAH5PeHI6s9%2F%252BusLaBdzw%3D%3D"/>
+      <property name="Manufacturer_Name" value="Knowles"/>
+      <property name="Manufacturer_Part_Number" value="SPU0410HR5H-PB"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="Blinky.kicad_sch"/>
+      <property name="ki_description" value="MEMS Microphones MIC MEMS ANALOG OMNI -42DB"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>76454719-d71e-4a81-9042-79d7a6b69db2</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector" part="Conn_01x02_Pin">
+      <description>Generic connector, single row, 01x02, script generated</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x02_Pin</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector" part="USB_B_Micro">
+      <description>USB Micro Type B connector</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>USB*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">USB_B_Micro</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="VBUS" type="power_out"/>
+        <pin num="2" name="D-" type="bidirectional"/>
+        <pin num="3" name="D+" type="bidirectional"/>
+        <pin num="4" name="ID" type="passive"/>
+        <pin num="5" name="GND" type="power_out"/>
+        <pin num="6" name="Shield" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector_Generic" part="Conn_01x02">
+      <description>Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x02</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="Battery">
+      <description>Multiple-cell battery</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">BT</field>
+        <field name="Value">Battery</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="+" type="passive"/>
+        <pin num="2" name="-" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <description>Resistor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="PAM8303CBSC" part="PAM8303CBSC">
+      <description>DiodesZetex PAM8303CBSC Audio Amplifier, Class-D Mono 40dB, 8-Pin MSOP</description>
+      <docs>https://componentsearchengine.com/Datasheets/1/PAM8303CBSC.pdf</docs>
+      <fields>
+        <field name="Reference">IC</field>
+        <field name="Value">PAM8303CBSC</field>
+        <field name="Footprint">SOP65P490X110-8N</field>
+        <field name="Datasheet">https://componentsearchengine.com/Datasheets/1/PAM8303CBSC.pdf</field>
+        <field name="Height">1.1</field>
+        <field name="Manufacturer_Name">Diodes Inc.</field>
+        <field name="Manufacturer_Part_Number">PAM8303CBSC</field>
+        <field name="Mouser Part Number">621-PAM8303CBSC</field>
+        <field name="Mouser Price/Stock">https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/PAM8303CBSC?qs=%252BSlWJf1dfkJSwgtz94g8zQ%3D%3D</field>
+        <field name="Arrow Part Number">PAM8303CBSC</field>
+        <field name="Arrow Price/Stock">https://www.arrow.com/en/products/pam8303cbsc/diodes-incorporated?region=nac</field>
+      </fields>
+      <pins>
+        <pin num="1" name="OUT+" type="passive"/>
+        <pin num="2" name="PVDD" type="passive"/>
+        <pin num="3" name="VDD" type="passive"/>
+        <pin num="4" name="IN-" type="passive"/>
+        <pin num="5" name="IN+" type="passive"/>
+        <pin num="6" name="~{SD}" type="passive"/>
+        <pin num="7" name="GND" type="passive"/>
+        <pin num="8" name="OUT-" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="RF_Module" part="ESP32-S2-WROVER">
+      <description>RF Module, ESP32-D0WDQ6 SoC, Wi-Fi 802.11b/g/n, 32-bit, 2.7-3.6V, onboard antenna, SMD</description>
+      <docs>https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf</docs>
+      <footprints>
+        <fp>ESP32?S2?WROVER*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">ESP32-S2-WROVER</field>
+        <field name="Footprint">RF_Module:ESP32-S2-WROVER</field>
+        <field name="Datasheet">https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="power_in"/>
+        <pin num="2" name="3V3" type="power_in"/>
+        <pin num="3" name="IO00" type="bidirectional"/>
+        <pin num="4" name="IO01" type="bidirectional"/>
+        <pin num="5" name="IO02" type="bidirectional"/>
+        <pin num="6" name="IO03" type="bidirectional"/>
+        <pin num="7" name="IO04" type="bidirectional"/>
+        <pin num="8" name="IO05" type="bidirectional"/>
+        <pin num="9" name="IO06" type="bidirectional"/>
+        <pin num="10" name="IO07" type="bidirectional"/>
+        <pin num="11" name="IO08" type="bidirectional"/>
+        <pin num="12" name="IO09" type="bidirectional"/>
+        <pin num="13" name="IO10" type="bidirectional"/>
+        <pin num="14" name="IO11" type="bidirectional"/>
+        <pin num="15" name="IO12" type="bidirectional"/>
+        <pin num="16" name="IO13" type="bidirectional"/>
+        <pin num="17" name="IO14" type="bidirectional"/>
+        <pin num="18" name="IO15" type="bidirectional"/>
+        <pin num="19" name="IO16" type="bidirectional"/>
+        <pin num="20" name="IO17" type="bidirectional"/>
+        <pin num="21" name="IO18" type="bidirectional"/>
+        <pin num="22" name="USB_D-" type="bidirectional"/>
+        <pin num="23" name="USB_D+" type="bidirectional"/>
+        <pin num="24" name="IO21" type="bidirectional"/>
+        <pin num="25" name="IO26" type="bidirectional"/>
+        <pin num="26" name="GND" type="passive"/>
+        <pin num="27" name="IO33" type="bidirectional"/>
+        <pin num="28" name="IO34" type="bidirectional"/>
+        <pin num="29" name="IO35" type="bidirectional"/>
+        <pin num="30" name="IO36" type="bidirectional"/>
+        <pin num="31" name="IO37" type="bidirectional"/>
+        <pin num="32" name="IO38" type="bidirectional"/>
+        <pin num="33" name="IO39" type="bidirectional"/>
+        <pin num="34" name="IO40" type="bidirectional"/>
+        <pin num="35" name="IO41" type="bidirectional"/>
+        <pin num="36" name="IO42" type="bidirectional"/>
+        <pin num="37" name="TXD0" type="bidirectional"/>
+        <pin num="38" name="RXD0" type="bidirectional"/>
+        <pin num="39" name="IO45" type="bidirectional"/>
+        <pin num="40" name="IO46" type="input"/>
+        <pin num="41" name="EN" type="input"/>
+        <pin num="42" name="GND" type="passive"/>
+        <pin num="43" name="GND" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="SPU0410HR5H-PB" part="SPU0410HR5H-PB">
+      <description>MEMS Microphones MIC MEMS ANALOG OMNI -42DB</description>
+      <docs>juergen.daeubler@te.com</docs>
+      <fields>
+        <field name="Reference">ZTS6156</field>
+        <field name="Value">Microphone</field>
+        <field name="Footprint">SPU0414HR5H-SB</field>
+        <field name="Datasheet">juergen.daeubler@te.com</field>
+        <field name="Mouser Part Number">721-SPU0410HR5H-PB</field>
+        <field name="Mouser Price/Stock">https://www.mouser.co.uk/ProductDetail/Knowles/SPU0410HR5H-PB?qs=ZBAH5PeHI6s9%2F%252BusLaBdzw%3D%3D</field>
+        <field name="Manufacturer_Name">Knowles</field>
+        <field name="Manufacturer_Part_Number">SPU0410HR5H-PB</field>
+      </fields>
+      <pins>
+        <pin num="1" name="VDD" type="passive"/>
+        <pin num="2" name="OUTPUT" type="passive"/>
+        <pin num="3" name="GND" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Switch" part="SW_Push">
+      <description>Push button switch, generic, two pins</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">SW</field>
+        <field name="Value">SW_Push</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="TP4056" part="TP4056">
+      <description>1A Standalone Linear Li-lon Battery Charger, SOP-8</description>
+      <docs>https://dlnmh9ip6v2uc.cloudfront.net/datasheets/Prototyping/TP4056.pdf</docs>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">TP4056</field>
+        <field name="Footprint">SOIC127P600X175-9N</field>
+        <field name="Datasheet">https://dlnmh9ip6v2uc.cloudfront.net/datasheets/Prototyping/TP4056.pdf</field>
+        <field name="Height">1.75</field>
+        <field name="Manufacturer_Name">NanJing Top Power</field>
+        <field name="Manufacturer_Part_Number">TP4056</field>
+      </fields>
+      <pins>
+        <pin num="1" name="TEMP1" type="passive"/>
+        <pin num="2" name="PROG2" type="passive"/>
+        <pin num="3" name="GND_3" type="passive"/>
+        <pin num="4" name="VCC4" type="passive"/>
+        <pin num="5" name="BAT" type="passive"/>
+        <pin num="6" name="~{STDBY}" type="passive"/>
+        <pin num="7" name="~{CHRG}" type="passive"/>
+        <pin num="8" name="CE" type="passive"/>
+        <pin num="9" name="EP" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Connector">
+      <uri>/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols//Connector.kicad_sym</uri>
+    </library>
+    <library logical="Connector_Generic">
+      <uri>/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols//Connector_Generic.kicad_sym</uri>
+    </library>
+    <library logical="Device">
+      <uri>/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols//Device.kicad_sym</uri>
+    </library>
+    <library logical="PAM8303CBSC">
+      <uri>/Users/julian/Code/components/LIB_PAM8303CBSC/PAM8303CBSC/KiCad/PAM8303CBSC.kicad_sym</uri>
+    </library>
+    <library logical="RF_Module">
+      <uri>/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols//RF_Module.kicad_sym</uri>
+    </library>
+    <library logical="SPU0410HR5H-PB">
+      <uri>/Users/julian/Code/components/SPU0410HR5H/SPU0410HR5H-PB.kicad_sym</uri>
+    </library>
+    <library logical="Switch">
+      <uri>/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols//Switch.kicad_sym</uri>
+    </library>
+    <library logical="TP4056">
+      <uri>/Users/julian/Code/components/TP4056.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="Net-(BT1-+)">
+      <node ref="BT1" pin="1" pinfunction="+" pintype="passive"/>
+      <node ref="SW1" pin="2" pinfunction="2" pintype="passive"/>
+    </net>
+    <net code="2" name="Net-(IC1-GND)">
+      <node ref="IC1" pin="7" pinfunction="GND" pintype="passive"/>
+      <node ref="ZTS6156" pin="3" pinfunction="GND" pintype="passive"/>
+    </net>
+    <net code="3" name="Net-(IC1-IN-)">
+      <node ref="IC1" pin="4" pinfunction="IN-" pintype="passive"/>
+      <node ref="J4" pin="2" pinfunction="D-" pintype="bidirectional"/>
+      <node ref="J4" pin="3" pinfunction="D+" pintype="bidirectional"/>
+      <node ref="U1" pin="22" pinfunction="USB_D-" pintype="bidirectional"/>
+      <node ref="U1" pin="23" pinfunction="USB_D+" pintype="bidirectional"/>
+      <node ref="U1" pin="24" pinfunction="IO21" pintype="bidirectional"/>
+      <node ref="U1" pin="25" pinfunction="IO26" pintype="bidirectional"/>
+      <node ref="U1" pin="27" pinfunction="IO33" pintype="bidirectional"/>
+      <node ref="U1" pin="28" pinfunction="IO34" pintype="bidirectional"/>
+      <node ref="U1" pin="29" pinfunction="IO35" pintype="bidirectional"/>
+      <node ref="U1" pin="30" pinfunction="IO36" pintype="bidirectional"/>
+      <node ref="U1" pin="31" pinfunction="IO37" pintype="bidirectional"/>
+      <node ref="U1" pin="32" pinfunction="IO38" pintype="bidirectional"/>
+      <node ref="U1" pin="33" pinfunction="IO39" pintype="bidirectional"/>
+      <node ref="ZTS6156" pin="2" pinfunction="OUTPUT" pintype="passive"/>
+    </net>
+    <net code="4" name="Net-(IC1-OUT+)">
+      <node ref="IC1" pin="1" pinfunction="OUT+" pintype="passive"/>
+      <node ref="J3" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="5" name="Net-(IC1-OUT-)">
+      <node ref="IC1" pin="8" pinfunction="OUT-" pintype="passive"/>
+      <node ref="J3" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+    <net code="6" name="Net-(IC1-VDD)">
+      <node ref="1k1" pin="1" pintype="passive"/>
+      <node ref="2k1" pin="2" pintype="passive"/>
+      <node ref="IC1" pin="3" pinfunction="VDD" pintype="passive"/>
+      <node ref="J1" pin="5" pinfunction="BAT" pintype="passive"/>
+      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="SW1" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="10" pinfunction="IO07" pintype="bidirectional"/>
+      <node ref="U1" pin="11" pinfunction="IO08" pintype="bidirectional"/>
+      <node ref="U1" pin="12" pinfunction="IO09" pintype="bidirectional"/>
+      <node ref="U1" pin="13" pinfunction="IO10" pintype="bidirectional"/>
+      <node ref="U1" pin="14" pinfunction="IO11" pintype="bidirectional"/>
+      <node ref="U1" pin="15" pinfunction="IO12" pintype="bidirectional"/>
+      <node ref="U1" pin="16" pinfunction="IO13" pintype="bidirectional"/>
+      <node ref="U1" pin="17" pinfunction="IO14" pintype="bidirectional"/>
+      <node ref="U1" pin="18" pinfunction="IO15" pintype="bidirectional"/>
+      <node ref="U1" pin="19" pinfunction="IO16" pintype="bidirectional"/>
+      <node ref="U1" pin="2" pinfunction="3V3" pintype="power_in"/>
+      <node ref="U1" pin="20" pinfunction="IO17" pintype="bidirectional"/>
+      <node ref="U1" pin="21" pinfunction="IO18" pintype="bidirectional"/>
+      <node ref="U1" pin="3" pinfunction="IO00" pintype="bidirectional"/>
+      <node ref="U1" pin="4" pinfunction="IO01" pintype="bidirectional"/>
+      <node ref="U1" pin="41" pinfunction="EN" pintype="input"/>
+      <node ref="U1" pin="5" pinfunction="IO02" pintype="bidirectional"/>
+      <node ref="U1" pin="6" pinfunction="IO03" pintype="bidirectional"/>
+      <node ref="U1" pin="7" pinfunction="IO04" pintype="bidirectional"/>
+      <node ref="U1" pin="8" pinfunction="IO05" pintype="bidirectional"/>
+      <node ref="U1" pin="9" pinfunction="IO06" pintype="bidirectional"/>
+      <node ref="ZTS6156" pin="1" pinfunction="VDD" pintype="passive"/>
+    </net>
+    <net code="7" name="Net-(J1-GND_3)">
+      <node ref="2k1" pin="1" pintype="passive"/>
+      <node ref="J1" pin="3" pinfunction="GND_3" pintype="passive"/>
+      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="J4" pin="5" pinfunction="GND" pintype="power_out"/>
+      <node ref="U1" pin="1" pinfunction="GND" pintype="power_in"/>
+      <node ref="U1" pin="26" pinfunction="GND" pintype="passive"/>
+      <node ref="U1" pin="42" pinfunction="GND" pintype="passive"/>
+      <node ref="U1" pin="43" pinfunction="GND" pintype="passive"/>
+    </net>
+    <net code="8" name="Net-(J4-VBUS)">
+      <node ref="1k1" pin="2" pintype="passive"/>
+      <node ref="J4" pin="1" pinfunction="VBUS" pintype="power_out"/>
+    </net>
+    <net code="9" name="unconnected-(BT1---Pad2)">
+      <node ref="BT1" pin="2" pinfunction="-" pintype="passive"/>
+    </net>
+    <net code="10" name="unconnected-(IC1-IN+-Pad5)">
+      <node ref="IC1" pin="5" pinfunction="IN+" pintype="passive"/>
+    </net>
+    <net code="11" name="unconnected-(IC1-PVDD-Pad2)">
+      <node ref="IC1" pin="2" pinfunction="PVDD" pintype="passive"/>
+    </net>
+    <net code="12" name="unconnected-(IC1-~{SD}-Pad6)">
+      <node ref="IC1" pin="6" pinfunction="~{SD}" pintype="passive"/>
+    </net>
+    <net code="13" name="unconnected-(J1-CE-Pad8)">
+      <node ref="J1" pin="8" pinfunction="CE" pintype="passive"/>
+    </net>
+    <net code="14" name="unconnected-(J1-EP-Pad9)">
+      <node ref="J1" pin="9" pinfunction="EP" pintype="passive"/>
+    </net>
+    <net code="15" name="unconnected-(J1-PROG2-Pad2)">
+      <node ref="J1" pin="2" pinfunction="PROG2" pintype="passive"/>
+    </net>
+    <net code="16" name="unconnected-(J1-TEMP1-Pad1)">
+      <node ref="J1" pin="1" pinfunction="TEMP1" pintype="passive"/>
+    </net>
+    <net code="17" name="unconnected-(J1-VCC4-Pad4)">
+      <node ref="J1" pin="4" pinfunction="VCC4" pintype="passive"/>
+    </net>
+    <net code="18" name="unconnected-(J1-~{CHRG}-Pad7)">
+      <node ref="J1" pin="7" pinfunction="~{CHRG}" pintype="passive"/>
+    </net>
+    <net code="19" name="unconnected-(J1-~{STDBY}-Pad6)">
+      <node ref="J1" pin="6" pinfunction="~{STDBY}" pintype="passive"/>
+    </net>
+    <net code="20" name="unconnected-(J4-ID-Pad4)">
+      <node ref="J4" pin="4" pinfunction="ID" pintype="passive"/>
+    </net>
+    <net code="21" name="unconnected-(J4-Shield-Pad6)">
+      <node ref="J4" pin="6" pinfunction="Shield" pintype="passive"/>
+    </net>
+    <net code="22" name="unconnected-(J5-Pin_1-Pad1)">
+      <node ref="J5" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="23" name="unconnected-(J5-Pin_2-Pad2)">
+      <node ref="J5" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+    <net code="24" name="unconnected-(U1-IO40-Pad34)">
+      <node ref="U1" pin="34" pinfunction="IO40" pintype="bidirectional"/>
+    </net>
+    <net code="25" name="unconnected-(U1-IO41-Pad35)">
+      <node ref="U1" pin="35" pinfunction="IO41" pintype="bidirectional"/>
+    </net>
+    <net code="26" name="unconnected-(U1-IO42-Pad36)">
+      <node ref="U1" pin="36" pinfunction="IO42" pintype="bidirectional"/>
+    </net>
+    <net code="27" name="unconnected-(U1-IO45-Pad39)">
+      <node ref="U1" pin="39" pinfunction="IO45" pintype="bidirectional"/>
+    </net>
+    <net code="28" name="unconnected-(U1-IO46-Pad40)">
+      <node ref="U1" pin="40" pinfunction="IO46" pintype="input"/>
+    </net>
+    <net code="29" name="unconnected-(U1-RXD0-Pad38)">
+      <node ref="U1" pin="38" pinfunction="RXD0" pintype="bidirectional"/>
+    </net>
+    <net code="30" name="unconnected-(U1-TXD0-Pad37)">
+      <node ref="U1" pin="37" pinfunction="TXD0" pintype="bidirectional"/>
+    </net>
+  </nets>
+</export>
