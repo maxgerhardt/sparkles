@@ -4344,7 +4344,7 @@
     (property "Value" "Charging Notches" (at 379.095 57.15 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Connector_PinHeader_1.00mm:PinHeader_1x02_P1.00mm_Horizontal" (at 379.73 59.69 0)
+    (property "Footprint" "Library:ChargingNotches" (at 379.73 59.69 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 379.73 59.69 0)
