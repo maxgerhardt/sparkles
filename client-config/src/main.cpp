@@ -5,199 +5,184 @@
 #define TIMER_INTERVAL_MS       1000
 #define USING_TIM_DIV1 true
 
-#define WAIT_FOR_TIMER 1
-#define TIMER_CALIBRATION 2
 #define PRINT_MODE -1
 #define HELLO 0
-#define WAIT_FOR_CALIBRATE 3
-#define CALIBRATE 4
-#define ASK_CLAP_TIME 5
-#define SEND_CLAP_TIME 6 
-#define NOCLAPFOUND -1
+#define BLINK 1
+#define ADDRESS_RCVD 2
+#define LETSGO 3
+#define NUM_ADDRESSES 4
 int mode;
+bool letsgo = false;
+bool blinking = false;
+int freq = 5000;
+int resolution = 8;
+int randnum = 0;
 
+const int ledPinBlue = 20;  // 16 corresponds to GPIO16
+const int ledPinRed = 9; // 17 corresponds to GPIO17
+const int ledPinGreen = 3;  // 5 corresponds to GPIO5
+const int ledPinGreen2 = 8;
+const int ledPinRed2 = 19;
+const int ledPinBlue2 = 18;
+const int ledChannelRed1 = 0;
+const int ledChannelGreen1 = 1;
+const int ledChannelBlue1 = 2;
+const int ledChannelRed2 = 3;
+const int ledChannelGreen2 = 4;
+const int ledChannelBlue2 = 5;
 
+float redfloat = 0, greenfloat = 0, bluefloat = 0;
+int steps = 1000;
 //Network
-//uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-uint8_t broadcastAddress[] = {0xB4,0xE6,0x2D,0xE9,0x3C,0x21};
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+//uint8_t broadcastAddress[] = {0xB4,0xE6,0x2D,0xE9,0x3C,0x21};
 uint8_t myAddress[6];
 esp_now_peer_info_t peerInfo;
 
 
 //Variables for Time Offset
-struct message_timer {
-  uint8_t messageType;
-  uint16_t counter;
-  uint16_t sendTime;
-  uint16_t lastDelay;
-} timerMessage, oldMessage;
 
-struct message_mode {
-  uint8_t messageType;
-  uint8_t mode;
-} modeChange;
-
-struct message_timer_received {
-  uint8_t messageType = WAIT_FOR_CALIBRATE;
-  uint8_t address[6];
-  uint8_t timerOffset;
-} timerReceivedMessage;
-
-struct message_clap_time {
-  uint8_t messageType = SEND_CLAP_TIME;
-  int clapCounter;
-  int timerCounter;
-  int timeStamp;
-} claps[100];
-
-struct message_send_clap {
-  uint8_t messageType = ASK_CLAP_TIME;
-  uint8_t address[6];
-  uint8_t clapIndex;
-} sendClap ;
 
 struct message_address {
   uint8_t messageType = HELLO;
   uint8_t address[6];
 } addressMessage;
 
-struct no_clap_found {
-  uint8_t messageType = NOCLAPFOUND;
+struct message_blink {
+  uint8_t message_Type = BLINK;
+  uint8_t color[3];
   uint8_t address[6];
-  uint8_t clapIndex;
-} noClapFound;
+} blinkMessage;
 
+struct addresses {
+  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  uint8_t rcvd[NUM_ADDRESSES];
+} addressList[NUM_ADDRESSES];
+int addressCounter = 0;
 
+struct msg_address_rcvd {
+  uint8_t message = ADDRESS_RCVD;
+  uint8_t address[6];
+} addressRcvd;
 
-
-//timer stuff
-int timeOffset;
-int messageArriveTime;
-int lastTime = 0;
-
-
-//general setup
-
-
-
-//calibration stuff
-int sensorValue;
-int microphonePin = A0;
-int clapCounter = 0;
-int lastClap;
-bool clapSent = false;
-
+struct msg_letsgo {
+  uint8_t message = LETSGO;
+} letsgoMsg;
 //address sending
 int addressReceived = false;
 int addressSending = 0;
 
 
-//timer stuff
-ESP32Timer ITimer(0);
-uint32_t timerCounter = 0;
-
-
-bool IRAM_ATTR TimerHandler(void * timerNo)
-{ 
-  timerCounter++;
-  return true;
-}
 
 
 void sendAddress() {
+  memcpy(&addressMessage.address, myAddress, sizeof(myAddress));
   esp_now_send(broadcastAddress, (uint8_t *) &addressMessage, sizeof(addressMessage));
 }
 
-void sendClapTime(int clapIndex) {
-  for (int i = 0; i <= clapCounter; i++) {
-    if (claps[i].timerCounter < clapCounter+2 or claps[i].timerCounter > clapCounter-2) { 
-      esp_now_send(broadcastAddress, (uint8_t *) &claps[i], sizeof(claps[i]));
+void blink(message_blink blinkMessage) {
+  blinking = true;
+  for (int i = 0; i < steps; i++) {
+    redfloat += (float)blinkMessage.color[0]/steps;
+    greenfloat += (float)blinkMessage.color[1]/steps;
+    bluefloat += (float)blinkMessage.color[2]/steps;
+  ledcWrite(ledChannelRed2, (int)floor(redfloat));
+  ledcWrite(ledChannelGreen2, (int)floor(greenfloat));
+  ledcWrite(ledChannelBlue2, (int)floor(bluefloat));
+  ledcWrite(ledChannelRed1, (int)floor(redfloat));
+  ledcWrite(ledChannelGreen1, (int)floor(greenfloat));
+  ledcWrite(ledChannelBlue1, (int)floor(bluefloat));
+  delay(2);
+  }
+  while (true) {
+    randnum = random(NUM_ADDRESSES);
+    if (memcmp(&blinkMessage.address, &addressList[randnum], sizeof(blinkMessage.address)) == false) {
+      memcpy(&blinkMessage.address, myAddress, sizeof(myAddress));
+      blinkMessage.color[0] = random(256);
+      blinkMessage.color[1] = random(256);
+      blinkMessage.color[2] = random(256);
+      esp_now_send(addressList[randnum].address, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
       break;
     }
-  }
-  esp_now_send(broadcastAddress, (uint8_t *) &noClapFound, sizeof(noClapFound));
 
+  }
+  for (int i = steps; i > 0; i--) {
+    redfloat -= (float)blinkMessage.color[0]/steps;
+    greenfloat -= (float)blinkMessage.color[1]/steps;
+    bluefloat -= (float)blinkMessage.color[2]/steps;
+  ledcWrite(ledChannelRed2, (int)floor(redfloat));
+  ledcWrite(ledChannelGreen2, (int)floor(greenfloat));
+  ledcWrite(ledChannelBlue2, (int)floor(bluefloat));
+  ledcWrite(ledChannelRed1, (int)floor(redfloat));
+  ledcWrite(ledChannelGreen1, (int)floor(greenfloat));
+  ledcWrite(ledChannelBlue1, (int)floor(bluefloat));   
+  delay(2); 
+  }
+  blinking = false;
 }
 
-void receiveTimer(int messageArriveTime) {
-  if (abs(messageArriveTime - lastTime-1000000) < 300 and abs(timerMessage.lastDelay) <1500) {
-    timeOffset = lastTime-oldMessage.sendTime;
-    WiFi.macAddress(timerReceivedMessage.address);
-    timerReceivedMessage.timerOffset = timeOffset;
-    esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
-  }
-  else {
-    lastTime = messageArriveTime;
-    oldMessage = timerMessage;
+
+void receiveAddress(uint8_t address[6]) {
+  Serial.print("Address received ");
+  Serial.println(address[5]);
+  for (int i = 0; i<sizeof(addressList); i++) {
+    if (memcmp(&address, &addressList[i], sizeof(address))) {
+      return;
+    }
+    memcpy(&addressList[addressCounter], &address, sizeof(address));
+    memcpy(&addressRcvd.address, myAddress, sizeof(myAddress));
+    esp_now_send(address, (uint8_t *) &addressRcvd, sizeof(addressRcvd));
+    addressCounter++;
+    if (addressCounter == NUM_ADDRESSES-1 and letsgo == false) {
+      esp_now_send(broadcastAddress, (uint8_t *) &letsgoMsg, sizeof(letsgoMsg));
+      blinkMessage.color[0] = 0xFF;
+      blinkMessage.color[1] = 0xFF; 
+      blinkMessage.color[2] = 0xFF;
+      delay(5);
+      blink(blinkMessage);
+    }
   }
 }
-
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   switch (incomingData[0]) {
-    case TIMER_CALIBRATION:  
-      messageArriveTime = micros();
-      memcpy(&timerMessage,incomingData,sizeof(timerMessage));
-      receiveTimer(messageArriveTime);
+    case HELLO:  
+      memcpy(&addressMessage,incomingData,sizeof(addressMessage));
+      receiveAddress(addressMessage.address);
       break;
-    case CALIBRATE: 
-      mode = incomingData[1];
+    case ADDRESS_RCVD: 
+      //add stuff regarding received address
       break;
-    case ASK_CLAP_TIME: 
-      mode = ASK_CLAP_TIME;
-      memcpy(&sendClap,incomingData,sizeof(sendClap));
-      sendClapTime(sendClap.clapIndex);
+    case BLINK: 
+      if (blinking == false) {}
+        memcpy(&blinkMessage,incomingData,sizeof(blinkMessage));
+        blink(blinkMessage);
+      break;
+    case LETSGO:
+      letsgo = true;
       break;
 
     default: 
       Serial.println("Data type not recognized");
   }
-  
-  if (mode == 0 ){
-
-  }
-  
 }
-
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  if (mode == HELLO) {
-    if (ESP_NOW_SEND_SUCCESS == true) {
-      mode = WAIT_FOR_TIMER;
-    }
-  }
-  else if (mode == TIMER_CALIBRATION) {
-    if (ESP_NOW_SEND_SUCCESS == true) {
-      mode = WAIT_FOR_CALIBRATE;
-    }
-  else if (mode == ASK_CLAP_TIME) {
-    if (ESP_NOW_SEND_SUCCESS == false) {
-      clapSent = false;
-    }
-    else {
-      clapSent = true;
-    }
-  }
-    else {
-      esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
-    }
-  }
 
 }
+
+
+
+
+
+
 
 
 
 void setup() {
+ 
   // Initialize Serial Monitor
   Serial.begin(115200);
   // start timer
-  if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
-  {
-    Serial.print(F("Starting  ITimer OK, millis() = ")); 
-    Serial.println(millis());
-  }
-  else 
-    Serial.println(F("Can't set ITimer correctly. Select another freq. or interval")); 
-  
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
   WiFi.macAddress(addressMessage.address);
@@ -217,22 +202,24 @@ void setup() {
   }
   esp_now_register_recv_cb(OnDataRecv);  
   esp_now_register_send_cb(OnDataSent);
-  mode = HELLO;
+  ledcSetup(ledChannelRed1, freq, resolution);
+  ledcSetup(ledChannelGreen1, freq, resolution);
+  ledcSetup(ledChannelBlue1, freq, resolution);
+ ledcSetup(ledChannelRed2, freq, resolution);
+  ledcSetup(ledChannelGreen2, freq, resolution);
+  ledcSetup(ledChannelBlue2, freq, resolution);
+
 }
+
 
 void loop() {
-  if (mode == HELLO) { 
+  if (addressCounter <NUM_ADDRESSES-1) {
+    Serial.println("Address sent");
     sendAddress();
-    delay(50);
+    delay(1);
   }
-  if (mode == CALIBRATE) {
-    sensorValue = analogRead(microphonePin);
-    if (sensorValue < 50 and millis() > lastClap+1000) {
-      claps[clapCounter].timerCounter = timerCounter;
-      claps[clapCounter].timeStamp = micros();
-      lastClap = millis();
-      clapCounter++;
+  else {
+    Serial.println("Address counter full");
   }
 
-}
 }
