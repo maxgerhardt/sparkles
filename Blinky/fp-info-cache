@@ -1,4 +1,4 @@
-22240328632323242
+22252289805377753
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -91910,6 +91910,13 @@ LED-SMD_XL-HD6070RGBC-A46L footprint
 7
 7
 footprint
+LED-SMD_XL-HD6070RGBC-A46L-BACKSIDE
+LED-SMD_XL-HD6070RGBC-A46L footprint
+LED-SMD_XL-HD6070RGBC-A46L footprint
+0
+1
+1
+footprint
 LED0603-RD_BLUE
 LED0603-RD_BLUE footprint
 LED0603-RD_BLUE footprint
@@ -91931,9 +91938,37 @@ MIC-SMD_3P-L2.8-W1.9_ZTS6056 footprint
 4
 3
 footprint
+MIC-SMD_BD4.0_B4013AM423-093-1
+MIC-SMD_BD4.0_B4013AM423-093-1 footprint
+MIC-SMD_BD4.0_B4013AM423-093-1 footprint
+0
+3
+2
+footprint
+MICRO-USB-SMD_MICROXNJ
+MICRO-USB-SMD_MICROXNJ footprint
+MICRO-USB-SMD_MICROXNJ footprint
+0
+9
+9
+footprint
 MSOP-8_L3.0-W3.0-P0.65-LS5.0-BL
 MSOP-8_L3.0-W3.0-P0.65-LS5.0-BL footprint
 MSOP-8_L3.0-W3.0-P0.65-LS5.0-BL footprint
+0
+8
+8
+footprint
+SO-8_L4.9-W3.9-P1.27-LS6.0-BL
+SO-8_L4.9-W3.9-P1.27-LS6.0-BL footprint
+SO-8_L4.9-W3.9-P1.27-LS6.0-BL footprint
+0
+8
+8
+footprint
+SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL
+SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL footprint
+SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL footprint
 0
 8
 8
@@ -91958,6 +91993,20 @@ SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR footprint
 0
 6
 6
+footprint
+SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL-2
+SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL-2 footprint
+SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL-2 footprint
+0
+4
+4
+footprint
+SW-SMD_MK-12C02-G025
+SW-SMD_MK-12C02-G025 footprint
+SW-SMD_MK-12C02-G025 footprint
+0
+7
+7
 footprint
 SW-TH_G-SWITCH_SK-22F02-G060
 SW-TH_G-SWITCH_SK-22F02-G060 footprint
