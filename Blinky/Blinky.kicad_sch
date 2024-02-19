@@ -3470,31 +3470,6 @@
     )
   )
 
-  (symbol (lib_id "power:GND") (at 67.31 198.12 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid 14623ae6-f9aa-4b1d-a016-77bcf5b36944)
-    (property "Reference" "#PWR08" (at 67.31 204.47 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (at 67.31 203.2 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "" (at 67.31 198.12 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 67.31 198.12 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid e3aa54cb-fdd8-4a29-9fc0-d6706b2b5fdd))
-    (instances
-      (project "Blinky"
-        (path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
-          (reference "#PWR08") (unit 1)
-        )
-      )
-    )
-  )
-
   (symbol (lib_id "Device:R") (at 143.51 198.12 180) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 153413b0-35b9-4423-8b7e-60f4930f70fb)
@@ -5031,31 +5006,6 @@
       (project "Blinky"
         (path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
           (reference "R10") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "power:GND") (at 66.04 147.32 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid 9ae4891a-a5dc-4b30-8f96-cb31045019a1)
-    (property "Reference" "#PWR07" (at 66.04 153.67 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (at 66.04 152.4 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "" (at 66.04 147.32 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 66.04 147.32 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid c3e9fc37-d4ed-4f61-a35b-90452ee6124e))
-    (instances
-      (project "Blinky"
-        (path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
-          (reference "#PWR07") (unit 1)
         )
       )
     )
