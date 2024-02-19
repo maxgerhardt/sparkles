@@ -4603,7 +4603,7 @@
   (symbol (lib_id "MICROXNJ:MICROXNJ") (at 280.67 80.01 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 7d4a5790-0999-4315-aebc-508a1756a51c)
-    (property "Reference" "USB?" (at 289.56 78.74 0)
+    (property "Reference" "USB1" (at 289.56 78.74 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "MICROXNJ" (at 289.56 81.28 0)
@@ -4630,7 +4630,7 @@
     (instances
       (project "Blinky"
         (path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
-          (reference "USB?") (unit 1)
+          (reference "USB1") (unit 1)
         )
       )
     )
