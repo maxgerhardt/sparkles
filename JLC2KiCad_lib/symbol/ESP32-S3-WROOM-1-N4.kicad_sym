@@ -1,25 +1,25 @@
 (kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
-  (symbol "ESP32-S2-SOLO-2-N4"   (in_bom yes) (on_board yes)
+  (symbol "ESP32-S3-WROOM-1-N4"   (in_bom yes) (on_board yes)
     (property "Reference" "U" (id 0) (at 0 1.27 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "ESP32-S2-SOLO-2-N4" (id 1) (at 0 -2.54 0)
+    (property "Value" "ESP32-S3-WROOM-1-N4" (id 1) (at 0 -2.54 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "footprint:WIRELM-SMD_ESP32-S3-WROOM-1" (id 2) (at 0 -10.16 0)
+    (property "Footprint" "footprint:WIFIM-SMD_ESP32-S3-WROOM-1-N8" (id 2) (at 0 -10.16 0)
       (effects (font (size 1.27 1.27) italic) hide)
     )
-    (property "Datasheet" "https://www.mouser.cn/datasheet/2/891/Espressif_ESP32_S3_WROOM_1_1U_Preliminary-2530171.pdf" (id 3) (at -2.286 0.127 0)
+    (property "Datasheet" "https://media.digikey.com/pdf/Data%20Sheets/Espressif%20PDFs/ESP32-S3-WROOM-1_1U_v0.5.1_Preliminary.pdf" (id 3) (at -2.286 0.127 0)
       (effects (font (size 1.27 1.27)) (justify left) hide)
     )
-    (property "ki_keywords" "C3040594" (id 4) (at 0 0 0)
+    (property "ki_keywords" "C2913197" (id 4) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "LCSC" "C3040594" (id 5) (at 0 0 0)
+    (property "LCSC" "C2913197" (id 5) (at 0 0 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     
-    (symbol "ESP32-S2-SOLO-2-N4_0_1"
+    (symbol "ESP32-S3-WROOM-1-N4_0_1"
       (rectangle
         (start -8.89001778003556 26.67005334010668)
         (end 8.89001778003556 -26.67005334010668)
@@ -173,13 +173,13 @@
       (pin unspecified line
         (at 11.430022860045721 -16.51003302006604 180)
         (length 2.54000508001016)
-        (name "IO33" (effects (font (size 1 1))))
+        (name "IO47" (effects (font (size 1 1))))
         (number "24" (effects (font (size 1 1))))
       )
       (pin unspecified line
         (at 11.430022860045721 -13.97002794005588 180)
         (length 2.54000508001016)
-        (name "IO34" (effects (font (size 1 1))))
+        (name "IO48" (effects (font (size 1 1))))
         (number "25" (effects (font (size 1 1))))
       )
       (pin unspecified line
@@ -280,5 +280,4 @@
       )
     )
   )
-
 )

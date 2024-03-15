@@ -1,3 +1,5 @@
+include </Users/julian/Code/sparkles/battery_casing.scad>;
+
 $fa = 1; $fs = $preview ? 2 : 0.5;
 //$fn=200;
 
@@ -7,7 +9,7 @@ $move = 35;
 $carrier_height = 16;
 $carrier_width = 8;
 $pcb_thickness = 1.77;
-$carrier_length = 50;
+$carrier_length = 43;
 $bottom_height=10;
 $pcb_width=41.3;
 $pcb_height = 65;
@@ -27,6 +29,9 @@ $upper_brim_width = 2;
 $top_thickness = 2;
 $reinforcement_height = 5;
 $bottom_cylinder_inner = $carrier_length-10;
+$battery_width = 20.5;
+$battery_height = 16;
+$battery_cutoff = 1;
 
 module cylbottom() {
      cylinder(h=$bottom_height, d1=$bottom_cylinder_outer, d2=$bottom_cylinder_outer);
@@ -83,7 +88,7 @@ module cylinder_bottom() {
         cylbottom();
          translate([0,0,$bottom_height/2+1]) cube([$carrier_width+1,$carrier_length+2,$bottom_height], true);
         rotate([0, 0,90])cube([$large_cutout_width, $large_cutout_length, $bottom_height*2], true);
-         cutout();
+         //cutout();
          translate([0,0,0]) cylinder(h=$bottom_height, d1=$bottom_cylinder_inner, d2=$bottom_cylinder_inner);
         
     }
@@ -99,36 +104,41 @@ module carrier_negative() {
     translate([$move+$carrier_width/2+$pcb_thickness/2,-16,$carrier_height-5]) color(0,1,0) cube([$carrier_width, 8, 15], true);
     }
 
-    
+/*module battery() {
+   difference() {
+            translate([0,0,$battery_height/2]) cube([$battery_width, $battery_width, $battery_height], true);
+            translate([0,0,2]) cylinder($battery_height, d=19);
+            translate([0,-$battery_width/2,$battery_height/2]) cube([$battery_width, $battery_cutoff, $battery_height], center=true);
+            translate([0,$battery_width/2,$battery_height/2]) cube([$battery_width, $battery_cutoff, $battery_height], center=true);
+
+        }
+
+} */   
 
 module carrier() { 
-    difference() {
-        translate([$move,0,$carrier_height/2]) color([0,0,1]) cube([$carrier_width,$carrier_length,$carrier_height], true);
-    carrier_negative();
-    }
-
+        difference() {
+            translate([$move,0,$carrier_height/2]) color([0,0,1]) cube([$carrier_width,$carrier_length,$carrier_height], true);
+            carrier_negative();
+        }
+    translate([$move-$battery_casing_height/2,$carrier_length/2, 0])  battery_casing();
+    translate([$move-$battery_casing_height/2,-$carrier_length/2-$battery_outer_width, 0]) battery_casing();
 }
+
+
 
 module casing() {
  cylinder_bottom();
 cylmiddle();
 cyltop();
 notch();
+reinforcement();
 }
 
 
-//reinforcement();
-//cyltop();
+
 //carrier_negative();
-//carrier();
+//translate([50, 0, 0]) carrier();
 //casing();
 
-
-    cylinder_bottom();
-
-    cylinder(h=$bottom_height, d1=$bottom_cylinder_inner, d2=$bottom_cylinder_inner);
-//cutout();
-$unten = 30;
-$oben = 20;
-//cylinder(10, d2=$unten, d1=$oben);
-
+carrier();
+//battery();

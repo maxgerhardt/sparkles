@@ -1,4 +1,4 @@
-(module "WIRELM-SMD_ESP32-S3-WROOM-1" (layer F.Cu) (tedit 655DDB18)
+(module "WIRELM-SMD_ESP32-S3-WROOM-1" (layer F.Cu) (tedit 65E500AC)
   (descr "WIRELM-SMD_ESP32-S3-WROOM-1 footprint")
   (tags "WIRELM-SMD_ESP32-S3-WROOM-1 footprint")
   (fp_text reference REF** (at 0.008496 -18.394996) (layer F.SilkS)

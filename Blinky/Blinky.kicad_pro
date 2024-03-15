@@ -58,13 +58,7 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [
-        "copper_edge_clearance|139845054|44525000|06261ce8-8d76-41cb-a745-03e4051836d7|8a7cab0d-a5ba-4fdf-9b7f-ada509381cd7",
-        "copper_edge_clearance|141083054|44284065|06261ce8-8d76-41cb-a745-03e4051836d7|68e83438-3191-470c-92af-ac7d0d6c4be8",
-        "copper_edge_clearance|156345054|44525000|06261ce8-8d76-41cb-a745-03e4051836d7|a5ca1815-4af4-4095-bc1f-4e2d3d63bf3f",
-        "copper_edge_clearance|156345054|44585054|06261ce8-8d76-41cb-a745-03e4051836d7|1d1dd5f1-ad8f-489e-83d7-a773e8c9e16d",
-        "copper_edge_clearance|157583054|44284065|06261ce8-8d76-41cb-a745-03e4051836d7|2f5cee06-86b0-4fb9-91e4-859175dfc6c6"
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -525,8 +519,8 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
-      "pos_files": "",
+      "plot": "./",
+      "pos_files": "JLCPCB",
       "specctra_dsn": "",
       "step": "",
       "svg": "",
@@ -585,13 +579,31 @@
           "label": "DNP",
           "name": "${DNP}",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC",
+          "name": "LCSC",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
-      "name": "Grouped By Value",
+      "name": "",
       "sort_asc": true,
-      "sort_field": "Referenz"
+      "sort_field": "Reference"
     },
     "connection_grid_size": 50.0,
     "drawing": {
@@ -643,7 +655,7 @@
   "sheets": [
     [
       "a854b35b-60aa-44a5-a34e-fbb2d526cb93",
-      "Stammblatt"
+      "Root"
     ]
   ],
   "text_variables": {}

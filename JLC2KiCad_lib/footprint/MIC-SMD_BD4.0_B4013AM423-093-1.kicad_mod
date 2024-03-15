@@ -1,4 +1,4 @@
-(module "MIC-SMD_BD4.0_B4013AM423-093-1" (layer F.Cu) (tedit 65CF571E)
+(module "MIC-SMD_BD4.0_B4013AM423-093-1" (layer F.Cu) (tedit 65D35C6F)
   (descr "MIC-SMD_BD4.0_B4013AM423-093-1 footprint")
   (tags "MIC-SMD_BD4.0_B4013AM423-093-1 footprint")
   (fp_text reference REF** (at -0.000025 -2.795403) (layer F.SilkS)

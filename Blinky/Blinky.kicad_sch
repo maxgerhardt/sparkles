@@ -6945,7 +6945,7 @@
 	)
 	(wire
 		(pts
-			(xy 254 80.01) (xy 270.51 80.01)
+			(xy 247.65 80.01) (xy 259.08 80.01)
 		)
 		(stroke
 			(width 0)
@@ -7135,7 +7135,7 @@
 	)
 	(wire
 		(pts
-			(xy 254 82.55) (xy 270.51 82.55)
+			(xy 247.65 82.55) (xy 259.08 82.55)
 		)
 		(stroke
 			(width 0)
@@ -7955,6 +7955,16 @@
 	)
 	(wire
 		(pts
+			(xy 266.7 80.01) (xy 270.51 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b711f07f-b261-40ad-a802-ae4223a229b5")
+	)
+	(wire
+		(pts
 			(xy 264.16 201.93) (xy 264.16 214.63)
 		)
 		(stroke
@@ -8625,6 +8635,16 @@
 	)
 	(wire
 		(pts
+			(xy 266.7 82.55) (xy 270.51 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fed3856a-0f3d-46a4-a67f-9d9553dbf0c1")
+	)
+	(wire
+		(pts
 			(xy 143.51 147.32) (xy 189.23 147.32)
 		)
 		(stroke
@@ -8975,7 +8995,7 @@
 		(uuid "c6288e56-c513-4429-b896-2a2f06aaa757")
 	)
 	(label "USB+"
-		(at 259.08 80.01 0)
+		(at 251.46 80.01 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9052,7 +9072,7 @@
 		(uuid "d23a7448-4d62-4f22-9ddc-40decf474a09")
 	)
 	(label "USB-"
-		(at 259.08 82.55 0)
+		(at 251.46 82.55 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -10679,6 +10699,73 @@
 			(project "Blinky"
 				(path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
 					(reference "#PWR016")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 262.89 82.55 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "33ddc4a9-d656-41d4-b378-fb514af5b103")
+		(property "Reference" "R36"
+			(at 262.89 86.868 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10"
+			(at 262.636 88.9 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 262.89 80.772 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 262.89 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 262.89 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "9788611b-3c38-47f1-9490-7d386914d22f")
+		)
+		(pin "1"
+			(uuid "5e677f22-e5be-4fd8-bc61-450e9f1497ac")
+		)
+		(instances
+			(project "Blinky"
+				(path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
+					(reference "R36")
 					(unit 1)
 				)
 			)
@@ -12955,6 +13042,74 @@
 	)
 	(symbol
 		(lib_id "Device:R")
+		(at 262.89 80.01 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7ad140c9-23b0-4bc2-afc0-8d3b6077f2e3")
+		(property "Reference" "R35"
+			(at 262.89 73.66 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10"
+			(at 262.89 76.2 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 262.89 78.232 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 262.89 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 262.89 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "bb43fb42-8251-4a2c-9719-2a84d18a1292")
+		)
+		(pin "1"
+			(uuid "56f1b996-740d-4188-8106-29c0a20ba4ac")
+		)
+		(instances
+			(project "Blinky"
+				(path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
+					(reference "R35")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
 		(at 356.87 99.06 270)
 		(unit 1)
 		(exclude_from_sim no)
@@ -14065,7 +14220,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
+		(property "Footprint" "footprint:HDR-TH_6P-P2.54-V-F"
 			(at 213.36 81.28 0)
 			(effects
 				(font
@@ -15123,7 +15278,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
+		(property "Footprint" "footprint:HDR-TH_6P-P2.54-V-F"
 			(at 240.03 100.33 0)
 			(effects
 				(font
@@ -15179,7 +15334,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 369.57 154.94 180)
+		(at 369.57 154.94 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15188,25 +15343,25 @@
 		(fields_autoplaced yes)
 		(uuid "be6df560-11d5-49b5-9f21-1d2a1f559094")
 		(property "Reference" "C10"
-			(at 373.38 153.67 0)
+			(at 373.38 153.6699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
 		(property "Value" "100uf"
-			(at 373.38 156.21 0)
+			(at 373.38 156.2099 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 368.6048 151.13 0)
+		(property "Footprint" "footprint:CASE-B_3528"
+			(at 370.5352 158.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
