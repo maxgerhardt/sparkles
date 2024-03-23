@@ -120,7 +120,10 @@ void sendClapTime(int clapIndex) {
 }
 
 void receiveTimer(int messageArriveTime) {
+  //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
   if (abs(messageArriveTime - lastTime-1000000) < 300 and abs(timerMessage.lastDelay) <1500) {
+    //damit hab ich den zeitoffset.. 
+    // if zeit - timeoffset % 1000 = 0: blink
     timeOffset = lastTime-oldMessage.sendTime;
     WiFi.macAddress(timerReceivedMessage.address);
     timerReceivedMessage.timerOffset = timeOffset;

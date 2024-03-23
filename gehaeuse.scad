@@ -120,8 +120,9 @@ module carrier() {
             translate([$move,0,$carrier_height/2]) color([0,0,1]) cube([$carrier_width,$carrier_length,$carrier_height], true);
             carrier_negative();
         }
-    translate([$move-$battery_casing_height/2,$carrier_length/2, 0])  battery_casing();
-    translate([$move-$battery_casing_height/2,-$carrier_length/2-$battery_outer_width, 0]) battery_casing();
+
+    //translate([$move-$battery_casing_height/2,$carrier_length/2, 0])  battery_casing();
+    //translate([$move-$battery_casing_height/2,-$carrier_length/2-$battery_outer_width, 0]) battery_casing();
 }
 
 
@@ -139,6 +140,13 @@ reinforcement();
 //carrier_negative();
 //translate([50, 0, 0]) carrier();
 //casing();
+module verbindungsschnupsi() {
+    translate([ 0,0.5, 0]) rotate([90,0,0]) cube([3, 2.5, 0.5]); 
+    translate([ -0.75,1, 0]) rotate([90,0,0]) cube([4.5, 2.5, 0.5]);   
+}
 
-carrier();
+translate([$move-$carrier_width/4, $carrier_length/2, 0]) verbindungsschnupsi() ;
+difference() {
+    carrier();
+}
 //battery();
