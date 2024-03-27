@@ -12513,7 +12513,7 @@
 		(descr "CASE-B_3528 footprint")
 		(tags "CASE-B_3528 footprint")
 		(property "Reference" "C10"
-			(at 0 2.4 180)
+			(at 0 -2.6 180)
 			(layer "F.SilkS")
 			(uuid "8c6a8674-39e1-4482-b4a4-430a4558f58f")
 			(effects
