@@ -16,8 +16,9 @@
 #define SEND_CLAP_TIME 6
 #define ANIMATE 7
 #define NOCLAPFOUND -1
+#define ADDRESS_SIZE 6
 int mode = HELLO;
-#define NUM_DEVICES 20;
+#define NUM_DEVICES 20
 hw_timer_t * timer = NULL;
 int interruptCounter;  //for counting interrupt
 int totalInterruptCounter;   	//total interrupt counting
@@ -45,20 +46,20 @@ uint8_t timerReceiver[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 struct message_timer {
   uint8_t messageType;
   uint16_t counter;
-  uint16_t sendTime;
+  uint32_t sendTime;
   uint16_t lastDelay;
 } timerMessage;
 
 struct message_announce {
   uint8_t messageType = ANNOUNCE;
-  uint16_t sendTime;
+  uint32_t sendTime;
   uint8_t address[6];
 } announceMessage;
 
 struct message_timer_received {
   uint8_t messageType = WAIT_FOR_TIMER;
   uint8_t address[6];
-  uint8_t timerOffset;
+  uint32_t timerOffset;
 } timerReceivedMessage;
 
 struct message_address{
@@ -70,13 +71,13 @@ struct message_address{
 //-----------
 //Timer config variables
 //-----------
-int msgSendTime;
-int msgArriveTime;
-int msgReceiveTime;
+uint32_t msgSendTime;
+uint32_t msgArriveTime;
+uint32_t msgReceiveTime;
 bool newMsgSent = false;
 bool newMsgReceived = false;
 int timesince;
-int newMsgTime;
+uint32_t newMsgTime;
 int lastDelay = 0;
 int timerCounter = 0;
 
@@ -98,7 +99,10 @@ struct client_address {
   float xLoc;
   float yLoc;
   float zLoc;
-} clientAddresses[20];
+} ;
+client_address clientAddresses[NUM_DEVICES];
+
+
 
 void printAddress(const uint8_t * mac_addr){
   char macStr[18];
@@ -140,6 +144,9 @@ void IRAM_ATTR onTimer()
 
  
 void addPeer(uint8_t * address) {
+  Serial.println(""); 
+  Serial.println(""); 
+  Serial.println("-----");
   Serial.print("Adding peer");
   printAddress(address);
   memcpy(&peerInfo.peer_addr, address, 6);
@@ -156,6 +163,10 @@ void addPeer(uint8_t * address) {
   }
   else {
     Serial.println("Added Peer");
+    Serial.print ("TimerCounter ");
+    Serial.println(timerCounter);
+    Serial.println("-----");
+    Serial.println("");
   }
 }
 
@@ -167,22 +178,38 @@ void removePeer(uint8_t address[6]) {
 }
 
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+
   if (mode == HELLO) {
     if (incomingData[0] == HELLO) { 
+    Serial.println("-----");
       Serial.println("received hello");
+    Serial.print ("TimerCounter ");
+    Serial.println(timerCounter);
       memcpy(&addressMessage,incomingData,sizeof(addressMessage));
-      for (int i = 0; i < sizeof(clientAddresses); i++) {
-        if (memcmp(&clientAddresses[i].address, &emptyAddress, 6) == true) {
-          Serial.println("Adding Address");
-          memcpy(&clientAddresses[i].address, addressMessage.address, sizeof(addressMessage.address));
-          memcpy(timerReceiver, addressMessage.address, sizeof(addressMessage.address));
+          Serial.print ("TimerCounter 2 ");
+    Serial.println(timerCounter);
+
+    Serial.print(" Size of client addresese ");
+    Serial.println(sizeof(clientAddresses));
+      for (int i = 0; i < NUM_DEVICES; i++) {
+        Serial.println("circultating through");
+        if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
+          Serial.print("Empty");
+          Serial.println(i);
+          memcpy(clientAddresses[i].address, addressMessage.address, ADDRESS_SIZE);
+          memcpy(&timerReceiver, addressMessage.address, ADDRESS_SIZE);
           addPeer(timerReceiver);
+          Serial.println("adding peer");
+          printAddress(timerReceiver);
           addressCounter++;
           break;
         }
-        else if (clientAddresses[i].address == addressMessage.address) {
+        else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
+          Serial.print("found: ");
+          printAddress(addressMessage.address);
           break;
         }
+        Serial.println("none empty");
         mode = TIMER_CALIBRATION;
 
       }
@@ -191,7 +218,7 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
       //check if incomingdata[1] can be in accordance with current Timer
       Serial.println("WAIT FOR TIMER");
       mode = TIMER_CALIBRATION;
-      memcpy(&timerReceiver, addressMessage.address, sizeof(addressMessage.address));
+      memcpy(&timerReceiver, addressMessage.address, ADDRESS_SIZE);
       addPeer(timerReceiver);
     }
     else if (incomingData[0] == GOT_TIMER) {
@@ -232,7 +259,7 @@ void setup() {
   timerAttachInterrupt(timer, &onTimer); 	// Attach interrupt
   timerWrite(timer, 0);  		// Match value= 1000000 for 1 sec. delay.
   timerStart(timer);   
-  timerAlarm(timer, 5000000, true, 0);
+  timerAlarm(timer, 1000000, true, 0);
 
   WiFi.mode(WIFI_STA);
   if (esp_now_init() != ESP_OK) {
@@ -240,7 +267,7 @@ void setup() {
     return;
   }
   //esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
-  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  memcpy(&peerInfo.peer_addr, broadcastAddress, 6);
   peerInfo.channel = 0;  
   peerInfo.encrypt = false;
     // Add peer        

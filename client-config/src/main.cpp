@@ -20,7 +20,7 @@ int mode;
 boolean from_head = true;
 int foo = 0;
 
-
+int timerDifference = 0;
 
 //Network
 //uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -31,20 +31,20 @@ uint8_t myAddress[6];
 esp_now_peer_info_t peerInfo;
 
 esp_now_peer_num_t peerNum;
-
+int timerflag = 0;
 
 
 //Variables for Time Offset
 struct message_timer {
   uint8_t messageType;
   uint16_t counter;
-  uint16_t sendTime;
+  uint32_t sendTime;
   uint16_t lastDelay;
 } timerMessage, oldMessage;
 
 struct message_announce {
   uint8_t messageType = ANNOUNCE;
-  uint16_t sendTime;
+  uint32_t sendTime;
   uint8_t address[6];
 } announceMessage;
 
@@ -56,7 +56,7 @@ struct message_mode {
 struct message_timer_received {
   uint8_t messageType = GOT_TIMER;
   uint8_t address[6];
-  uint8_t timerOffset;
+  uint32_t timerOffset;
 } timerReceivedMessage;
 
 struct message_clap_time {
@@ -87,8 +87,8 @@ struct no_clap_found {
 
 //timer stuff
 int timeOffset;
-int messageArriveTime;
-int lastTime = 0;
+uint32_t messageArriveTime;
+uint32_t lastTime = 0;
 
 
 //general setup
@@ -138,18 +138,22 @@ void sendAddress() {
 
 
 void receiveTimer(int messageArriveTime) {
+  timerflag++;
   //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
-  Serial.print ("receiving timer");
-  Serial.println(messageArriveTime);
-  if (abs(messageArriveTime - lastTime-1000000) < 300 and abs(timerMessage.lastDelay) <1500) {
+  if (messageArriveTime < lastTime) {
+    timerDifference = (4294967295-lastTime)+messageArriveTime;
+  }
+  else {
+    timerDifference = messageArriveTime-lastTime;
+  }
+  if (abs(timerDifference-1000000) < 300 and abs(timerMessage.lastDelay) <1500) {
+    timerflag = timerflag+10;
     //damit hab ich den zeitoffset.. 
     // if zeit - timeoffset % 1000 = 0: blink
     timeOffset = lastTime-oldMessage.sendTime;
     WiFi.macAddress(timerReceivedMessage.address);
     timerReceivedMessage.timerOffset = timeOffset;
-    Serial.print("Sent: ");
-    Serial.println(esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) ));
-
+    esp_now_send(hostAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
   }
   else {
     lastTime = messageArriveTime;
@@ -163,13 +167,10 @@ void receiveTimer(int messageArriveTime) {
 
 
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
-  Serial.print ("Received  ");
-  Serial.println(incomingData[0]);
-  memcpy(hostAddress, mac->src_addr, sizeof(hostAddress));
+  memcpy(&hostAddress, mac->src_addr, sizeof(hostAddress));
   switch (incomingData[0]) {
     case ANNOUNCE: 
     {
-      Serial.println("ANNOUNCE");
       addPeer(hostAddress);
       memcpy(&announceMessage, incomingData, sizeof(announceMessage));
       esp_now_send(hostAddress, (uint8_t*) &addressMessage, sizeof(addressMessage));
@@ -179,7 +180,6 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
       break;
     case TIMER_CALIBRATION:  
     {
-      Serial.println("TIMER CALIBRATION MESSAGE REECEIVED");
       messageArriveTime = micros();
       memcpy(&timerMessage,incomingData,sizeof(timerMessage));
       receiveTimer(messageArriveTime);
@@ -196,8 +196,7 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
 }
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  Serial.print("SENT - Mode:");
-  Serial.println(mode);
+
   
   if (mode == HELLO) {
     if (ESP_NOW_SEND_SUCCESS == true) {
@@ -258,9 +257,13 @@ void setup() {
 }
 
 void loop() {
-  printAddress(addressMessage.address);
+  //printAddress(addressMessage.address);
   Serial.println("");
+  Serial.print("Last Delay: ");
+  Serial.println(timerMessage.lastDelay);
+  Serial.print ("Timer Flag");
+  Serial.println(timerflag);
 
-  delay(3000);
+  delay(5000);
 
 } 
