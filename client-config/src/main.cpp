@@ -51,6 +51,7 @@ const int ledChannelGreen2 = 4;
 const int ledChannelBlue2 = 5;
 float redfloat = 0, greenfloat = 0, bluefloat = 0;
 
+float rgb[3];
 #define TIMER_ARRAY_COUNT 3
 
 int mode = MODE_WAIT_FOR_ANNOUNCE;
@@ -164,9 +165,9 @@ struct no_clap_found {
 struct animate {
   uint8_t messageType = MSG_ANIMATION; 
   uint8_t animationType;
-  uint8_t speed;
-  uint8_t delay;
-  uint8_t reps;
+  uint16_t speed;
+  uint16_t delay;
+  uint16_t reps;
   uint8_t rgb1[3];
   uint8_t rgb2[3];
   uint32_t startTime;
@@ -205,12 +206,6 @@ int addressSending = 0;
 //timer stuff
 //ESP32Timer ITimer(0);
 
-void printAddress(const uint8_t * mac_addr){
-  char macStr[18];
-  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  Serial.print(macStr);
-}
 
 
 int addPeer(uint8_t * address) {
@@ -239,6 +234,28 @@ void removePeer(uint8_t address[6]) {
     return;
   }
 }
+
+void printAddress(const uint8_t * mac_addr){
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  Serial.print(macStr);
+}
+
+float fract(float x) { return x - int(x); }
+
+float mix(float a, float b, float t) { return a + (b - a) * t; }
+
+float step(float e, float x) { return x < e ? 0.0 : 1.0; }
+
+float* hsv2rgb(float h, float s, float b, float* rgb) {
+  Serial.print("hsv2rgb");
+  rgb[0] = b * mix(1.0, constrain(abs(fract(h + 1.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0), s);
+  Serial.println(rgb[0]);
+  rgb[1] = b * mix(1.0, constrain(abs(fract(h + 0.6666666) * 6.0 - 3.0) - 1.0, 0.0, 1.0), s);
+  rgb[2] = b * mix(1.0, constrain(abs(fract(h + 0.3333333) * 6.0 - 3.0) - 1.0, 0.0, 1.0), s);
+  return rgb;
+}
 void ledsOff() {
       ledcWrite(ledPinRed2, 0);
   ledcWrite(ledPinGreen2, 0);
@@ -248,7 +265,6 @@ void ledsOff() {
   ledcWrite(ledPinBlue1, 0);
 
 }
-
 void flash(int r, int g, int b, int duration, int reps, int pause) {
   Serial.println("flashing");
 for (int i = 0; i < reps; i++ ){
@@ -270,6 +286,46 @@ for (int i = 0; i < reps; i++ ){
   }
 
 }
+void candle(int duration, int reps, int pause) {
+  bool heating = true;
+  float redsteps = 255.0/(duration/3);
+  float greensteps = 255.0/(duration/3);
+  float bluesteps = 80.0/(duration/3);
+  redfloat = 0.0;
+  greenfloat = 0.0;
+  bluefloat = 0.0;
+  
+  Serial.println("candling");
+
+for (int i = 0; i < reps; i++ ){
+  redfloat = 0.0;
+  greenfloat = 0.0;
+  bluefloat = 0.0;
+  for (int j = 0; j <=duration; j++ ) 
+    {
+    if (redfloat <255) {
+      redfloat += redsteps;
+    }
+    else if (greenfloat <255) {
+      greenfloat += greensteps;
+    }
+    else {
+      bluefloat+=bluesteps;
+    }
+    ledcWrite(ledPinRed2, (int)floor(redfloat));
+    ledcWrite(ledPinGreen2, (int)floor(greenfloat));
+    ledcWrite(ledPinBlue2, (int)floor(bluefloat));
+    ledcWrite(ledPinRed1, (int)floor(redfloat));
+    ledcWrite(ledPinGreen1, (int)floor(greenfloat));
+    ledcWrite(ledPinBlue1, (int)floor(bluefloat));
+    delay(1);
+  }
+  ledsOff(); 
+  delay(pause);
+  }
+
+}
+
 
 void blink(animate animationMessage) {
   Serial.println("should blink");
@@ -277,17 +333,6 @@ void blink(animate animationMessage) {
   uint32_t difference = currentTime-timeOffset;
   if (animationMessage.startTime-difference > 0) {
     delayMicroseconds(animationMessage.startTime-difference);
-    Serial.println("should delay");
-    Serial.print("Reps " );
-    Serial.println(animationMessage.reps);
-    Serial.print("Delay " );
-    Serial.println(animationMessage.delay);
-    Serial.print("Speed " );
-    Serial.println(animationMessage.speed);
-    Serial.print("R " );
-    Serial.println(animationMessage.rgb1[0]);
-    Serial.print("G " );
-    Serial.println(animationMessage.rgb1[1]);    
     flash(animationMessage.rgb1[0], animationMessage.rgb1[1], animationMessage.rgb1[2], animationMessage.speed, animationMessage.reps, animationMessage.delay);
   }
   else {
@@ -377,7 +422,9 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
     if (mode == MODE_ANIMATE) {
       Serial.println("Calling Blink");
       memcpy(&animationMessage, incomingData, sizeof(animationMessage));
-      blink(animationMessage);
+      Serial.print("Animation Message speed");
+      Serial.println(animationMessage.speed);
+      candle(animationMessage.speed, animationMessage.reps, animationMessage.delay);
     }
       break;
     default: 
@@ -436,7 +483,7 @@ void setup() {
   esp_now_register_send_cb(OnDataSent);
    WiFi.macAddress(addressMessage.address);
    esp_now_get_peer_num(&peerNum);
-
+  
   Serial.print("Number of Peers start: ");
   Serial.println(peerNum.total_num);
   ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -447,42 +494,23 @@ void setup() {
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   
   ledsOff();
-
+  
   
   delay(1000);
   
 }
 
 void loop() {
+  //candle(360, 10, 500);
+
+delay(5000);
+
   test = false;
   if (test == true) {
-    ledcFade(ledPinRed2, 0, 255, 2000);
-    delay(1000);
-    ledcFade(ledPinGreen2, 0, 255, 2000);
-    delay(1000);
-    ledcFade(ledPinRed2, 255, 0, 2000);
-    delay(1000);
-    ledcFade(ledPinGreen2, 255, 0, 2000);
-    delay(2000);
-    ledsOff();
-    ledcWrite(ledPinBlue2, 255);
-    delay(1000);
-    ledsOff();
-    ledcWrite(ledPinRed1, 255);
-    delay(1000);
-    ledsOff();
-    ledcWrite(ledPinGreen1, 255);
-    delay(1000);
-    ledsOff();
-    ledcWrite(ledPinBlue1, 255);
-    delay(1000);
-    ledsOff();
 
-    test = false;
+
+
   }
   //printAddress(addressMessage.address);
-  Serial.print("Regular timer: ");
-  printMode(mode);
-  delay(2000);
 
 } 

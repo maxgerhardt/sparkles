@@ -26,7 +26,7 @@ int mode;
 hw_timer_t * timer = NULL;
 int interruptCounter;  //for counting interrupt
 int totalInterruptCounter;   	//total interrupt counting
-
+bool start = true;
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t emptyAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint8_t timerReceiver[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -96,9 +96,9 @@ struct message_address{
 struct animate {
   uint8_t messageType = MSG_ANIMATION; 
   uint8_t animationType;
-  uint8_t speed;
-  uint8_t delay;
-  uint8_t reps;
+  uint16_t speed;
+  uint16_t delay;
+  uint16_t reps;
   uint8_t rgb1[3];
   uint8_t rgb2[3];
   uint32_t startTime;
@@ -299,7 +299,10 @@ void setup() {
 
 void loop() {
 //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &announceMessage, sizeof(announceMessage));
-
+if (start == true) {
+  delay(120000);
+  start = false;
+}
 animationMessage.animationType = ANIMATION_SYNC;
 animationMessage.speed = 300;
 animationMessage.delay = 1000;
@@ -311,9 +314,13 @@ animationMessage.rgb2[1] = 255;
 animationMessage.rgb2[2] = 255;
 animationMessage.reps=10;
 animationMessage.startTime = micros()+2000*1000;
+Serial.print("Speed ");
+Serial.println(animationMessage.speed);
+Serial.print("Delay ");
+Serial.println(animationMessage.delay);
 esp_now_send(broadcastAddress, (uint8_t *) &animationMessage, sizeof(animationMessage));
 
-delay(5000);
+delay(15000);
 
  /* else if (mode == ASK_CLAP_TIME) {
     //make sure claps actually correspond, in case one got lost or so?
