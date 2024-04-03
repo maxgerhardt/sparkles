@@ -300,7 +300,7 @@ void setup() {
 void loop() {
 //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &announceMessage, sizeof(announceMessage));
 if (start == true) {
-  delay(120000);
+  delay(30000);
   start = false;
 }
 animationMessage.animationType = ANIMATION_SYNC;

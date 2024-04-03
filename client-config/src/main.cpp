@@ -320,8 +320,36 @@ for (int i = 0; i < reps; i++ ){
     ledcWrite(ledPinBlue1, (int)floor(bluefloat));
     delay(1);
   }
+  for (int j = 0; j <=duration; j++ ) 
+    {
+    if (bluefloat > 0) {
+      bluefloat -= bluesteps;
+      if (bluefloat <= 0) {
+        bluefloat = 0;
+      }
+    }
+    else if (greenfloat > 0) {
+      greenfloat -= greensteps;
+      if (greenfloat <= 0) {
+        greenfloat = 0;
+      }
+    }
+    else {
+      redfloat-=redsteps;
+      if (redfloat <= 0) {
+        redfloat = 0;
+      }
+    }
+    ledcWrite(ledPinRed2, (int)floor(redfloat));
+    ledcWrite(ledPinGreen2, (int)floor(greenfloat));
+    ledcWrite(ledPinBlue2, (int)floor(bluefloat));
+    ledcWrite(ledPinRed1, (int)floor(redfloat));
+    ledcWrite(ledPinGreen1, (int)floor(greenfloat));
+    ledcWrite(ledPinBlue1, (int)floor(bluefloat));
+    delay(1);
+  }
   ledsOff(); 
-  delay(pause);
+  delay(1);
   }
 
 }
