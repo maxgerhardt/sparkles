@@ -529,9 +529,9 @@ void setup() {
 }
 
 void loop() {
-  //candle(360, 10, 500);
+  candle(360, 10, 500);
 
-delay(5000);
+delay(100);
 
   test = false;
   if (test == true) {
