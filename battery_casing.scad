@@ -1,11 +1,12 @@
 include </Users/julian/Code/sparkles/roundedcube.scad>;
 $fa = 1; $fs = $preview ? 2 : 0.5;
+$fn = $preview? 20 : 200;
 
 $battery_metal_width = 20;
 $battery_wall_width = 1;
 $battery_outer_width = $battery_metal_width+$battery_wall_width*2;
-$battery_metal_thickness = 1.25;
-$battery_metal_thickness_2 = 1.25;
+$battery_metal_thickness = 1.6;
+$battery_metal_thickness_2 = 1.6;
 $battery_length = 73.55;
 $battery_height = 18.75;
 $battery_outer_length = 77.2;
@@ -51,6 +52,12 @@ module battery_wall_cutout() {
     translate([0, $battery_outer_length/2, $battery_outer_length+$battery_casing_height/2+$battery_wall_width]) rotate([0,90,0]) cylinder($battery_wall_width, $battery_outer_length, $battery_outer_length);
     translate([$battery_outer_width-$battery_wall_width, $battery_outer_length/2, $battery_outer_length+$battery_casing_height/2+$battery_wall_width]) rotate([0,90,0]) cylinder($battery_wall_width, $battery_outer_length, $battery_outer_length);
 }
+
+module sidetriangle() {
+    rotate([90, 270, 0]) cylinder($battery_outer_width/2-4, 0.7, 0.7);
+   
+}
+//sidetriangle();
 //battery_wall();
 //color("red", 1.0) battery_wall_cutout() ;
 module battery_casing() {
@@ -64,7 +71,24 @@ module battery_casing() {
             battery_wall_cutout();
         }
     }
-}
+    translate([0, $battery_outer_width, 0]) rotate([180,0,270]) sidetriangle(); 
+    rotate([180,0,270]) sidetriangle(); 
 
+}
+module full_casing () {
+    difference() {
+        
+        battery_casing();
+        //delete upper part
+        translate([0,0,15]) cube([100, 100, 100]);
+        //delete "slider" overhang
+       translate([$battery_outer_width, 0, 0]) cube([20, 20, 20]);
+       translate([$battery_outer_width-2.5, -3, -2]) cube([30, 30, 30]);
+    }
+ }
+ //full_casing() ;
+ //translate([$battery_outer_width, 0, 0]) rotate([180,0,270]) sidetriangle(); 
+
+ //rotate([180,0,270]) sidetriangle();
 
 //translate([-$battery_casing_height, 0,0]) battery_casing();
