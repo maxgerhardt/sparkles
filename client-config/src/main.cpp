@@ -530,7 +530,7 @@ void setup() {
   
   ledsOff();
   pinMode(audioPin, INPUT); 
-  peakDetection.begin(48, 3, 0.7);   
+  peakDetection.begin(30, 3, 0);   
   delay(1000);
   timerDings = micros();
   
