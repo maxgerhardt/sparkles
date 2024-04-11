@@ -5,11 +5,11 @@ $fn = $preview? 20 : 200;
 
 $ellipse_length = 105;
 $ellipse_width = 55;
-$base_height = 6;
+$base_height = 8;
 $casing_straight_height = 78;
 $casing_roof_height = 20;
 $screw_thickness = 2;
-$board_width = 44;
+$board_width = 41.2;
 $board_thickness = 1.75;
 $rail_height = 20;
 $rail_width = 4.5;
@@ -31,13 +31,33 @@ module elrdcyl(
    }
 }
 
+
+module cover_main() {
+elrdcyl($ellipse_length,$ellipse_width,$casing_straight_height,$casing_roof_height);
+}
+$notch_height = 20;
+$notch_width = 10;
+$notch_start = $casing_straight_height+$casing_roof_height-3;
+$through_hole = 2.5;
+module notch() {
+    difference() {
+        difference() {
+            translate([0, 0, $notch_start])
+                cylinder($notch_height, d1=$notch_width+$notch_width/2, d2=$notch_width);
+           cover_main();
+        }
+     translate([0, 0, $notch_start+$notch_height-5]) rotate([90,0,0])  cylinder($notch_width, d1=$through_hole, d2=$through_hole, center=true);
+     }
+ }
+
 module cover() {
 
-    translate([0, 25/2, 0]) difference() {
-        elrdcyl($ellipse_length,$ellipse_width,$casing_straight_height,$casing_roof_height);
+    translate([0, 0, 0]) difference() {
+        cover_main();
         translate([0,0,-1]) elrdcyl($ellipse_length-1,$ellipse_width-1,$casing_straight_height, $casing_roof_height-1);
         translate([-$ellipse_length/2, 0, $base_height/2-0.5]) rotate([0,90, 0]) cylinder($ellipse_length, $screw_thickness, $screw_thickness);
     }
+    notch();
 }
 
 module bottom_base() {
@@ -58,21 +78,7 @@ module bottom_base() {
         
     }
 }
-$notch_height = 20;
-$notch_width = 10;
-$notch_start = $casing_straight_height+$casing_roof_height-3;
-$through_hole = 2.5;
-module notch() {
-    difference() {
-        difference() {
-            translate([0, 0, $notch_start])
-                cylinder($notch_height, d1=$notch_width+$notch_width/2, d2=$notch_width);
-           cover();
-        }
-     translate([0, 0, $notch_start+$notch_height-5]) rotate([90,0,0])  cylinder($notch_width, d1=$through_hole, d2=$through_hole, center=true);
-     }
- }
- notch();
+
  
 
 
@@ -89,7 +95,7 @@ module bottom() {
 
 }
 
-cover();
+//cover();
 
 $cutout_insert_width = 3;
 $battery_to_rail_distance = 0;
@@ -117,11 +123,11 @@ module entire_bottom() {
       //board
       translate([-$board_width/2, 100-$board_thickness/2, $base_height-2]) cube([$board_width, $board_thickness, $rail_height]);
       //screws
-          translate([-$ellipse_length/2, 100, $base_height/2-0.5]) rotate([180,90, 0])  hole_threaded(name="M3", l=25);
-    translate([$ellipse_length/2, 100, $base_height/2-0.5]) rotate([0,90, 0])  hole_threaded(name="M4", l=25);
+          translate([-$ellipse_length/2, 100, $base_height/2-0.5]) rotate([180,90, 0])  hole_through(name="M3", l=12, cld=0.1, h=0, hcld=0.4);
+    translate([$ellipse_length/2, 100, $base_height/2-0.5]) rotate([0,90, 0])  hole_through(name="M3", l=12, cld=0.1, h=0, hcld=0.4);
     }
 }
- //   entire_bottom();
+    entire_bottom();
 
 //translate([-$cutout_square_width/2-$rail_width-$battery_to_rail_distance-$battery_outer_width-$battery_cutout_width/2, 100+($ellipse_inner_width)/2,  $base_height-1]) rotate([90, 270, 0]) cylinder($cutout_insert_length, $battery_cutout_width/2, $battery_cutout_width/2);
 

@@ -5,8 +5,8 @@ $fn = $preview? 20 : 200;
 $battery_metal_width = 20;
 $battery_wall_width = 1;
 $battery_outer_width = $battery_metal_width+$battery_wall_width*2;
-$battery_metal_thickness = 1.6;
-$battery_metal_thickness_2 = 1.6;
+$battery_metal_thickness = 1.57;
+$battery_metal_thickness_2 = 1.57;
 $battery_length = 73.55;
 $battery_height = 18.75;
 $battery_outer_length = 77.2;
@@ -80,13 +80,13 @@ module full_casing () {
         
         battery_casing();
         //delete upper part
-        translate([0,0,15]) cube([100, 100, 100]);
+        //translate([0,0,15]) cube([100, 100, 100]);
         //delete "slider" overhang
        translate([$battery_outer_width, 0, 0]) cube([20, 20, 20]);
        translate([$battery_outer_width-2.5, -3, -2]) cube([30, 30, 30]);
     }
  }
- //full_casing() ;
+ full_casing() ;
  //translate([$battery_outer_width, 0, 0]) rotate([180,0,270]) sidetriangle(); 
 
  //rotate([180,0,270]) sidetriangle();
