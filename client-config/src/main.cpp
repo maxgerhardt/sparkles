@@ -39,12 +39,22 @@ bool test = true;
   fade_ended = true;
 }
 */
-const int ledPinBlue1 = 20;  // 16 corresponds to GPIO16
-const int ledPinRed1 = 9; // 17 corresponds to GPIO17
-const int ledPinGreen1 = 3;  // 5 corresponds to GPIO5
-const int ledPinGreen2 = 8;
-const int ledPinRed2 = 19;
-const int ledPinBlue2 = 18;
+/* IF BOARD == V1
+  const int ledPinBlue1 = 20;  // 16 corresponds to GPIO16
+  const int ledPinRed1 = 9; // 17 corresponds to GPIO17
+  const int ledPinGreen1 = 3;  // 5 corresponds to GPIO5
+  const int ledPinGreen2 = 8;
+  const int ledPinRed2 = 19;
+  const int ledPinBlue2 = 18;
+ */
+// IF BOARD == V2
+  const int ledPinBlue1 = 18;  // 16 corresponds to GPIO16
+  const int ledPinRed1 = 38; // 17 corresponds to GPIO17
+  const int ledPinGreen1 = 8;  // 5 corresponds to GPIO5
+  const int ledPinGreen2 = 3;
+  const int ledPinRed2 = 9;
+  const int ledPinBlue2 = 37;
+
 const int ledChannelRed1 = 0;
 const int ledChannelGreen1 = 1;
 const int ledChannelBlue1 = 2;
@@ -272,7 +282,7 @@ void ledsOff() {
   ledcWrite(ledPinBlue1, 0);
 
 }
-void flash(int r = 255, int g = 0, int b = 0, int duration = 250, int reps = 2, int pause = 100) {
+void flash(int r = 255, int g = 0, int b = 0, int duration = 50, int reps = 2, int pause = 50) {
   Serial.println("flashing");
 for (int i = 0; i < reps; i++ ){
   ledcFade(ledPinRed1, 0, r, duration);
@@ -537,18 +547,37 @@ void setup() {
 }
 
 void loop() {
-    double data = (double)analogRead(audioPin)/512-1;  // converts the sensor value to a range between -1 and 1
-    peakDetection.add(data); 
-    int peak = peakDetection.getPeak();          // 0, 1 or -1
-    double filtered = peakDetection.getFilt();   // moving average
-    if (peak != 0) {
-      Serial.println(peak);                          // print peak status
+  sensorValue = analogRead(audioPin);
+  
+  double data = (double)sensorValue/512-1;
+  peakDetection.add(data); 
+  int peak = peakDetection.getPeak(); 
+  double filtered = peakDetection.getFilt(); 
+  //Serial.println(sensorValue);
+  if (peak == -1 and millis() > lastClap+1000) {
+    Serial.print ("clap millis");
+    Serial.print (millis());
+    Serial.print("lastclap");
+    Serial.println(lastClap);
+    flash();
+    //esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
+    lastClap = millis();
+    clapCounter++;
+  }
+  /*if (isMaster and 0 == 1) {
+    sensorValue = analogRead(microphonePin);
+    if (sensorValue < 50 and millis() > lastClap+1000) {
+      blinkMessage.color[0] = random(128);
+       blinkMessage.color[1] = random(128);
+       blinkMessage.color[2] = random(128);
+       esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
+      lastClap = millis();
+      clapCounter++;
+      
     }
-    if (timerDings+1000 < (micros())) {
-      Serial.println("\n\n\n ------- \n\n\n");
-      delay(1000);
-      timerDings = micros();
-    }
+  }*/
+
+
     //printAddress(addressMessage.address);
 
 
