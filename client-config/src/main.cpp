@@ -53,6 +53,7 @@ const int ledChannelGreen2 = 4;
 const int ledChannelBlue2 = 5;
 const int audioPin = 5;
 float redfloat = 0, greenfloat = 0, bluefloat = 0;
+uint32_t timerDings;
 
 float rgb[3];
 #define TIMER_ARRAY_COUNT 3
@@ -529,8 +530,9 @@ void setup() {
   
   ledsOff();
   pinMode(audioPin, INPUT); 
-  peakDetection.begin(48, 3, 0.6);   
+  peakDetection.begin(48, 3, 0.7);   
   delay(1000);
+  timerDings = micros();
   
 }
 
@@ -539,11 +541,15 @@ void loop() {
     peakDetection.add(data); 
     int peak = peakDetection.getPeak();          // 0, 1 or -1
     double filtered = peakDetection.getFilt();   // moving average
-    Serial.print(data);                          // print data
-    Serial.print(",");
-    Serial.print(peak);                          // print peak status
-    Serial.print(",");
-    Serial.println(filtered);
+    if (peak != 0) {
+      Serial.println(peak);                          // print peak status
+    }
+    if (timerDings+1000 < (micros())) {
+      Serial.println("\n\n\n ------- \n\n\n");
+      delay(1000);
+      timerDings = micros();
+    }
     //printAddress(addressMessage.address);
+
 
 } 
