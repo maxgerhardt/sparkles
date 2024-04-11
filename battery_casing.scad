@@ -71,11 +71,11 @@ module verbindungsschnupsi() {
     translate([ -0.75,1, 0]) rotate([90,0,0]) cube([4.5, 2.5, 0.5]);   
 }
 
-
+/*
 difference() {
     translate([-$battery_casing_height, 0,0]) battery_casing();
     translate([-$battery_outer_width/2, 0, 0]) verbindungsschnupsi() ;
     //translate([-$battery_outer_width, 0, 10]) cube(100, 100, 100);
 }
-
+*/
 //translate([$battery_outer_width/2,0 , 0]) schnupsi() ;

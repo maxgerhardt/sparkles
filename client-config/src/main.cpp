@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <PeakDetection.h> 
+
 //#include "ESP32TimerInterrupt.h"
 #define TIMER_INTERVAL_MS       1000
 #define USING_TIM_DIV1 true
@@ -49,12 +51,16 @@ const int ledChannelBlue1 = 2;
 const int ledChannelRed2 = 3;
 const int ledChannelGreen2 = 4;
 const int ledChannelBlue2 = 5;
+const int audioPin = 5;
 float redfloat = 0, greenfloat = 0, bluefloat = 0;
 
 float rgb[3];
 #define TIMER_ARRAY_COUNT 3
 
 int mode = MODE_WAIT_FOR_ANNOUNCE;
+
+
+PeakDetection peakDetection; 
 
 
 
@@ -265,7 +271,7 @@ void ledsOff() {
   ledcWrite(ledPinBlue1, 0);
 
 }
-void flash(int r, int g, int b, int duration, int reps, int pause) {
+void flash(int r = 255, int g = 0, int b = 0, int duration = 250, int reps = 2, int pause = 100) {
   Serial.println("flashing");
 for (int i = 0; i < reps; i++ ){
   ledcFade(ledPinRed1, 0, r, duration);
@@ -522,23 +528,22 @@ void setup() {
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   
   ledsOff();
-  
-  
+  pinMode(audioPin, INPUT); 
+  peakDetection.begin(48, 3, 0.6);   
   delay(1000);
   
 }
 
 void loop() {
-  candle(360, 10, 500);
-
-delay(100);
-
-  test = false;
-  if (test == true) {
-
-
-
-  }
-  //printAddress(addressMessage.address);
+    double data = (double)analogRead(audioPin)/512-1;  // converts the sensor value to a range between -1 and 1
+    peakDetection.add(data); 
+    int peak = peakDetection.getPeak();          // 0, 1 or -1
+    double filtered = peakDetection.getFilt();   // moving average
+    Serial.print(data);                          // print data
+    Serial.print(",");
+    Serial.print(peak);                          // print peak status
+    Serial.print(",");
+    Serial.println(filtered);
+    //printAddress(addressMessage.address);
 
 } 
