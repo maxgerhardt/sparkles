@@ -1,4 +1,4 @@
-include <roundedcube.scad>;
+include </Users/julian/Code/sparkles/roundedcube.scad>;
 $fa = 1; $fs = $preview ? 2 : 0.5;
 
 $battery_metal_width = 20;
