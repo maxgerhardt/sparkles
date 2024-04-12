@@ -95,7 +95,7 @@ module bottom() {
 
 }
 
-//cover();
+cover();
 
 $cutout_insert_width = 3;
 $battery_to_rail_distance = 0;
@@ -127,7 +127,7 @@ module entire_bottom() {
     translate([$ellipse_length/2, 100, $base_height/2-0.5]) rotate([0,90, 0])  hole_through(name="M3", l=12, cld=0.1, h=0, hcld=0.4);
     }
 }
-    entire_bottom();
+//    entire_bottom();
 
 //translate([-$cutout_square_width/2-$rail_width-$battery_to_rail_distance-$battery_outer_width-$battery_cutout_width/2, 100+($ellipse_inner_width)/2,  $base_height-1]) rotate([90, 270, 0]) cylinder($cutout_insert_length, $battery_cutout_width/2, $battery_cutout_width/2);
 
