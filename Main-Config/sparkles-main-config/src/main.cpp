@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <PeakDetection.h> 
+
 //#include "ESP32TimerInterrupt.h"
 //#include "driver/gptimer.h"
 #define TIMER_INTERVAL_MS       1000
@@ -23,7 +25,15 @@
 #define ANIMATION_SYNC 1
 int mode;
 #define NUM_DEVICES 20
+
+#define V1 1
+#define V2 2
+#define D1 3
+
+#define DEVICE D1
 hw_timer_t * timer = NULL;
+PeakDetection peakDetection; 
+
 int interruptCounter;  //for counting interrupt
 int totalInterruptCounter;   	//total interrupt counting
 bool start = true;
@@ -31,6 +41,8 @@ uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t emptyAddress[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint8_t timerReceiver[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 esp_now_peer_info_t peerInfo;
+
+int audioPin = 5;
 
 void printMode(int mode) { 
   Serial.print("Mode: ");
@@ -92,6 +104,13 @@ struct message_address{
   uint8_t messageType = MSG_HELLO;
   uint8_t address[6];
 } addressMessage;
+
+struct message_clap_time {
+  uint8_t messageType = MSG_SEND_CLAP_TIME;
+  int clapCounter;
+  uint32_t timeStamp; //offsetted.
+} clapTime;
+
 
 struct animate {
   uint8_t messageType = MSG_ANIMATION; 
@@ -293,51 +312,34 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);  
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
   WiFi.macAddress(announceMessage.address);
+  if (DEVICE == D1) {
+    audioPin = A0;
+  }
+  pinMode(audioPin, INPUT); 
+  peakDetection.begin(30, 3, 0);   
   timerCounter = 0;
   modeSwitch(MODE_SEND_ANNOUNCE);
 }
 
 void loop() {
-//esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &announceMessage, sizeof(announceMessage));
-if (start == true) {
-  delay(30000);
-  start = false;
+   sensorValue = analogRead(audioPin);
+  
+  double data = (double)sensorValue/512-1;
+  peakDetection.add(data); 
+  int peak = peakDetection.getPeak(); 
+  double filtered = peakDetection.getFilt(); 
+  //Serial.println(sensorValue);
+  if (peak == -1 and millis() > lastClap+1000) {
+    Serial.print("Clap Time ") ;
+    Serial.println(micros());
+    //esp_now_send(hostAddress, (uint8_t *) &clapTime, sizeof(clapTime));
+    //esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
+    lastClap = millis();
+  }
+  else if (millis()>(lastClap+5000)) 
+  {
+    Serial.println("Still alive");
+    lastClap = millis();
+  }
+  
 }
-animationMessage.animationType = ANIMATION_SYNC;
-animationMessage.speed = 300;
-animationMessage.delay = 1000;
-animationMessage.rgb1[0] = 255;
-animationMessage.rgb1[1] = 255;
-animationMessage.rgb1[2] = 255;
-animationMessage.rgb2[0] = 255;
-animationMessage.rgb2[1] = 255;
-animationMessage.rgb2[2] = 255;
-animationMessage.reps=10;
-animationMessage.startTime = micros()+2000*1000;
-Serial.print("Speed ");
-Serial.println(animationMessage.speed);
-Serial.print("Delay ");
-Serial.println(animationMessage.delay);
-esp_now_send(broadcastAddress, (uint8_t *) &animationMessage, sizeof(animationMessage));
-
-delay(15000);
-
- /* else if (mode == ASK_CLAP_TIME) {
-    //make sure claps actually correspond, in case one got lost or so?
-    for (int i =0; i <= addressCounter; i++) {
-      if (clientAddresses[i].address == emptyAddress) {
-        mode = ANIMATE;
-        break;
-      }
-      else { 
-        for (int j = 0; j < clapCounter; j++) {;
-          sendClap.clapIndex = claps[j].timerCounter;
-          memcpy(&sendClap.address, clientAddresses[i].address, sizeof(clientAddresses[i].address));
-          esp_now_send(clientAddresses[i].address, (uint8_t *) &sendClap, sizeof(sendClap) );
-        }
-      }
-    }
-  }*/
-
-}
-

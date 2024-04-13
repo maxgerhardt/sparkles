@@ -139,7 +139,7 @@ struct message_got_timer {
 } gotTimerMessage;
 
 struct message_announce {
-  uint8_t messageType = MSG_ANNOUNCE;
+  uint8_t messageType = MSG_HELLO;
   uint32_t sendTime;
   uint8_t address[6];
 } announceMessage;
@@ -158,9 +158,8 @@ struct message_timer_received {
 struct message_clap_time {
   uint8_t messageType = MSG_SEND_CLAP_TIME;
   int clapCounter;
-  int timerCounter;
-  int timeStamp;
-} claps[100];
+  uint32_t timeStamp; //offsetted.
+} clapTime;
 
 struct message_send_clap {
   uint8_t messageType = MSG_ASK_CLAP_TIME;
@@ -213,6 +212,7 @@ int sensorValue;
 int microphonePin = A0;
 int clapCounter = 0;
 int lastClap;
+int lastFlash;
 bool clapSent = false;
 
 //address sending
@@ -282,8 +282,8 @@ void ledsOff() {
   ledcWrite(ledPinBlue1, 0);
 
 }
+
 void flash(int r = 255, int g = 0, int b = 0, int duration = 50, int reps = 2, int pause = 50) {
-  Serial.println("flashing");
 for (int i = 0; i < reps; i++ ){
   ledcFade(ledPinRed1, 0, r, duration);
   ledcFade(ledPinGreen1, 0, g, duration);
@@ -413,7 +413,7 @@ void receiveTimer(int messageArriveTime) {
       Serial.print("delay avg ");
       Serial.println(delayAvg);
       Serial.println("Should Flash");
-      flash(255,0,0, 200, 2, 300);
+      flash(255,0,0, 200, 3, 300);
     }
     //damit hab ich den zeitoffset.. 
     // if zeit - timeoffset % 1000 = 0: blink
@@ -447,6 +447,7 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
       if (mode == MODE_WAIT_FOR_ANNOUNCE) {
         if (addPeer(hostAddress) == 1) {
           Serial.println("Adding peer ");
+          flash(0, 125, 125, 200, 1, 50);
           memcpy(&announceMessage, incomingData, sizeof(announceMessage));
           esp_now_send(hostAddress, (uint8_t*) &addressMessage, sizeof(addressMessage));
           //modeSwitch(MODE_WAIT_FOR_TIMER);
@@ -459,6 +460,7 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
     { 
       addPeer(hostAddress);
       memcpy(&timerMessage,incomingData,sizeof(timerMessage));
+      flash(125, 0, 0 , 200, 1, 50);
       receiveTimer(msgReceiveTime);
     }
       break;
@@ -531,6 +533,7 @@ void setup() {
   
   Serial.print("Number of Peers start: ");
   Serial.println(peerNum.total_num);
+  
   ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinBlue1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -539,14 +542,21 @@ void setup() {
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   
   ledsOff();
+  
+ Serial.println("huch");
   pinMode(audioPin, INPUT); 
   peakDetection.begin(30, 3, 0);   
   delay(1000);
   timerDings = micros();
-  
+  clapTime.clapCounter = 0;
+  flash(0, 255, 0, 200, 2, 50);
+  lastFlash = 0;
 }
 
 void loop() {
+
+  //flash(0, 255, 0, 200, 2, 50);
+
   sensorValue = analogRead(audioPin);
   
   double data = (double)sensorValue/512-1;
@@ -555,15 +565,21 @@ void loop() {
   double filtered = peakDetection.getFilt(); 
   //Serial.println(sensorValue);
   if (peak == -1 and millis() > lastClap+1000) {
-    Serial.print ("clap millis");
-    Serial.print (millis());
-    Serial.print("lastclap");
-    Serial.println(lastClap);
+    clapTime.clapCounter++;
+    clapTime.timeStamp = micros()-timeOffset;
+    Serial.print("Clap Time ") ;
+    Serial.println(clapTime.timeStamp);
+    esp_now_send(hostAddress, (uint8_t *) &clapTime, sizeof(clapTime));
     flash();
     //esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
     lastClap = millis();
-    clapCounter++;
   }
+  else if (millis()>(lastClap+5000)) 
+  {
+    Serial.println("Still alive");
+    lastClap = millis();
+  }
+  
   /*if (isMaster and 0 == 1) {
     sensorValue = analogRead(microphonePin);
     if (sensorValue < 50 and millis() > lastClap+1000) {
