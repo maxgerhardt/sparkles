@@ -32,6 +32,11 @@ int resolution = 8;
 #define LEDC_TARGET_DUTY  (4095)
 #define LEDC_FADE_TIME    (3000)
 
+#define V1 1
+#define V2 2
+#define D1 3
+#define DEVICE D1
+
 bool test = true;
 
 /*void ARDUINO_ISR_ATTR LED_FADE_ISR()
@@ -61,7 +66,7 @@ const int ledChannelBlue1 = 2;
 const int ledChannelRed2 = 3;
 const int ledChannelGreen2 = 4;
 const int ledChannelBlue2 = 5;
-const int audioPin = 5;
+int audioPin = 5;
 float redfloat = 0, greenfloat = 0, bluefloat = 0;
 uint32_t timerDings;
 
@@ -192,7 +197,7 @@ struct animate {
 
 
 //timer stuff
-int timeOffset;
+uint32_t timeOffset;
 uint32_t lastTime = 0;
 uint32_t msgSendTime;
 uint32_t msgArriveTime;
@@ -284,6 +289,9 @@ void ledsOff() {
 }
 
 void flash(int r = 255, int g = 0, int b = 0, int duration = 50, int reps = 2, int pause = 50) {
+  if (DEVICE == D1) {
+    return;
+  }
 for (int i = 0; i < reps; i++ ){
   ledcFade(ledPinRed1, 0, r, duration);
   ledcFade(ledPinGreen1, 0, g, duration);
@@ -533,7 +541,7 @@ void setup() {
   
   Serial.print("Number of Peers start: ");
   Serial.println(peerNum.total_num);
-  
+  if (DEVICE != D1){
   ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinBlue1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -542,7 +550,10 @@ void setup() {
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   
   ledsOff();
-  
+  }
+  else {
+    audioPin = 35;
+  }
  Serial.println("huch");
   pinMode(audioPin, INPUT); 
   peakDetection.begin(30, 3, 0);   
@@ -554,12 +565,11 @@ void setup() {
 }
 
 void loop() {
-
+if (mode == MODE_ANIMATE) {
   //flash(0, 255, 0, 200, 2, 50);
 
-  sensorValue = analogRead(audioPin);
-  
-  double data = (double)sensorValue/512-1;
+ 
+  double data = (double)analogRead(audioPin)/512-1;
   peakDetection.add(data); 
   int peak = peakDetection.getPeak(); 
   double filtered = peakDetection.getFilt(); 
@@ -569,6 +579,8 @@ void loop() {
     clapTime.timeStamp = micros()-timeOffset;
     Serial.print("Clap Time ") ;
     Serial.println(clapTime.timeStamp);
+    Serial.print("Clap Counter ");
+    Serial.println(clapTime.clapCounter);
     esp_now_send(hostAddress, (uint8_t *) &clapTime, sizeof(clapTime));
     flash();
     //esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
@@ -579,9 +591,15 @@ void loop() {
     Serial.println("Still alive");
     lastClap = millis();
   }
-  
-  /*if (isMaster and 0 == 1) {
-    sensorValue = analogRead(microphonePin);
+
+}
+  else if (millis()>(lastClap+5000)) 
+  {
+    Serial.println("Still alive");
+    lastClap = millis();
+  }
+
+/*    sensorValue = analogRead(microphonePin);
     if (sensorValue < 50 and millis() > lastClap+1000) {
       blinkMessage.color[0] = random(128);
        blinkMessage.color[1] = random(128);

@@ -30,7 +30,7 @@ int mode;
 #define V2 2
 #define D1 3
 
-#define DEVICE D1
+#define DEVICE V2
 hw_timer_t * timer = NULL;
 PeakDetection peakDetection; 
 
@@ -43,6 +43,7 @@ uint8_t timerReceiver[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 esp_now_peer_info_t peerInfo;
 
 int audioPin = 5;
+int oldClapCounter = 0;
 
 void printMode(int mode) { 
   Serial.print("Mode: ");
@@ -75,6 +76,8 @@ void printMessage(int message) {
     case MSG_GOT_TIMER : 
     Serial.println("MSG_GOT_TIMER ");
     break;
+    case MSG_SEND_CLAP_TIME:
+    Serial.println("MSG_SEND_CLAP_TIME");
     default: 
     Serial.println("Didn't recognize Message");
   }
@@ -140,9 +143,9 @@ int delayAvg = 0;
 
 //calibration
 int sensorValue;
-int microphonePin = A0;
 int clapCounter = 0;
 int lastClap = 0;
+uint32_t lastClapTime;
 
 
 //receive addresses
@@ -190,7 +193,7 @@ void IRAM_ATTR onTimer()
       esp_err_t result = esp_now_send(timerReceiver, (uint8_t *) &timerMessage, sizeof(timerMessage));
     }
     else {
-      Serial.println("broadcasting");
+      //Serial.println("broadcasting");
       announceMessage.sendTime = msgSendTime;
       esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &announceMessage, sizeof(announceMessage));
     }
@@ -245,7 +248,7 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
           modeSwitch(MODE_SENDING_TIMER);
           break;
         }
-        else if (memcmp(&clientAddresses  [i].address, &addressMessage.address, 6) == true) {
+        else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
           Serial.print("found: ");
           printAddress(addressMessage.address);
           modeSwitch(MODE_SENDING_TIMER);
@@ -260,6 +263,12 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
       lastDelay = 0;
       modeSwitch(MODE_ANIMATE);
       break;
+    case MSG_SEND_CLAP_TIME:
+      Serial.println("GOT CLAP");
+      memcpy(&clapTime,incomingData,sizeof(clapTime));
+      Serial.println("--");
+      break;
+
     default: 
       Serial.println("MSG NOT RECOGNIZED");
       Serial.println(incomingData[0]);
@@ -313,33 +322,43 @@ void setup() {
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
   WiFi.macAddress(announceMessage.address);
   if (DEVICE == D1) {
-    audioPin = A0;
+    audioPin = 35;
   }
   pinMode(audioPin, INPUT); 
   peakDetection.begin(30, 3, 0);   
+  lastClap = millis();
   timerCounter = 0;
   modeSwitch(MODE_SEND_ANNOUNCE);
 }
 
 void loop() {
-   sensorValue = analogRead(audioPin);
-  
-  double data = (double)sensorValue/512-1;
-  peakDetection.add(data); 
-  int peak = peakDetection.getPeak(); 
-  double filtered = peakDetection.getFilt(); 
-  //Serial.println(sensorValue);
-  if (peak == -1 and millis() > lastClap+1000) {
-    Serial.print("Clap Time ") ;
-    Serial.println(micros());
-    //esp_now_send(hostAddress, (uint8_t *) &clapTime, sizeof(clapTime));
-    //esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
-    lastClap = millis();
-  }
-  else if (millis()>(lastClap+5000)) 
-  {
-    Serial.println("Still alive");
-    lastClap = millis();
-  }
+    double data = (double)analogRead(audioPin)/512-1;  // converts the sensor value to a range between -1 and 1
+    peakDetection.add(data);                     // adds a new data point
+    int peak = peakDetection.getPeak();          // 0, 1 or -1
+    double filtered = peakDetection.getFilt();   // moving average
+    if (peak == -1 and lastClap+1000 < millis()) {
+      lastClapTime = micros();
+      lastClap = millis();
+      Serial.println("Clapped at ");
+      Serial.println(lastClapTime);
+      // print peak status
+    }
+    if (lastClap+5000 < millis()) {
+      Serial.println("still alive");
+      lastClap = millis();
+    }
+    if (clapTime.clapCounter > oldClapCounter) {
+      oldClapCounter = clapTime.clapCounter;
+      Serial.println(clapTime.timeStamp);
+      Serial.print("Clap received at Base: ");
+      Serial.println(lastClapTime);
+      Serial.print("Difference ");
+      Serial.print(clapTime.timeStamp - lastClapTime);
+      Serial.print("ms \nIn Meters ");
+      double inMeters = (0.343*(clapTime.timeStamp-lastClapTime))/1000;
+      Serial.println((inMeters));
+      delay(5000);
+
+    }
   
 }
