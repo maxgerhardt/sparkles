@@ -7649,6 +7649,16 @@
 	)
 	(wire
 		(pts
+			(xy 367.03 30.48) (xy 372.11 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7c4d4a60-d61b-4d8e-bf5e-6cf64254862b")
+	)
+	(wire
+		(pts
 			(xy 368.3 95.25) (xy 368.3 96.52)
 		)
 		(stroke
@@ -8419,6 +8429,16 @@
 	)
 	(wire
 		(pts
+			(xy 367.03 33.02) (xy 372.11 33.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c9bf50d8-9f07-4e5e-b78f-f5be221b2240")
+	)
+	(wire
+		(pts
 			(xy 201.93 234.95) (xy 201.93 237.49)
 		)
 		(stroke
@@ -8989,6 +9009,17 @@
 		)
 		(uuid "0fb114fb-28d4-483f-9533-ea227fa49139")
 	)
+	(label "BAT-"
+		(at 368.3 33.02 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "133b7d5d-7cef-4f87-9a29-00f6419531f5")
+	)
 	(label "GREEN2"
 		(at 138.43 147.32 0)
 		(fields_autoplaced yes)
@@ -9131,6 +9162,17 @@
 			(justify left bottom)
 		)
 		(uuid "3fcf769f-fad2-4c3b-9955-477bbfa5eea0")
+	)
+	(label "BAT+"
+		(at 368.3 30.48 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "473c145a-ca0c-43ee-9e54-fd81ce2ba8cb")
 	)
 	(label "PIN7"
 		(at 247.65 97.79 0)
@@ -12980,6 +13022,75 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector_Generic:Conn_01x02")
+		(at 377.19 30.48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5c914abd-f65e-4ebc-b66c-105393277eb0")
+		(property "Reference" "J5"
+			(at 379.73 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Battery Connector"
+			(at 379.73 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical"
+			(at 377.19 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 377.19 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 377.19 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e52880a5-f8ae-403c-8cf3-c5b1ac2b72ab")
+		)
+		(pin "2"
+			(uuid "aac10ede-628e-48ce-8cb8-2b82b0152c4d")
+		)
+		(instances
+			(project "Blinky"
+				(path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
+					(reference "J5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 334.01 204.47 90)
 		(unit 1)
@@ -14487,7 +14598,7 @@
 		(fields_autoplaced yes)
 		(uuid "93a69f1c-1457-44da-aa56-b32f8b0c696b")
 		(property "Reference" "C5"
-			(at 307.34 154.94 0)
+			(at 307.34 154.9399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14496,7 +14607,7 @@
 			)
 		)
 		(property "Value" "1000uf"
-			(at 307.34 157.48 0)
+			(at 307.34 157.4799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
