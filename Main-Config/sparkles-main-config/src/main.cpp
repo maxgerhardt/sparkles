@@ -4,7 +4,6 @@
 #include <PeakDetection.h> 
 #include <messaging.cpp>
 #include <stateMachine.h>
-#include <stateMachine.cpp>
 
 //#include "ESP32TimerInterrupt.h"
 //#include "driver/gptimer.h"
@@ -32,19 +31,6 @@ int oldClapCounter = 0;
 modeMachine modeHandler;
 messaging messageHandler(modeHandler);
 
-
-
-
-
-//-----------
-//Timer config variables
-//-----------
-int timerCounter = 0;
-int lastDelay = 0;
-int oldTimerCounter = 0;
-int delayAvg = 0;
-
-
 //calibration
 int sensorValue;
 int clapCounter = 0;
@@ -59,14 +45,14 @@ uint32_t lastClapTime;
 void IRAM_ATTR onTimer()
 {   
   messageHandler.setSendTime(micros());
-    timerCounter++;
+    messageHandler.incrementTimerCounter();
     //wait for timer vs wait for calibrate
     if (mode == MODE_SENDING_TIMER) {
       messageHandler.timerMessage.messageType = MSG_TIMER_CALIBRATION;
       
      messageHandler.timerMessage.sendTime = messageHandler.getSendTime();
-     messageHandler.timerMessage.counter = timerCounter;
-     messageHandler.timerMessage.lastDelay = lastDelay;
+     messageHandler.timerMessage.counter = messageHandler.getTimerCounter();
+     messageHandler.timerMessage.lastDelay = messageHandler.getLastDelay();
       esp_err_t result = esp_now_send(timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
     }
     else {
@@ -79,7 +65,44 @@ void IRAM_ATTR onTimer()
 }
 
 
- 
+       void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+            Serial.print("received ");
+            printMessage(incomingData[0]);
+            
+
+            switch (incomingData[0]) {
+                case MSG_HELLO: 
+                memcpy(&messageHandler.addressMessage,incomingData,sizeof(messageHandler.addressMessage));
+                    messageHandler.handleAddressMessage(mac);
+                break;
+                case MSG_GOT_TIMER: 
+                    messageHandler.handleGotTimer() ;
+                    break;
+                case MSG_SEND_CLAP_TIME:
+                    memcpy(&messageHandler.clapTime,incomingData,sizeof(messageHandler.clapTime));
+                break;
+
+                default: 
+                Serial.println("MSG NOT RECOGNIZED");
+                Serial.println(incomingData[0]);
+                } 
+
+  }
+
+
+    void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
+    if (modeHandler.getMode() == MODE_SENDING_TIMER) {
+        Serial.print("Sent Timer to  ");
+        messageHandler.printAddress(mac_addr);
+        if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+            messageHandler.setArriveTime(micros());
+            messageHandler.setLastDelay(messageHandler.getArriveTime()-messageHandler.getSendTime());
+        }
+        else {
+            messageHandler.setArriveTime(0);
+        }
+    }
+    }
 
 
 
@@ -106,8 +129,8 @@ void setup() {
 
     // Add peer        
 
-  esp_now_register_send_cb(messageHandler.OnDataSent);
-  esp_now_register_recv_cb(messageHandler.OnDataRecv);  
+  esp_now_register_send_cb(OnDataSent);
+  esp_now_register_recv_cb(OnDataRecv);  
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
   WiFi.macAddress(messageHandler.announceMessage.address);
   if (DEVICE == D1) {
@@ -116,7 +139,6 @@ void setup() {
   pinMode(audioPin, INPUT); 
   peakDetection.begin(30, 3, 0);   
   lastClap = millis();
-  timerCounter = 0;
   modeHandler.switchMode(MODE_SEND_ANNOUNCE);
 }
 

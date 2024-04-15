@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <stateMachine.h>
 
-
+ 
 modeMachine::modeMachine() {
 
 }
