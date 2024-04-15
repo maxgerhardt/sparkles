@@ -2,7 +2,8 @@
 #include <stateMachine.h>
 
 
-
+#ifndef MODE_MACHINE_CPP
+#define MODE_MACHINE_CPP
 class modeMachine {
     private: 
         int currentMode = MODE_INIT;
@@ -37,3 +38,4 @@ class modeMachine {
 
 
 };
+#endif
