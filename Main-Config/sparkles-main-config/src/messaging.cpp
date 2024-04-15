@@ -41,7 +41,7 @@ void printMessage(int message) {
 struct message_timer {
   uint8_t messageType;
   uint16_t counter;
-  uint32_t sendTime;
+  unsigned long sendTime;
   uint16_t lastDelay;
 } ;
 
@@ -52,7 +52,7 @@ struct message_got_timer {
 };
 struct message_announce {
   uint8_t messageType = MSG_ANNOUNCE;
-  uint32_t sendTime;
+  unsigned long sendTime;
   uint8_t address[6];
 } ;
 struct message_address{
@@ -63,7 +63,7 @@ struct message_address{
 struct message_clap_time {
   uint8_t messageType = MSG_SEND_CLAP_TIME;
   int clapCounter;
-  uint32_t timeStamp; //offsetted.
+  unsigned long timeStamp; //offsetted.
 };
 
 struct message_animate {
@@ -74,7 +74,7 @@ struct message_animate {
   uint16_t reps;
   uint8_t rgb1[3];
   uint8_t rgb2[3];
-  uint32_t startTime;
+  unsigned long startTime;
 } ;
 
 struct client_address {
@@ -91,7 +91,7 @@ class messaging {
         client_address clientAddresses[NUM_DEVICES];
         int addressCounter = 0;
         modeMachine messagingModeMachine;
-        uint32_t arriveTime, receiveTime, sendTime, lastDelay;
+        unsigned long arriveTime, receiveTime, sendTime, lastDelay;
 
     public: 
         message_animate animationMessage;
@@ -182,10 +182,10 @@ class messaging {
             
         }
         
-        void setSendTime(uint32_t time) {
+        void setSendTime(unsigned long time) {
             sendTime = time;
         }
-        uint32_t getSendTime() {
+        unsigned long getSendTime() {
             return sendTime;
         }
 

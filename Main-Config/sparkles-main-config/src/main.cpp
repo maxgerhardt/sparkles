@@ -18,6 +18,8 @@ int mode;
 #define V2 2 
 #define D1 3
 
+#define DEVICE DEVICE_USED
+
 hw_timer_t * timer = NULL;
 PeakDetection peakDetection; 
 
@@ -56,7 +58,7 @@ uint32_t lastClapTime;
 
 void IRAM_ATTR onTimer()
 {   
-  messageHandler.setSendTime(uint32_tmicros());
+  messageHandler.setSendTime(micros());
     timerCounter++;
     //wait for timer vs wait for calibrate
     if (mode == MODE_SENDING_TIMER) {
@@ -134,15 +136,15 @@ void loop() {
       Serial.println("still alive");
       lastClap = millis();
     }
-    if (clapTime.clapCounter > oldClapCounter) {
-      oldClapCounter = clapTime.clapCounter;
-      Serial.println(clapTime.timeStamp);
+    if (messageHandler.clapTime.clapCounter > oldClapCounter) {
+      oldClapCounter = messageHandler.clapTime.clapCounter;
+      Serial.println(messageHandler.clapTime.timeStamp);
       Serial.print("Clap received at Base: ");
       Serial.println(lastClapTime);
       Serial.print("Difference ");
-      Serial.print(clapTime.timeStamp - lastClapTime);
+      Serial.print(messageHandler.clapTime.timeStamp - lastClapTime);
       Serial.print("ms \nIn Meters ");
-      double inMeters = (0.343*(clapTime.timeStamp-lastClapTime))/1000;
+      double inMeters = (0.343*(messageHandler.clapTime.timeStamp-lastClapTime))/1000;
       Serial.println((inMeters));
       delay(5000);
 

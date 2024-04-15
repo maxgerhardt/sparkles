@@ -2,17 +2,16 @@
 #include <stateMachine.h>
 
 
-public:
-    modeMachine() {
+modeMachine::modeMachine() {
 
-    };
-void switchMode(int mode) {
+}
+void modeMachine::switchMode(int mode) {
     currentMode = mode;
 }
-int getMode() {
+int modeMachine::getMode() {
     return currentMode;
 }
-void printMode(int mode) { 
+void modeMachine::printMode(int mode) { 
     Serial.print("Mode: ");
     switch (mode) {
         case MODE_SEND_ANNOUNCE:
@@ -28,6 +27,6 @@ void printMode(int mode) {
         Serial.println("MODE_ANIMATE");
         break;
     }
-    }
+}
 
 

@@ -9,5 +9,10 @@
     class modeMachine {
         private: 
             int currentMode = MODE_INIT;
+        public:
+            modeMachine();
+            void switchMode(int mode);
+            int getMode();
+            void printMode(int mode);
     };
 #endif
