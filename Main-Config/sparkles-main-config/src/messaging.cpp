@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <stateMachine.cpp>
 
 #define MSG_HELLO 0
 #define MSG_ANNOUNCE 1
@@ -10,6 +11,9 @@
 #define MSG_SEND_CLAP_TIME 6
 #define MSG_ANIMATION 7
 #define MSG_NOCLAPFOUND -1
+
+#define NUM_DEVICES 20
+
 
 uint8_t timerReceiver[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 esp_now_peer_info_t peerInfo;
@@ -38,18 +42,18 @@ struct message_timer {
   uint16_t counter;
   uint32_t sendTime;
   uint16_t lastDelay;
-} timerMessage;
+} ;
 
 
 struct message_got_timer {
   uint8_t messageType = MSG_GOT_TIMER;
   uint16_t delayAvg;
-} gotTimerMessage;
+};
 struct message_announce {
   uint8_t messageType = MSG_ANNOUNCE;
   uint32_t sendTime;
   uint8_t address[6];
-} announceMessage;
+} ;
 struct message_address{
   uint8_t messageType = MSG_HELLO;
   uint8_t address[6];
@@ -60,7 +64,6 @@ struct message_clap_time {
   int clapCounter;
   uint32_t timeStamp; //offsetted.
 };
-
 
 struct message_animate {
   uint8_t messageType = MSG_ANIMATION; 
@@ -73,17 +76,34 @@ struct message_animate {
   uint32_t startTime;
 } ;
 
+struct client_address {
+  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  int id;
+  float xLoc;
+  float yLoc;
+  float zLoc;
+} ;
+
 class messaging {
      private: 
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t myAddress[6];
         esp_now_peer_info_t peerInfo;
+        client_address clientAddresses[NUM_DEVICES];
+        int addressCounter = 0;
+        modeMachine messagingModeMachine;
+
     public: 
         message_animate animationMessage;
         message_clap_time clapTime;
         message_address addressMessage;
-        messaging() {
+        message_timer timerMessage;
+        message_got_timer gotTimerMessage;
+        message_announce announceMessage;
+
+        
+        messaging(modeMachine globalModeMachine) {
               if (esp_now_init() != ESP_OK) {
                 Serial.println("Error initializing ESP-NOW");
             return;            
@@ -92,7 +112,8 @@ class messaging {
             peerInfo.channel = 0;  
             peerInfo.encrypt = false;
             WiFi.macAddress(myAddress);
-        }
+            messagingModeMachine = globalModeMachine;
+        };
 
         void removePeer(uint8_t address[6]) {
              if (esp_now_del_peer(address) != ESP_OK) {
@@ -125,5 +146,56 @@ class messaging {
                 return 1;
             }
         }
+
+        void handleAddressMessage() {
+            for (int i = 0; i < NUM_DEVICES; i++) {
+                if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
+                    Serial.println("need to add peer");
+                    memcpy(clientAddresses[i].address, addressMessage.address, 6);
+                    memcpy(&timerReceiver, mac->src_addr, 6);
+                    addPeer(timerReceiver);
+                    addressCounter++;
+                    messagingModeMachine.switchMode(MODE_SENDING_TIMER);
+                    break;
+                    }
+                    else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
+                    Serial.print("found: ");
+                    printAddress(addressMessage.address);
+                    messagingModeMachine.switchMode(MODE_SENDING_TIMER);
+
+                    break;
+                    }
+                }
+
+        }
+        void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+            Serial.print("received ");
+            printMessage(incomingData[0]);
+            
+
+            switch (incomingData[0]) {
+                case MSG_HELLO: 
+                memcpy(&addressMessage,incomingData,sizeof(addressMessage));
+                handleAddressMessage();
+                break;
+                case MSG_GOT_TIMER: 
+                Serial.println("GOT TIMER");
+                removePeer(timerReceiver);
+                timerCounter = 0;
+                lastDelay = 0;
+                modeSwitch(MODE_ANIMATE);
+                break;
+                case MSG_SEND_CLAP_TIME:
+                Serial.println("GOT CLAP");
+                memcpy(&clapTime,incomingData,sizeof(clapTime));
+                Serial.println("--");
+                break;
+
+                default: 
+                Serial.println("MSG NOT RECOGNIZED");
+                Serial.println(incomingData[0]);
+                } 
+
+  }
 
 };
