@@ -1,9 +1,5 @@
-#define MODE_INIT -1
-#define MODE_SEND_ANNOUNCE 0
-#define MODE_SENDING_TIMER 1
-#define MODE_CALIBRATE 4
-#define MODE_ANIMATE 7
 #include <Arduino.h>
+#include <stateMachine.h>
 
 
 
@@ -20,6 +16,23 @@ class modeMachine {
     }
     int getMode() {
         return currentMode;
+    }
+    void printMode(int mode) { 
+    Serial.print("Mode: ");
+    switch (mode) {
+        case MODE_SEND_ANNOUNCE:
+        Serial.println("MODE_SEND_ANNOUNCE");
+        break;
+        case MODE_SENDING_TIMER:
+        Serial.println("MODE_SENDING_TIMER");
+        break;
+        case MODE_CALIBRATE: 
+        Serial.println("MODE_CALIBRATE");
+        break;
+        case MODE_ANIMATE:
+        Serial.println("MODE_ANIMATE");
+        break;
+    }
     }
 
 
