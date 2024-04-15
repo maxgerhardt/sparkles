@@ -56,7 +56,7 @@ uint32_t lastClapTime;
 
 void IRAM_ATTR onTimer()
 {   
-  messageHandler.setSendTime(micros);
+  messageHandler.setSendTime(uint32_tmicros());
     timerCounter++;
     //wait for timer vs wait for calibrate
     if (mode == MODE_SENDING_TIMER) {
@@ -83,19 +83,7 @@ void IRAM_ATTR onTimer()
 
 
 
-void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  if (mode == MODE_SENDING_TIMER) {
-    Serial.print("Sent Timer to  ");
-    printAddress(mac_addr);
-    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      msgArriveTime = micros();
-      lastDelay = msgArriveTime-msgSendTime;
-    }
-    else {
-     msgArriveTime = 0;
-    }
-  }
-}
+
 
 
 void setup() {
@@ -116,10 +104,10 @@ void setup() {
 
     // Add peer        
 
-  esp_now_register_send_cb(OnDataSent);
-  esp_now_register_recv_cb(OnDataRecv);  
+  esp_now_register_send_cb(messageHandler.OnDataSent);
+  esp_now_register_recv_cb(messageHandler.OnDataRecv);  
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
-  WiFi.macAddress(announceMessage.address);
+  WiFi.macAddress(messageHandler.announceMessage.address);
   if (DEVICE == D1) {
     audioPin = 35;
   }
@@ -127,7 +115,7 @@ void setup() {
   peakDetection.begin(30, 3, 0);   
   lastClap = millis();
   timerCounter = 0;
-  modeSwitch(MODE_SEND_ANNOUNCE);
+  modeHandler.switchMode(MODE_SEND_ANNOUNCE);
 }
 
 void loop() {

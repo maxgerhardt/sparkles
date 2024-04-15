@@ -6,5 +6,8 @@
 #define MODE_CALIBRATE 4
 #define MODE_ANIMATE 7
 
-    class modeMachine {};
+    class modeMachine {
+        private: 
+            int currentMode = MODE_INIT;
+    };
 #endif

@@ -2,23 +2,17 @@
 #include <stateMachine.h>
 
 
-#ifndef MODE_MACHINE_CPP
-#define MODE_MACHINE_CPP
-class modeMachine {
-    private: 
-        int currentMode = MODE_INIT;
+public:
+    modeMachine() {
 
-    public:
-        modeMachine() {
-
-        };
-    void switchMode(int mode) {
-        currentMode = mode;
-    }
-    int getMode() {
-        return currentMode;
-    }
-    void printMode(int mode) { 
+    };
+void switchMode(int mode) {
+    currentMode = mode;
+}
+int getMode() {
+    return currentMode;
+}
+void printMode(int mode) { 
     Serial.print("Mode: ");
     switch (mode) {
         case MODE_SEND_ANNOUNCE:
@@ -37,5 +31,3 @@ class modeMachine {
     }
 
 
-};
-#endif
