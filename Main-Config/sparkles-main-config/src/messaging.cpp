@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <stateMachine.h>
 #include <stateMachine.cpp>
 
 #define MSG_HELLO 0
@@ -86,13 +87,11 @@ struct client_address {
 
 class messaging {
      private: 
-        uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-        uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        uint8_t myAddress[6];
         esp_now_peer_info_t peerInfo;
         client_address clientAddresses[NUM_DEVICES];
         int addressCounter = 0;
         modeMachine messagingModeMachine;
+        uint32_t arriveTime, receiveTime, sendTime, lastDelay;
 
     public: 
         message_animate animationMessage;
@@ -101,6 +100,10 @@ class messaging {
         message_timer timerMessage;
         message_got_timer gotTimerMessage;
         message_announce announceMessage;
+        uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        uint8_t myAddress[6];
+
 
         
         messaging(modeMachine globalModeMachine) {
@@ -168,6 +171,26 @@ class messaging {
                 }
 
         }
+        void handleGotTimer() {
+            removePeer(timerReceiver);
+            timerCounter = 0;
+            lastDelay = 0;
+            messagingModeMachine.switchMode(MODE_ANIMATE);
+        }
+
+        void handleClapTime() {
+            
+        }
+        
+        void setSendTime(uint32_t time) {
+            sendTime = time;
+        }
+        uint32_t getSendTime() {
+            return sendTime;
+        }
+
+
+
         void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
             Serial.print("received ");
             printMessage(incomingData[0]);
@@ -176,19 +199,13 @@ class messaging {
             switch (incomingData[0]) {
                 case MSG_HELLO: 
                 memcpy(&addressMessage,incomingData,sizeof(addressMessage));
-                handleAddressMessage();
+                    handleAddressMessage();
                 break;
                 case MSG_GOT_TIMER: 
-                Serial.println("GOT TIMER");
-                removePeer(timerReceiver);
-                timerCounter = 0;
-                lastDelay = 0;
-                modeSwitch(MODE_ANIMATE);
-                break;
+                    handleGotTimer() ;
+                    break;
                 case MSG_SEND_CLAP_TIME:
-                Serial.println("GOT CLAP");
-                memcpy(&clapTime,incomingData,sizeof(clapTime));
-                Serial.println("--");
+                    memcpy(&clapTime,incomingData,sizeof(clapTime));
                 break;
 
                 default: 
@@ -198,4 +215,18 @@ class messaging {
 
   }
 
+
+    void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
+    if (messagingModeMachine.getMode() == MODE_SENDING_TIMER) {
+        Serial.print("Sent Timer to  ");
+        printAddress(mac_addr);
+        if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+            arriveTime = micros();
+            lastDelay = arriveTime-sendTime;
+        }
+        else {
+            arriveTime = 0;
+        }
+    }
+    }
 };

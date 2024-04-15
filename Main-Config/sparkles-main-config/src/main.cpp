@@ -3,6 +3,8 @@
 #include <WiFi.h>
 #include <PeakDetection.h> 
 #include <messaging.cpp>
+#include <stateMachine.h>
+#include <stateMachine.cpp>
 
 //#include "ESP32TimerInterrupt.h"
 //#include "driver/gptimer.h"
@@ -25,6 +27,8 @@ int totalInterruptCounter;   	//total interrupt counting
 
 int audioPin = 5;
 int oldClapCounter = 0;
+modeMachine modeHandler;
+messaging messageHandler(modeHandler);
 
 
 
@@ -33,9 +37,6 @@ int oldClapCounter = 0;
 //-----------
 //Timer config variables
 //-----------
-uint32_t msgSendTime;
-uint32_t msgArriveTime;
-uint32_t msgReceiveTime;
 int timerCounter = 0;
 int lastDelay = 0;
 int oldTimerCounter = 0;
@@ -55,21 +56,21 @@ uint32_t lastClapTime;
 
 void IRAM_ATTR onTimer()
 {   
-  msgSendTime = micros();
+  messageHandler.setSendTime(micros);
     timerCounter++;
     //wait for timer vs wait for calibrate
     if (mode == MODE_SENDING_TIMER) {
-      timerMessage.messageType = MSG_TIMER_CALIBRATION;
+      messageHandler.timerMessage.messageType = MSG_TIMER_CALIBRATION;
       
-      timerMessage.sendTime = msgSendTime;
-      timerMessage.counter = timerCounter;
-      timerMessage.lastDelay = lastDelay;
-      esp_err_t result = esp_now_send(timerReceiver, (uint8_t *) &timerMessage, sizeof(timerMessage));
+     messageHandler.timerMessage.sendTime = messageHandler.getSendTime();
+     messageHandler.timerMessage.counter = timerCounter;
+     messageHandler.timerMessage.lastDelay = lastDelay;
+      esp_err_t result = esp_now_send(timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
     }
     else {
       //Serial.println("broadcasting");
-      announceMessage.sendTime = msgSendTime;
-      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &announceMessage, sizeof(announceMessage));
+      messageHandler.announceMessage.sendTime = messageHandler.getSendTime();
+      esp_err_t result = esp_now_send(messageHandler.broadcastAddress,  (uint8_t *) &messageHandler.announceMessage, sizeof(messageHandler.announceMessage));
     }
 
   //return true;
@@ -78,55 +79,6 @@ void IRAM_ATTR onTimer()
 
  
 
-
-
-
-void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
-  Serial.print("received ");
-  printMessage(incomingData[0]);
-  
-
-  switch (incomingData[0]) {
-    case MSG_HELLO: 
-    Serial.println("received hallo");
-    memcpy(&addressMessage,incomingData,sizeof(addressMessage));
-    for (int i = 0; i < NUM_DEVICES; i++) {
-      if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
-        Serial.println("need to add peer");
-          memcpy(clientAddresses[i].address, addressMessage.address, 6);
-          memcpy(&timerReceiver, mac->src_addr, 6);
-          addPeer(timerReceiver);
-          addressCounter++;
-          modeSwitch(MODE_SENDING_TIMER);
-          break;
-        }
-        else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
-          Serial.print("found: ");
-          printAddress(addressMessage.address);
-          modeSwitch(MODE_SENDING_TIMER);
-          break;
-        }
-      }
-    break;
-    case MSG_GOT_TIMER: 
-      Serial.println("GOT TIMER");
-      removePeer(timerReceiver);
-      timerCounter = 0;
-      lastDelay = 0;
-      modeSwitch(MODE_ANIMATE);
-      break;
-    case MSG_SEND_CLAP_TIME:
-      Serial.println("GOT CLAP");
-      memcpy(&clapTime,incomingData,sizeof(clapTime));
-      Serial.println("--");
-      break;
-
-    default: 
-      Serial.println("MSG NOT RECOGNIZED");
-      Serial.println(incomingData[0]);
-    } 
-
-  }
 
 
 
