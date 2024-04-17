@@ -1,6 +1,11 @@
 #include <Arduino.h>
-#include <../../sparkles-client-config/src/ledHandler.h>
-
+#include <ledHandler.h>
+#ifndef DEVICE
+#define V1 1
+#define V2 2 
+#define D1 3
+#define DEVICE DEVICE_USED
+#endif
 ledHandler::ledHandler() {
   ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -122,23 +127,24 @@ for (int i = 0; i < reps; i++ ){
   ledsOff(); 
   delay(1);
   }
-
-  void ledHandler::blink(animate animationMessage) {
+}
+  void ledHandler::blink() {
     Serial.println("should blink");
   uint32_t currentTime = micros();
-  uint32_t difference = currentTime-timeOffset;
-  if (animationMessage.startTime-difference > 0) {
-    delayMicroseconds(animationMessage.startTime-difference);
+  //uint32_t difference = currentTime-timeOffset;
+  /*
+  if (startTime-difference > 0) {
+    delayMicroseconds(startTime-difference);
     flash(animationMessage.rgb1[0], animationMessage.rgb1[1], animationMessage.rgb1[2], animationMessage.speed, animationMessage.reps, animationMessage.delay);
   }
   else {
     Serial.println("too late, need to wait to chime in");
     //find algorithm that calculates length of animation and finds later point in time to jump in
-  }  
+  }  */
 return;
-}
 
 }
+
 
 
 // IF BOARD == V2

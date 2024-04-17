@@ -7,7 +7,10 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <PeakDetection.h> 
-#include <../../sparkles-client-config/src/ledHandler.h>
+#include <ledHandler.h>
+//#include <../../sparkles-main-config/src/messaging.h>
+//#include <../../sparkles-main-config/src/stateMachine.h>
+
 #define CALIBRATION_FREQUENCY 1000
 int freq = 5000;
 int resolution = 8;

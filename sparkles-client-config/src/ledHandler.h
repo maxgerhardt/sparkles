@@ -1,8 +1,8 @@
 #ifndef LED_HANDLER_H
 #define LED_HANDLER_H
-#include <../../sparkles-main-config/src/stateMachine.h>
+//#include <../../sparkles-main-config/src/stateMachine.h>
 
-#include <../../sparkles-main-config/src/messaging.h>
+//#include <../../sparkles-main-config/src/messaging.h>
 
 #define LED_HANDLER_H
 #define LEDC_TIMER_12_BIT  12
@@ -44,7 +44,7 @@ class ledHandler {
     float* hsv2rgb(float h, float s, float b, float* rgb);
     void ledsOff();
     void flash(int r = 255, int g = 0, int b = 0, int duration = 50, int reps = 2, int pause = 50);
-    void blink(message_animate  animationMessage);
+    void blink();
     void candle(int duration, int reps, int pause);
 
 };
