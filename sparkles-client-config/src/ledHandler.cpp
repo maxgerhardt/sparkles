@@ -1,11 +1,13 @@
 #include <Arduino.h>
-#include <ledHandler.h>
+#include <../../sparkles-client-config/src/ledHandler.h>
 #ifndef DEVICE
 #define V1 1
 #define V2 2 
 #define D1 3
 #define DEVICE DEVICE_USED
-#endif
+#endif 
+
+
 ledHandler::ledHandler() {
   ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -23,7 +25,7 @@ float ledHandler::step(float e, float x) { return x < e ? 0.0 : 1.0; }
 
 float* ledHandler::hsv2rgb(float h, float s, float b, float* rgb) {
   rgb[0] = b * mix(1.0, constrain(abs(fract(h + 1.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0), s);
-  Serial.println(rgb[0]);
+  Serial.println(rgb[0]); 
   rgb[1] = b * mix(1.0, constrain(abs(fract(h + 0.6666666) * 6.0 - 3.0) - 1.0, 0.0, 1.0), s);
   rgb[2] = b * mix(1.0, constrain(abs(fract(h + 0.3333333) * 6.0 - 3.0) - 1.0, 0.0, 1.0), s);
   return rgb;
@@ -37,28 +39,27 @@ void ledHandler::ledsOff() {
   ledcWrite(ledPinBlue1, 0);
 
 }
-void ledHandler::flash(int r = 255, int g = 0, int b = 0, int duration = 50, int reps = 2, int pause = 50) {
+void ledHandler::flash(int r, int g, int b, int duration, int reps, int pause) {
   if (DEVICE == D1) {
     return;
   }
-for (int i = 0; i < reps; i++ ){
-  ledcFade(ledPinRed1, 0, r, duration);
-  ledcFade(ledPinGreen1, 0, g, duration);
-  ledcFade(ledPinBlue1, 0, b, duration);
-  ledcFade(ledPinRed2, 0, r, duration);
-  ledcFade(ledPinGreen2, 0, g, duration);
-  ledcFade(ledPinBlue2, 0, b, duration);
-  delay(duration);
-  ledcFade(ledPinRed1, r, 0, duration);
-  ledcFade(ledPinGreen1, g, 0, duration);
-  ledcFade(ledPinBlue1, b, 0, duration);
-  ledcFade(ledPinRed2, r, 0, duration);
-  ledcFade(ledPinGreen2, g, 0, duration);
-  ledcFade(ledPinBlue2, b, 0, duration);
-  delay(pause);
-  ledsOff(); 
+  for (int i = 0; i < reps; i++ ){
+    ledcFade(ledPinRed1, 0, r, duration);
+    ledcFade(ledPinGreen1, 0, g, duration);
+    ledcFade(ledPinBlue1, 0, b, duration);
+    ledcFade(ledPinRed2, 0, r, duration);
+    ledcFade(ledPinGreen2, 0, g, duration);
+    ledcFade(ledPinBlue2, 0, b, duration);
+    delay(duration);
+    ledcFade(ledPinRed1, r, 0, duration);
+    ledcFade(ledPinGreen1, g, 0, duration);
+    ledcFade(ledPinBlue1, b, 0, duration);
+    ledcFade(ledPinRed2, r, 0, duration);
+    ledcFade(ledPinGreen2, g, 0, duration);
+    ledcFade(ledPinBlue2, b, 0, duration);
+    delay(pause);
+    ledsOff(); 
   }
-
 }    
 
 

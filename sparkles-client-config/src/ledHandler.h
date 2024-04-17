@@ -1,6 +1,6 @@
 #ifndef LED_HANDLER_H
 #define LED_HANDLER_H
-//#include <../../sparkles-main-config/src/stateMachine.h>
+#include <../../sparkles-main-config/src/stateMachine.h>
 
 //#include <../../sparkles-main-config/src/messaging.h>
 
@@ -19,7 +19,7 @@
     const int ledPinBlue2 = 18;
 #elif (DEVICE == V2)
     const int ledPinBlue1 = 18;  // 16 corresponds to GPIO16
-    const int ledPinRed1 = 38; // 17 corresponds to GPIO17
+    const int ledPinRed1 = 38; // 17 cmsgrorresponds to GPIO17
     const int ledPinGreen1 = 8;  // 5 corresponds to GPIO5
     const int ledPinGreen2 = 3;
     const int ledPinRed2 = 9;
@@ -37,7 +37,7 @@ class ledHandler {
         float rgb[3];
         float redfloat = 0, greenfloat = 0, bluefloat = 0;
     public:
-    ledHandler() {};
+    ledHandler();
     float fract(float x);
     float mix(float a, float b, float t);
     float step(float e, float x);

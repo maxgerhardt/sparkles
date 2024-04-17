@@ -13,8 +13,8 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <PeakDetection.h> 
-#include <../../sparkles-main-config/src/messaging.h>
 #include <../../sparkles-client-config/src/ledHandler.h>
+#include <../../sparkles-main-config/src/messaging.h>
 #include <../../sparkles-main-config/src/stateMachine.h>
 #define TIMER_INTERVAL_MS       1000
 #define USING_TIM_DIV1 true

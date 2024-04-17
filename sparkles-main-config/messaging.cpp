@@ -84,6 +84,9 @@ void messaging::setLastDelay(int delay) {
 void messaging::handleClapTime() {
     
 }
+unsigned long messaging::getTimeOffset() {
+    return timeOffset;
+}
 int messaging::getTimerCounter(){
     return timerCounter;
 }
@@ -106,7 +109,7 @@ unsigned long messaging::getArriveTime() {
     return arriveTime;
 }
 void messaging::setHostAddress(uint8_t address[6]) {
-    memcpy (&hostAddress, address, sizeof(address));
+    memcpy (&hostAddress, address, 6);
 }
 
 void messaging::printMessage(int message) { 

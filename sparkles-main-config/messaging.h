@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <esp_now.h>
-#include <../../sparkles-main-config/src/stateMachine.h>
-#include <../../sparkles-client-config/src/ledHandler.h>
+#include <stateMachine.h>
+#include <ledHandler.h>
 #ifndef MESSAGING_H
 #define MESSAGING_H
 #define MSG_HELLO 0
@@ -24,7 +24,7 @@
 #define LEDC_TARGET_DUTY  (4095)
 #define LEDC_FADE_TIME    (3000)
 
-
+ 
 //MESSAGE STRUCTS
 struct message_timer {
   uint8_t messageType;
