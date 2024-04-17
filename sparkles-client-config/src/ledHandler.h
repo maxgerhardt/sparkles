@@ -1,6 +1,6 @@
 #ifndef LED_HANDLER_H
 #define LED_HANDLER_H
-#include <../../sparkles-main-config/src/stateMachine.h>
+//#include <stateMachine.h>
 
 //#include <../../sparkles-main-config/src/messaging.h>
 

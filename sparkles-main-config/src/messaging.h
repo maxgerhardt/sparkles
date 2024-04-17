@@ -88,13 +88,13 @@ class messaging {
     private:  
         client_address clientAddresses[NUM_DEVICES];
         int addressCounter = 0;
-        modeMachine messagingModeMachine;
+        modeMachine* messagingModeMachine;
         unsigned long arriveTime, receiveTime, sendTime, lastDelay, lastTime, timeOffset;
         int timerCounter = 0;
         int timerArray[TIMER_ARRAY_COUNT];
         int arrayCounter = 0;
         int delayAvg = 0;
-        ledHandler handleLed;
+        ledHandler* handleLed;
     public: 
         esp_now_peer_info_t peerInfo;
         esp_now_peer_num_t peerNum;
@@ -112,7 +112,7 @@ class messaging {
         uint8_t hostAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t myAddress[6];
         uint8_t timerReceiver[6] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        messaging(modeMachine globalModeMachine, ledHandler handleLed) ;
+        messaging(modeMachine &globalModeMachine, ledHandler &handleLed) ;
         void removePeer(uint8_t address[6]);
         void printAddress(const uint8_t * mac_addr);
         int addPeer(uint8_t * address);

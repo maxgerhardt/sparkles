@@ -9,6 +9,9 @@
 #include <WiFi.h>
 #include <PeakDetection.h> 
 #include <ledHandler.h>
+
+
+
 #include <messaging.h>
 #include <stateMachine.h>
 #define CALIBRATION_FREQUENCY 1000
@@ -23,12 +26,14 @@ int audioPin = 5;
 PeakDetection peakDetection; 
 ledHandler handleLed;
 modeMachine modeHandler;
-messaging messageHandler(modeHandler, handleLed);
+
+messaging messageHandler(&modeHandler, &handleLed);
+
 //calibration stuff
 int sensorValue;
 int microphonePin = A0;
 int clapCounter = 0;
-int lastClap;
+int lastClap = 0;
 bool clapSent = false;
 
 unsigned long msgReceiveTime;
@@ -38,7 +43,7 @@ unsigned long msgReceiveTime;
 
 
 
-
+/*
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
   Serial.print("received ");
   messageHandler.printMessage(incomingData[0]);
@@ -104,7 +109,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
     }
 }
 
-
+*/
 
 
 
@@ -113,18 +118,18 @@ void setup() {
   Serial.begin(115200);
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-  WiFi.macAddress(messageHandler.myAddress);
-
+  //WiFi.macAddress(messageHandler.myAddress);
+/*
   // Init ESP-NOW
   if (esp_now_init() != 0) {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-  memcpy(messageHandler.peerInfo.peer_addr, messageHandler.broadcastAddress, 6);
-  messageHandler.peerInfo.channel = 0;  
-  messageHandler.peerInfo.encrypt = false;
+ // memcpy(messageHandler.peerInfo.peer_addr, messageHandler.broadcastAddress, 6);
+ // messageHandler.peerInfo.channel = 0;  
+ // messageHandler.peerInfo.encrypt = false;
     // Add peer        
-  if (esp_now_add_peer(&messageHandler.peerInfo) != ESP_OK){
+if (esp_now_add_peer(&messageHandler.peerInfo) != ESP_OK){
     Serial.println("Failed to add peer");
     return;
   }
@@ -133,13 +138,14 @@ void setup() {
   esp_now_register_send_cb(OnDataSent);
    WiFi.macAddress(messageHandler.addressMessage.address);
    esp_now_get_peer_num(&messageHandler.peerNum);
-  
+
   Serial.print("Number of Peers start: ");
   Serial.println(messageHandler.peerNum.total_num);
+  */
   if (DEVICE != D1){
 
   
-  handleLed.ledsOff();
+  //handleLed.ledsOff();
   }
   else {
     audioPin = 35;
@@ -148,11 +154,12 @@ void setup() {
   pinMode(audioPin, INPUT); 
   peakDetection.begin(30, 3, 0);   
   delay(1000);
-    messageHandler.clapTime.clapCounter = 0;
+    //messageHandler.clapTime.clapCounter = 0;
   handleLed.flash(0, 255, 0, 200, 2, 50);
 }
 
 void loop() {
+  /*
 if (modeHandler.getMode() == MODE_ANIMATE) {
   //flash(0, 255, 0, 200, 2, 50);
 
@@ -181,8 +188,9 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
     handleLed.flash(0, 255, 0, 200, 2, 50);
   }
 
-}
-  else if (millis()>(lastClap+5000)) 
+
+*/
+  if (millis()>(lastClap+5000)) 
   {
     Serial.println("Still alive");
     lastClap = millis();

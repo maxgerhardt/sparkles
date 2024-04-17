@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <../../sparkles-main-config/src/messaging.h>
+#include <messaging.h>
 
-messaging::messaging(modeMachine globalModeMachine, ledHandler handleLed) {
+messaging::messaging(modeMachine &globalModeMachine, ledHandler &handleLed) {
     if (esp_now_init() != ESP_OK) {
         Serial.println("Error initializing ESP-NOW");
     return;            
@@ -12,7 +12,7 @@ messaging::messaging(modeMachine globalModeMachine, ledHandler handleLed) {
     peerInfo.channel = 0;  
     peerInfo.encrypt = false;
     WiFi.macAddress(myAddress);
-    messagingModeMachine = globalModeMachine;
+    messagingModeMachine = &globalModeMachine;
 };
 
 void messaging::removePeer(uint8_t address[6]) {
