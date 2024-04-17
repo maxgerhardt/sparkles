@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include <../../sparkles-client-config/src/ledHandler.h>
+#include <ledHandler.h>
 #ifndef DEVICE
 #define V1 1
 #define V2 2 
 #define D1 3
-#define DEVICE DEVICE_USED
+#define DEVICE V2
 #endif 
 
 

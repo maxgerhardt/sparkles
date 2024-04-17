@@ -1,15 +1,16 @@
 #define V1 1
 #define V2 2
 #define D1 3
-#define DEVICE DEVICE_USED
+#define DEVICE_USED V2
+#define DEVICE V2
 
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
 #include <PeakDetection.h> 
-#include <../../sparkles-client-config/src/ledHandler.h>
-#include <../../sparkles-main-config/src/messaging.h>
-#include <../../sparkles-main-config/src/stateMachine.h>
+#include <ledHandler.h>
+#include <messaging.h>
+#include <stateMachine.h>
 #define CALIBRATION_FREQUENCY 1000
 int freq = 5000;
 int resolution = 8;
@@ -177,6 +178,7 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
   {
     Serial.println("Still alive");
     lastClap = millis();
+    handleLed.flash(0, 255, 0, 200, 2, 50);
   }
 
 }
@@ -184,6 +186,7 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
   {
     Serial.println("Still alive");
     lastClap = millis();
+    handleLed.flash(0, 255, 0, 200, 2, 50);
   }
 
 /*    sensorValue = analogRead(microphonePin);
