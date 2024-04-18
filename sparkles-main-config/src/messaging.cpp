@@ -3,17 +3,15 @@
 #include <WiFi.h>
 #include <messaging.h>
 
-messaging::messaging(modeMachine globalModeMachine, ledHandler handleLed) {
-    if (esp_now_init() != ESP_OK) {
-        Serial.println("Error initializing ESP-NOW");
-    return;            
-    }
-    memcpy(&peerInfo.peer_addr, broadcastAddress, 6);
-    peerInfo.channel = 0;  
-    peerInfo.encrypt = false;
-    WiFi.macAddress(myAddress);
-    messagingModeMachine = globalModeMachine;
+messaging::messaging() {
 };
+
+void messaging::setup(modeMachine &messagingModeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo) {
+
+    WiFi.macAddress(myAddress);
+    handleLed = &globalHandleLed;
+    peerInfo = &globalPeerInfo;
+}
 
 void messaging::removePeer(uint8_t address[6]) {
         if (esp_now_del_peer(address) != ESP_OK) {
@@ -27,17 +25,24 @@ void messaging::printAddress(const uint8_t * mac_addr){
             mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
     Serial.println(macStr);
 }
+void messaging::printBroadcastAddress(){
+    char macStr[18];
+    snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+            broadcastAddress[0], broadcastAddress[1], broadcastAddress[2], broadcastAddress[3], broadcastAddress[4], broadcastAddress[5]);
+    Serial.println("blubl");
+    Serial.println(macStr);
+}
 
 int messaging::addPeer(uint8_t * address) {
-    memcpy(&peerInfo.peer_addr, address, 6);
-    if (esp_now_get_peer(peerInfo.peer_addr, &peerInfo) == ESP_OK) {
+    memcpy(&peerInfo->peer_addr, address, 6);
+    if (esp_now_get_peer(peerInfo->peer_addr, peerInfo) == ESP_OK) {
         Serial.println("Found Peer");
         return 0;
     }
-    peerInfo.channel = 0;  
-    peerInfo.encrypt = false;
+    peerInfo->channel = 0;  
+    peerInfo->encrypt = false;
         // Add peer        
-    if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    if (esp_now_add_peer(peerInfo) != ESP_OK){
         Serial.println("Failed to add peer");
         return -1;
     }
@@ -55,13 +60,13 @@ void messaging::handleAddressMessage(const esp_now_recv_info * mac) {
             memcpy(&timerReceiver, mac->src_addr, 6);
             addPeer(timerReceiver);
             addressCounter++;
-            messagingModeMachine.switchMode(MODE_SENDING_TIMER);
+            messagingModeHandler->switchMode(MODE_SENDING_TIMER);
             break;
             }
             else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
             Serial.print("found: ");
             printAddress(addressMessage.address);
-            messagingModeMachine.switchMode(MODE_SENDING_TIMER);
+            messagingModeHandler->switchMode(MODE_SENDING_TIMER);
 
             break;
             }
@@ -72,7 +77,11 @@ void messaging::handleGotTimer() {
     removePeer(timerReceiver);
     timerCounter = 0;
     lastDelay = 0;
-    messagingModeMachine.switchMode(MODE_ANIMATE);
+    //messagingModeMachine.switchMode(MODE_ANIMATE);
+}
+
+void messaging::blink() {
+    handleLed->flash(0, 0, 255, 200, 2, 50);
 }
 int messaging::getLastDelay() {
     return lastDelay;
@@ -135,6 +144,7 @@ void messaging::printMessage(int message) {
         default: 
             Serial.println("Didn't recognize Message");
             Serial.println(message);
+            Serial.println("----");
     }
 }
 void messaging::receiveTimer(int messageArriveTime) {
@@ -161,7 +171,7 @@ void messaging::receiveTimer(int messageArriveTime) {
       Serial.print("delay avg ");
       Serial.println(delayAvg);
       Serial.println("Should Flash");
-      handleLed.flash(255,0,0, 200, 3, 300);
+      handleLed->flash(255,0,0, 200, 3, 300);
     }
     //damit hab ich den zeitoffset.. 
     // if zeit - timeoffset % 1000 = 0: blink
@@ -174,14 +184,44 @@ void messaging::receiveTimer(int messageArriveTime) {
   }
 }
   void messaging::prepareAnnounceMessage() {
+    
     memcpy(&announceMessage.address, myAddress, 6);
+    //printAddress(announceMessage.address);
     announceMessage.sendTime = sendTime;
+    //Serial.print("Size");
+    
+    //Serial.print("Msg ");
+    //Serial.println((uint8_t *) &announceMessage);
+    //Serial.println("preparing ");
+    //Serial.print ("sendtime" );
+    //Serial.println(sendTime);
   }
   void messaging::prepareTimerMessage() {
     timerMessage.sendTime = sendTime;
     timerMessage.counter = timerCounter;
     timerMessage.lastDelay = lastDelay;
   }
+void messaging::printAllPeers() {
+    Serial.println("buh");
+    // Get the peer list
+    esp_now_peer_info_t peerList;
+    esp_now_fetch_peer(true, &peerList);
+    Serial.println("aha");
 
 
+    // Iterate over the peer list and print peer information
 
+    Serial.println("Peer List:");
+      Serial.print("Peer ");
+        Serial.print(": MAC Address=");
+
+        for (int j = 0; j < 6; ++j) {
+            Serial.print(peerList.peer_addr[j], HEX);
+            if (j < 5) {
+                Serial.print(":");
+            }
+        }
+        Serial.print(", Channel=");
+        Serial.print(peerList.channel);
+        Serial.println();
+}

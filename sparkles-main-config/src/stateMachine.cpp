@@ -26,6 +26,10 @@ void modeMachine::printMode(int mode) {
         case MODE_ANIMATE:
         Serial.println("MODE_ANIMATE");
         break;
+        default: 
+        Serial.print("Mode unknown ");
+        Serial.println(mode);
+        break;
     }
 }
 
