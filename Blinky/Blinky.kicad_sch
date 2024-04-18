@@ -8009,6 +8009,16 @@
 	)
 	(wire
 		(pts
+			(xy 212.09 149.86) (xy 220.98 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a428b5e0-92db-4a2a-bd90-6723b3f4e057")
+	)
+	(wire
+		(pts
 			(xy 350.52 186.69) (xy 350.52 184.15)
 		)
 		(stroke
@@ -8476,6 +8486,16 @@
 			(type default)
 		)
 		(uuid "cf1ef85a-f849-414d-aab7-efdd86c0e939")
+	)
+	(wire
+		(pts
+			(xy 212.09 147.32) (xy 220.98 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d08dfb55-f593-4d0c-b4ad-8d93e1b6abcb")
 	)
 	(wire
 		(pts
@@ -8998,7 +9018,7 @@
 		)
 		(uuid "01ac8a8d-3cdb-439f-8eb5-484841b1645c")
 	)
-	(label "PIN34"
+	(label "PIN37"
 		(at 219.71 78.74 0)
 		(fields_autoplaced yes)
 		(effects
@@ -9251,17 +9271,6 @@
 		)
 		(uuid "78e3a37b-0548-4790-a086-fe8f2a62532d")
 	)
-	(label "PIN35"
-		(at 214.63 124.46 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "7fa79436-fef4-4fe3-b164-2bc6ce86485e")
-	)
 	(label "PIN36"
 		(at 213.36 121.92 0)
 		(fields_autoplaced yes)
@@ -9273,7 +9282,7 @@
 		)
 		(uuid "80a5e28c-6ddc-4fce-abf5-ace21c7da83d")
 	)
-	(label "PIN37"
+	(label "PIN25"
 		(at 219.71 83.82 0)
 		(fields_autoplaced yes)
 		(effects
@@ -9284,7 +9293,7 @@
 		)
 		(uuid "8448cec0-81e8-4c1a-beb3-99ece6715973")
 	)
-	(label "PIN35"
+	(label "PIN36"
 		(at 219.71 76.2 0)
 		(fields_autoplaced yes)
 		(effects
@@ -9294,6 +9303,17 @@
 			(justify left bottom)
 		)
 		(uuid "85ba6d34-166c-4c9a-95c9-6e3468d432ac")
+	)
+	(label "PIN26"
+		(at 214.63 147.32 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "87cdd2c7-b3af-4fc9-8e48-ead11196ce6c")
 	)
 	(label "BLUE2"
 		(at 138.43 144.78 0)
@@ -9372,8 +9392,8 @@
 		)
 		(uuid "ba313d5e-8c3e-4955-9c27-40a2f413767d")
 	)
-	(label "PIN34"
-		(at 213.36 127 0)
+	(label "PIN25"
+		(at 214.63 149.86 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9381,7 +9401,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c6288e56-c513-4429-b896-2a2f06aaa757")
+		(uuid "bd7da283-f063-4a2d-b972-3fc7835e40ed")
 	)
 	(label "USB+"
 		(at 251.46 80.01 0)
@@ -9482,7 +9502,7 @@
 		)
 		(uuid "d32adfae-6fee-4450-bceb-0a8f6967dfe3")
 	)
-	(label "PIN36"
+	(label "PIN26"
 		(at 219.71 81.28 0)
 		(fields_autoplaced yes)
 		(effects
@@ -17009,7 +17029,7 @@
 				)
 			)
 		)
-		(property "Footprint" "footprint:SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL"
+		(property "Footprint" "footprint3:TSSOP-8_L4.4-W3.0-P0.65-LS6.4-BL-2"
 			(at 311.15 191.77 0)
 			(effects
 				(font
@@ -17522,7 +17542,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "footprint:SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL"
+		(property "Footprint" "footprint3:TSSOP-8_L4.4-W3.0-P0.65-LS6.4-BL-2"
 			(at 276.86 191.77 0)
 			(effects
 				(font
