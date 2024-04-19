@@ -15,6 +15,7 @@ ledHandler::ledHandler() {
   ledcAttach(ledPinRed2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
+  ledsOff();
 };
 
 float ledHandler::fract(float x) { return x - int(x); }
@@ -43,6 +44,7 @@ void ledHandler::flash(int r, int g, int b, int duration, int reps, int pause) {
   if (DEVICE == D1) {
     return;
   }
+  Serial.println("should flash");
   for (int i = 0; i < reps; i++ ){
     ledcFade(ledPinRed1, 0, r, duration);
     ledcFade(ledPinGreen1, 0, g, duration);

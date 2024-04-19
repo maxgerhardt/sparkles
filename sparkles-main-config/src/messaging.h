@@ -88,7 +88,8 @@ class messaging {
     private:  
         client_address clientAddresses[NUM_DEVICES];
         int addressCounter = 0;
-        modeMachine* messagingModeHandler;
+        modeMachine messagingModeHandler;
+        modeMachine* globalModeHandler;
         unsigned long arriveTime, receiveTime, sendTime, lastDelay, lastTime, timeOffset;
         int timerCounter = 0;
         int timerArray[TIMER_ARRAY_COUNT];
@@ -106,14 +107,14 @@ class messaging {
         message_announce announceMessage;
         message_mode modeMessage;
         message_timer_received timerReceivedMessage;
-        
+        bool gotTimer = false;
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t hostAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t myAddress[6];
         uint8_t timerReceiver[6] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         messaging();
-        void setup(modeMachine &messagingModeHandler, ledHandler &globalHandleLed,esp_now_peer_info_t &globalPeerInfo);
+        void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
         void blink();
         void removePeer(uint8_t address[6]);
         void printAddress(const uint8_t * mac_addr);
@@ -123,7 +124,7 @@ class messaging {
         void handleGotTimer();
         int getLastDelay();
         void setLastDelay(int delay);
-        void handleClapTime();
+        void handleClapTime(const uint8_t *incomingData);
         int getTimerCounter();
         void setTimerCounter(int counter);
         void incrementTimerCounter();
@@ -139,6 +140,12 @@ class messaging {
         void prepareTimerMessage();
         void printBroadcastAddress();
         void printAllPeers();
+        void setTimerReceiver(const uint8_t *incomingData);
+        void handleAnnounce(uint8_t address[6]);
+        void respondAnnounce();
+        void respondTimer();
+        int getMessagingMode();
+        void setMessagingMode(int mode);
         
 };
 

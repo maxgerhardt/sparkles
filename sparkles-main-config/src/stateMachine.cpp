@@ -6,6 +6,8 @@ modeMachine::modeMachine() {
 
 }
 void modeMachine::switchMode(int mode) {
+    Serial.print("Switched Mode to ");
+    printMode(mode);
     currentMode = mode;
 }
 int modeMachine::getMode() {
@@ -20,6 +22,11 @@ void modeMachine::printMode(int mode) {
         case MODE_SENDING_TIMER:
         Serial.println("MODE_SENDING_TIMER");
         break;
+        case MODE_WAIT_FOR_ANNOUNCE:
+        Serial.println("MODE_WAIT_FOR_ANNOUNCE");
+        break;
+        case MODE_WAIT_FOR_TIMER:
+        Serial.println("MODE_WAIT_FOR_TIMER");
         case MODE_CALIBRATE: 
         Serial.println("MODE_CALIBRATE");
         break;
@@ -30,7 +37,9 @@ void modeMachine::printMode(int mode) {
         Serial.print("Mode unknown ");
         Serial.println(mode);
         break;
-    }
+    }   
 }
-
+void modeMachine::printCurrentMode() {
+    printMode(currentMode);
+}
 

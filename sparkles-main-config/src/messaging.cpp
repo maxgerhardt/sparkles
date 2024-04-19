@@ -6,10 +6,10 @@
 messaging::messaging() {
 };
 
-void messaging::setup(modeMachine &messagingModeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo) {
-
+void messaging::setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo) {
     WiFi.macAddress(myAddress);
     handleLed = &globalHandleLed;
+    globalModeHandler = &modeHandler;
     peerInfo = &globalPeerInfo;
 }
 
@@ -33,7 +33,35 @@ void messaging::printBroadcastAddress(){
     Serial.println(macStr);
 }
 
+void messaging::setTimerReceiver(const uint8_t * incomingData) {
+    memcpy(&addressMessage,incomingData,sizeof(addressMessage));
+    Serial.println("calling Set Timer Receiver");
+    for (int i = 0; i < NUM_DEVICES; i++) {
+        if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
+            Serial.print("need to add peer ");
+            Serial.println(i);
+            memcpy(clientAddresses[i].address, addressMessage.address, 6);
+            Serial.println("j");
+            memcpy(&timerReceiver, addressMessage.address, 6);
+            Serial.println("k");
+            //addPeer(timerReceiver);
+            Serial.println("l");
+            addressCounter++;
+            Serial.println("switching");
+            globalModeHandler->switchMode( MODE_SENDING_TIMER);
+            break;
+        }
+        else if (memcmp(clientAddresses[i].address, addressMessage.address, 6) == 0) {
+            Serial.print("found: ");
+            printAddress(addressMessage.address);
+            globalModeHandler->switchMode(MODE_SENDING_TIMER);
+            break;
+        }
+    }
+}
+
 int messaging::addPeer(uint8_t * address) {
+    Serial.println("adding peer");
     memcpy(&peerInfo->peer_addr, address, 6);
     if (esp_now_get_peer(peerInfo->peer_addr, peerInfo) == ESP_OK) {
         Serial.println("Found Peer");
@@ -60,13 +88,13 @@ void messaging::handleAddressMessage(const esp_now_recv_info * mac) {
             memcpy(&timerReceiver, mac->src_addr, 6);
             addPeer(timerReceiver);
             addressCounter++;
-            messagingModeHandler->switchMode(MODE_SENDING_TIMER);
+            globalModeHandler->switchMode(MODE_SENDING_TIMER);
             break;
             }
             else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
             Serial.print("found: ");
             printAddress(addressMessage.address);
-            messagingModeHandler->switchMode(MODE_SENDING_TIMER);
+            globalModeHandler->switchMode(MODE_SENDING_TIMER);
 
             break;
             }
@@ -90,8 +118,8 @@ void messaging::setLastDelay(int delay) {
     lastDelay = delay;
 }
 
-void messaging::handleClapTime() {
-    
+void messaging::handleClapTime(const uint8_t *incomingdata) {
+    memcpy(&clapTime, incomingdata, sizeof(clapTime));
 }
 unsigned long messaging::getTimeOffset() {
     return timeOffset;
@@ -150,14 +178,18 @@ void messaging::printMessage(int message) {
 void messaging::receiveTimer(int messageArriveTime) {
   //add condition that if nothing happened after 5 seconds, situation goes back to start
   //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
+  Serial.println("receiving timer");
   int difference = messageArriveTime - lastTime;
   lastDelay = timerMessage.lastDelay;
 
   if (abs(difference-CALIBRATION_FREQUENCY*1000) < 500 and abs(timerMessage.lastDelay) <2500) {
+    Serial.print("a");
     if (arrayCounter <TIMER_ARRAY_COUNT) {
+        Serial.print("b");
       timerArray[arrayCounter] = timerMessage.lastDelay;
     }
     else {
+        Serial.print("c");
       for (int i = 0; i< TIMER_ARRAY_COUNT; i++) {
         delayAvg += timerArray[i];
       } 
@@ -167,7 +199,13 @@ void messaging::receiveTimer(int messageArriveTime) {
       //TODO: Make sure the message actually arrives.
       Serial.print("sending GOT_TIMER to ");
       printAddress(hostAddress);
-      esp_now_send(hostAddress, (uint8_t *) &gotTimerMessage, sizeof(gotTimerMessage));
+      if (messagingModeHandler.getMode()!=MODE_NO_SEND) {
+        Serial.println("Alerta");
+      }
+      else{
+        messagingModeHandler.switchMode(MODE_RESPOND_TIMER);
+        gotTimer = true;
+      }
       Serial.print("delay avg ");
       Serial.println(delayAvg);
       Serial.println("Should Flash");
@@ -225,3 +263,31 @@ void messaging::printAllPeers() {
         Serial.print(peerList.channel);
         Serial.println();
 }
+
+void messaging::handleAnnounce(uint8_t address[6]) {
+    Serial.println("handling announce");
+    setHostAddress(address);    
+    printAddress(addressMessage.address);
+    if (globalModeHandler->getMode() == MODE_WAIT_FOR_ANNOUNCE) {
+        if (addPeer(hostAddress) == 1) {
+            handleLed->flash(0, 125, 125, 200, 1, 50);
+        }
+        messagingModeHandler.switchMode(MODE_RESPOND_ANNOUNCE);
+    }
+}
+void messaging::respondAnnounce() {
+    esp_now_send(hostAddress, (uint8_t*) &addressMessage, sizeof(addressMessage));
+    globalModeHandler->switchMode(MODE_WAIT_FOR_TIMER);
+}
+int messaging::getMessagingMode() {
+    return messagingModeHandler.getMode();
+}
+void messaging::setMessagingMode(int mode) {
+    messagingModeHandler.switchMode(mode);
+}
+void messaging::respondTimer() {
+    esp_now_send(hostAddress, (uint8_t *) &gotTimerMessage, sizeof(gotTimerMessage));
+}
+
+
+
