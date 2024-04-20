@@ -16,6 +16,7 @@
 #define TIMER_INTERVAL_MS       500
 #define USING_TIM_DIV1 true
 
+        uint8_t myAddress[6];
 
 int mode;
 #define NUM_DEVICES 20
@@ -66,12 +67,16 @@ void IRAM_ATTR onTimer()
   //Serial.println(msgSendTime/1000);
     timerCounter++;
     //wait for timer vs wait for calibrate
+    
     if (modeHandler.getMode() == MODE_SENDING_TIMER) {
+      
       messageHandler.timerMessage.messageType = MSG_TIMER_CALIBRATION; 
       messageHandler.timerMessage.sendTime = msgSendTime;
       messageHandler.timerMessage.counter = timerCounter;
       messageHandler.timerMessage.lastDelay = lastDelay;
+      Serial.println("Sending timer msg");
       esp_err_t result = esp_now_send(messageHandler.timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
+      
     }
     else {
       //Serial.println("broadcasting");
@@ -93,19 +98,19 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
       messageHandler.setTimerReceiver(incomingData);
     break;
     case MSG_GOT_TIMER: 
-      Serial.println("GOT TIMER");
       messageHandler.removePeer(messageHandler.timerReceiver);
       timerCounter = 0;
       lastDelay = 0;
       modeHandler.switchMode(MODE_ANIMATE);
       break;
     case MSG_SEND_CLAP_TIME:
-      Serial.println("GOT CLAP");
       messageHandler.handleClapTime(incomingData);
 
-      Serial.println("--");
       break;
-
+    case MSG_ANNOUNCE:
+      Serial.println("why did i receive an announce message");
+      messageHandler.printAddress(mac->src_addr);
+      break;
     default: 
       Serial.println("MSG NOT RECOGNIZED");
       Serial.println(incomingData[0]);
@@ -167,6 +172,7 @@ void setup() {
   lastClap = millis();
   timerCounter = 0;
   modeHandler.switchMode(MODE_SEND_ANNOUNCE);
+  WiFi.macAddress(myAddress);
 }
 
 void loop() {
@@ -184,7 +190,12 @@ void loop() {
     if (lastClap+5000 < millis()) {
       Serial.println("still alive");
       messageHandler.printAddress(messageHandler.announceMessage.address);
+      handleLed.flash(0, 255, 0, 200, 2, 50);
       lastClap = millis();
+      Serial.println("MessageHandler Timer receiver ");
+      messageHandler.printAddress(messageHandler.timerReceiver);
+      Serial.println("myAddress)");
+      messageHandler.printAddress(myAddress);
     }
     if (messageHandler.clapTime.clapCounter > oldClapCounter) {
       oldClapCounter = messageHandler.clapTime.clapCounter;

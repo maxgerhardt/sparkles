@@ -36,9 +36,10 @@ void messaging::printBroadcastAddress(){
 void messaging::setTimerReceiver(const uint8_t * incomingData) {
     memcpy(&addressMessage,incomingData,sizeof(addressMessage));
     Serial.println("calling Set Timer Receiver");
+    
     for (int i = 0; i < NUM_DEVICES; i++) {
-        if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
-            printAddress(addressMessage.address);
+        if (memcmp(&clientAddresses[i].address, emptyAddress, 6) == 0) {
+            //printAddress(addressMessage.address);
             Serial.print("need to add peer ");
             Serial.println(i);
             memcpy(&clientAddresses[i].address, addressMessage.address, 6);
@@ -50,9 +51,11 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
             addressCounter++;
             Serial.println("switching");
             globalModeHandler->switchMode( MODE_SENDING_TIMER);
+            
+
             break;
         }
-        else if (memcmp(clientAddresses[i].address, addressMessage.address, 6) == 0) {
+        else if (memcmp(&clientAddresses[i].address, addressMessage.address, 6) == 0) {
             Serial.print("found: ");
             printAddress(addressMessage.address);
             globalModeHandler->switchMode(MODE_SENDING_TIMER);
@@ -62,24 +65,24 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
 }
 
 int messaging::addPeer(uint8_t * address) {
-    Serial.println("adding peer");
-    /*memcpy(&peerInfo->peer_addr, address, 6);
+    memcpy(&peerInfo->peer_addr, address, 6);
+    
     if (esp_now_get_peer(peerInfo->peer_addr, peerInfo) == ESP_OK) {
-        Serial.println("Found Peer");
+        //Serial.println("Found Peer");
         return 0;
     }
     peerInfo->channel = 0;  
     peerInfo->encrypt = false;
-     g    // Add peer        
+         // Add peer        
     if (esp_now_add_peer(peerInfo) != ESP_OK){
-        Serial.println("Failed to add peer");
+        //Serial.println("Failed to add peer");
         return -1;
     }
     else {
-        Serial.println("Added Peer");
+        //Serial.println("Added Peer");
         return 1;
     }
-    */
+    
 }
 
 void messaging::handleAddressMessage(const esp_now_recv_info * mac) {
