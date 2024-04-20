@@ -42,14 +42,14 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
             memcpy(&clientAddresses[i].address, addressMessage.address, 6);
             memcpy(&timerReceiver, addressMessage.address, 6);
             addPeer(timerReceiver);
-            error_message = "should have added timerReceiver";
+            addError("should have added timerReceiver");
             addressCounter++;
             globalModeHandler->switchMode( MODE_SENDING_TIMER);
             break;
         }
         else if (memcmp(&clientAddresses[i].address, addressMessage.address, 6) == 0) {
             globalModeHandler->switchMode(MODE_SENDING_TIMER);
-            error_message = "address was already in list";
+            addError("address was already in list");
             break;
         }
     }
@@ -77,10 +77,10 @@ int messaging::addPeer(uint8_t * address) {
 }
 
 void messaging::handleAddressMessage(const esp_now_recv_info * mac) {
-    /*
+    
     for (int i = 0; i < NUM_DEVICES; i++) {
         if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
-            Serial.println("need to add peer");
+            addError("need to add peer");
             memcpy(&clientAddresses[i].address, addressMessage.address, 6);
             memcpy(&timerReceiver, mac->src_addr, 6);
             addPeer(timerReceiver);
@@ -89,14 +89,13 @@ void messaging::handleAddressMessage(const esp_now_recv_info * mac) {
             break;
             }
             else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
-            Serial.print("found: ");
-            printAddress(addressMessage.address);
+            addError("found: ");
+            //printAddress(addressMessage.address);
             globalModeHandler->switchMode(MODE_SENDING_TIMER);
 
             break;
             }
         }
-*/
 }
 void messaging::handleGotTimer() {
     removePeer(timerReceiver);
@@ -166,6 +165,7 @@ void messaging::printMessage(int message) {
         break;
         case MSG_ANIMATION: 
             Serial.println("MSG_ANIMATION");
+        break;
         default: 
             Serial.println("Didn't recognize Message");
             Serial.println(message);
@@ -175,18 +175,14 @@ void messaging::printMessage(int message) {
 void messaging::receiveTimer(int messageArriveTime) {
   //add condition that if nothing happened after 5 seconds, situation goes back to start
   //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
-  Serial.println("receiving timer");
   int difference = messageArriveTime - lastTime;
   lastDelay = timerMessage.lastDelay;
 
-  if (abs(difference-CALIBRATION_FREQUENCY*1000) < 500 and abs(timerMessage.lastDelay) <2500) {
-    Serial.print("a");
+  if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) < 500 and abs(timerMessage.lastDelay) <2500) {
     if (arrayCounter <TIMER_ARRAY_COUNT) {
-        Serial.print("b");
       timerArray[arrayCounter] = timerMessage.lastDelay;
     }
     else {
-        Serial.print("c");
       for (int i = 0; i< TIMER_ARRAY_COUNT; i++) {
         delayAvg += timerArray[i];
       } 
@@ -194,18 +190,14 @@ void messaging::receiveTimer(int messageArriveTime) {
       gotTimerMessage.delayAvg = delayAvg;
       timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
       //TODO: Make sure the message actually arrives.
-      Serial.print("sending GOT_TIMER to ");
-      printAddress(hostAddress);
       if (messagingModeHandler.getMode()!=MODE_NO_SEND) {
         Serial.println("Alerta");
       }
       else{
         messagingModeHandler.switchMode(MODE_RESPOND_TIMER);
+        addError("GOT TIMER");
         gotTimer = true;
       }
-      Serial.print("delay avg ");
-      Serial.println(delayAvg);
-      Serial.println("Should Flash");
       handleLed->flash(255,0,0, 200, 3, 300);
     }
     //damit hab ich den zeitoffset.. 
@@ -215,6 +207,11 @@ void messaging::receiveTimer(int messageArriveTime) {
     arrayCounter++;
   }
   else {
+    /*error_message += "Not enough. Difference =  ";
+    error_message += String(difference);
+    error_message += "timerMessage last delay = ";
+    error_message += String(timerMessage.lastDelay);
+    */
     lastTime = messageArriveTime;
   }
 }
@@ -263,18 +260,23 @@ void messaging::printAllPeers() {
       
 }
 void messaging::handleAnnounce(uint8_t address[6]) {
-    setHostAddress(address);    
-    if (globalModeHandler->getMode() == MODE_WAIT_FOR_ANNOUNCE) {
-        if (addPeer(hostAddress) == 1) {
-            handleLed->flash(0, 125, 125, 200, 1, 50);
-        }
-        else {
-            error_message = "COULD NOT ADD PEER";
-        }
-        messagingModeHandler.switchMode(MODE_RESPOND_ANNOUNCE);
+    if (gotTimer == true) {
+        return;
     }
+    addError("Should have handled announce \n");
+    setHostAddress(address);    
+    if (addPeer(hostAddress) == 1) {
+        handleLed->flash(0, 125, 125, 200, 1, 50);
+    }
+    else {
+        addError("COULD NOT ADD PEER");
+    }
+    messagingModeHandler.switchMode(MODE_RESPOND_ANNOUNCE);
 }
 void messaging::respondAnnounce() {
+    addSent(String(globalModeHandler->getMode()));
+    messagingModeHandler.switchMode(MODE_WAIT_ANNOUNCE_RESPONCE);
+    msgSendTime = millis();
     esp_now_send(hostAddress, (uint8_t*) &addressMessage, sizeof(addressMessage));
     globalModeHandler->switchMode(MODE_WAIT_FOR_TIMER);
 }
@@ -283,9 +285,45 @@ int messaging::getMessagingMode() {
 }
 void messaging::setMessagingMode(int mode) {
     messagingModeHandler.switchMode(mode);
+    addError(messagingModeHandler.modeToText(mode));
 }
 void messaging::respondTimer() {
+    addError("Got Timer ");
+    addSent("Sent timerMessage");
+    messagingModeHandler.switchMode(MODE_WAIT_TIMER_RESPONSE);
+    msgSendTime = millis();
     esp_now_send(hostAddress, (uint8_t *) &gotTimerMessage, sizeof(gotTimerMessage));
+}
+void messaging::handleReceived() {
+    if (message_received != "") {
+        Serial.print("Message received: ");
+        Serial.println(message_received);
+        message_received = "";
+    }
+}
+void messaging::handleErrors() {
+    if (error_message != "") {
+        Serial.print("Error Message from Handler: ");
+        Serial.println(error_message);
+        error_message = "";
+    }
+}
+void messaging::handleSent() {
+    if (message_sent != "") {
+        Serial.print("Sent from Handler: ");
+        Serial.println(message_sent);
+        message_sent = "";
+    } 
+}
+void messaging::addError(String error) {
+    error_message += "\n";
+    error_message += error;
+    error_message += "\n";
+}
+void messaging::addSent(String sent) {
+    message_sent += "\n";
+    message_sent += sent;
+    message_sent += "\n";
 }
 
 

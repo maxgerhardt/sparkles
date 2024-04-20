@@ -35,28 +35,25 @@ void messaging::printBroadcastAddress(){
 
 void messaging::setTimerReceiver(const uint8_t * incomingData) {
     memcpy(&addressMessage,incomingData,sizeof(addressMessage));
-    Serial.println("calling Set Timer Receiver");
     
     for (int i = 0; i < NUM_DEVICES; i++) {
         if (memcmp(&clientAddresses[i].address, emptyAddress, 6) == 0) {
             //printAddress(addressMessage.address);
-            Serial.println(i);
             memcpy(&clientAddresses[i].address, addressMessage.address, 6);
             memcpy(&timerReceiver, addressMessage.address, 6);
             addPeer(timerReceiver);
+            addError("should have added timerReceiver");
             addressCounter++;
             globalModeHandler->switchMode( MODE_SENDING_TIMER);
-            
-
             break;
         }
         else if (memcmp(&clientAddresses[i].address, addressMessage.address, 6) == 0) {
             globalModeHandler->switchMode(MODE_SENDING_TIMER);
+            addError("address was already in list");
             break;
         }
     }
 }
-
 
 int messaging::addPeer(uint8_t * address) {
     memcpy(&peerInfo->peer_addr, address, 6);
@@ -172,8 +169,7 @@ void messaging::printMessage(int message) {
         default: 
             Serial.println("Didn't recognize Message");
             Serial.println(message);
-            Serial.println("----");
-            
+            Serial.println("----");          
     }
 }
 void messaging::receiveTimer(int messageArriveTime) {
@@ -279,8 +275,9 @@ void messaging::handleAnnounce(uint8_t address[6]) {
     messagingModeHandler.switchMode(MODE_RESPOND_ANNOUNCE);
 }
 void messaging::respondAnnounce() {
-    addSent("Sent address Message");
     addSent(String(globalModeHandler->getMode()));
+    messagingModeHandler.switchMode(MODE_WAIT_ANNOUNCE_RESPONCE);
+    msgSendTime = millis();
     esp_now_send(hostAddress, (uint8_t*) &addressMessage, sizeof(addressMessage));
     globalModeHandler->switchMode(MODE_WAIT_FOR_TIMER);
 }
@@ -289,13 +286,14 @@ int messaging::getMessagingMode() {
 }
 void messaging::setMessagingMode(int mode) {
     messagingModeHandler.switchMode(mode);
+    addError(messagingModeHandler.modeToText(mode));
 }
 void messaging::respondTimer() {
     addError("Got Timer ");
     addSent("Sent timerMessage");
-    int error = esp_now_send(hostAddress, (uint8_t *) &gotTimerMessage, sizeof(gotTimerMessage));
-    addError(String(error));
-    addError(String(esp_err_to_name(error)));
+    messagingModeHandler.switchMode(MODE_WAIT_TIMER_RESPONSE);
+    msgSendTime = millis();
+    esp_now_send(hostAddress, (uint8_t *) &gotTimerMessage, sizeof(gotTimerMessage));
 }
 void messaging::handleReceived() {
     if (message_received != "") {

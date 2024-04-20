@@ -7,38 +7,52 @@ modeMachine::modeMachine() {
 }
 void modeMachine::switchMode(int mode) {
     Serial.print("Switched Mode to ");
-    Serial.println(mode);
+    printMode(mode);
     currentMode = mode;
 }
 int modeMachine::getMode() {
     return currentMode;
 }
 void modeMachine::printMode(int mode) { 
-    Serial.print("Mode: ");
+    Serial.println(modeToText(mode));   
+}
+String modeMachine::modeToText(int mode) {
+    String out ;
+    out = "Mode: ";
     switch (mode) {
         case MODE_SEND_ANNOUNCE:
-        Serial.println("MODE_SEND_ANNOUNCE");
+        out += "MODE_SEND_ANNOUNCE";
         break;
-        case MODE_SENDING_TIMER:
-        Serial.println("MODE_SENDING_TIMER");
+    case MODE_SENDING_TIMER:
+        out += "MODE_SENDING_TIMER";
         break;
-        case MODE_WAIT_FOR_ANNOUNCE:
-        Serial.println("MODE_WAIT_FOR_ANNOUNCE");
+    case MODE_WAIT_FOR_ANNOUNCE:
+        out += "MODE_WAIT_FOR_ANNOUNCE";
         break;
-        case MODE_WAIT_FOR_TIMER:
-        Serial.println("MODE_WAIT_FOR_TIMER");
+    case MODE_WAIT_FOR_TIMER:
+        out += "MODE_WAIT_FOR_TIMER";
         break;
-        case MODE_CALIBRATE: 
-        Serial.println("MODE_CALIBRATE");
+    case MODE_CALIBRATE: 
+        out += "MODE_CALIBRATE";
         break;
-        case MODE_ANIMATE:
-        Serial.println("MODE_ANIMATE");
+    case MODE_ANIMATE:
+        out += "MODE_ANIMATE";
         break;
-        default: 
-        Serial.print("Mode unknown ");
-        Serial.println(mode);
+    case MODE_NO_SEND: 
+        out += "MODE_NO_SEND";
+        break;
+    case MODE_RESPOND_ANNOUNCE:
+        out += "MODE_RESPOND_ANNOUNCE";
+        break;
+    case MODE_RESPOND_TIMER:
+        out += "MODE_RESPOND_TIMER";
+        break;
+    default: 
+        out += "Mode unknown ";
+        out += String(mode); // Convert 'mode' integer to String and concatenate
         break;
     }   
+    return out;
 }
 void modeMachine::printCurrentMode() {
     printMode(currentMode);

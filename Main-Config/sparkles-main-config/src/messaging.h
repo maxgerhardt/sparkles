@@ -16,7 +16,9 @@
   #ifndef CALIBRATION_FREQUENCY
   #define CALIBRATION_FREQUENCY 1000
   #endif
-
+#ifndef TIMER_INTERVAL_MS
+#define TIMER_INTERVAL_MS 600
+#endif
 #define TIMER_ARRAY_COUNT 3
 #define LEDC_TIMER_12_BIT  12
 #define LEDC_BASE_FREQ     5000
@@ -98,7 +100,7 @@ class messaging {
         ledHandler* handleLed;
         esp_now_peer_info_t* peerInfo;
     public: 
-
+        int msgSendTime;
         message_animate animationMessage;
         message_clap_time clapTime;
         message_address addressMessage;
@@ -108,6 +110,8 @@ class messaging {
         message_mode modeMessage;
         message_timer_received timerReceivedMessage;
         String error_message = "";
+        String message_received = "";
+        String message_sent = "";
         bool gotTimer = false;
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -147,7 +151,11 @@ class messaging {
         void respondTimer();
         int getMessagingMode();
         void setMessagingMode(int mode);
-        
+        void handleErrors();
+        void addError(String error);
+        void handleReceived();
+        void handleSent();
+        void addSent(String sent);
 };
 
 

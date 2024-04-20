@@ -17,7 +17,7 @@
 #define CALIBRATION_FREQUENCY 1000
 #endif
 #ifndef TIMER_INTERVAL_MS
-#define TIMER_INTERVAL_MS 500
+#define TIMER_INTERVAL_MS 600
 #endif
 #define TIMER_ARRAY_COUNT 3
 #define LEDC_TIMER_12_BIT  12
@@ -99,9 +99,8 @@ class messaging {
         int delayAvg = 0;
         ledHandler* handleLed;
         esp_now_peer_info_t* peerInfo;
-        
     public: 
-
+        int msgSendTime;
         message_animate animationMessage;
         message_clap_time clapTime;
         message_address addressMessage;

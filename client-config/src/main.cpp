@@ -8,7 +8,7 @@
 #include <PeakDetection.h> 
 
 //#include "ESP32TimerInterrupt.h"
-#define TIMER_INTERVAL_MS       500
+#define TIMER_INTERVAL_MS       600
 #define USING_TIM_DIV1 true
 #include <messaging.h>
 #include <ledHandler.h>
@@ -188,25 +188,26 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
 
 
 void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  messageHandler.addError("SENT\n");
+  messageHandler.addError("It took"+ String(millis()-messageHandler.msgSendTime)+" ms to send this message");
+
   count++;
-  messageHandler.addError(String(count));
-  if (messageHandler.getMessagingMode() == MODE_RESPOND_ANNOUNCE) {
+  if (messageHandler.getMessagingMode() == MODE_WAIT_ANNOUNCE_RESPONCE) {
     messageHandler.printAddress(mac_addr);
     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
       modeHandler.switchMode(MODE_WAIT_FOR_TIMER);
-    }
-    else {
-    }
-  }
-  else if (messageHandler.getMessagingMode() == MODE_RESPOND_TIMER) {
-    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      modeHandler.switchMode(MODE_ANIMATE);
-      messageHandler.addError("should have sent.");
       messageHandler.setMessagingMode(MODE_NO_SEND);
     }
     else {
-      messageHandler.addError("shouldn't have sent");
+      messageHandler.setMessagingMode(MODE_RESPOND_ANNOUNCE);
+    }
+  }
+  else if (messageHandler.getMessagingMode() == MODE_WAIT_TIMER_RESPONSE) {
+    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+      modeHandler.switchMode(MODE_ANIMATE);
+      messageHandler.setMessagingMode(MODE_NO_SEND);
+    }
+    else {
+      messageHandler.setMessagingMode(MODE_RESPOND_TIMER);
     }
   }
   else {
@@ -214,33 +215,7 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
   }
 }
 
-/*void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  //turn into MODE WAIT FOR TIMER if message to host is saved.
-  Serial.println("sent message to");
-  messageHandler.printAddress(mac_addr);
-  modeHandler.printCurrentMode();
-  Serial.println("A");
-  if (modeHandler.getMode() == MODE_WAIT_FOR_ANNOUNCE) {
-    Serial.println("B");
-    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      Serial.println("C");
-      modeHandler.switchMode(MODE_WAIT_FOR_TIMER);
-    }
-  }
-  else if (modeHandler.getMode() == MODE_WAIT_FOR_TIMER) {
-    Serial.println("D");
-    Serial.println("should send");
-    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      Serial.println("E");
-      modeHandler.switchMode(MODE_ANIMATE);
-    }
-  }
-    else {
-      //esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
-    }
-}
 
-*/
 
 
 
@@ -290,25 +265,20 @@ void loop() {
   messageHandler.handleSent();
   if (messageHandler.getMessagingMode() == MODE_RESPOND_ANNOUNCE) {
     count = 0;
-    Serial.println("responding to announce");
     messageHandler.respondAnnounce();
     messageHandler.setMessagingMode(MODE_NO_SEND);
-    delay(100);
+    //delay(100);
   }
   else if (messageHandler.getMessagingMode() == MODE_RESPOND_TIMER) {
     count = 0;
-    Serial.println("responding to timer");
-    messageHandler.printAddress(messageHandler.hostAddress);
+    delay(50);
     messageHandler.respondTimer();
-    delay(100);
+    //delay(100);
     count++;
 
   }
 
 if (modeHandler.getMode() == MODE_ANIMATE) {
-  //flash(0, 255, 0, 200, 2, 50);
-
- 
   double data = (double)analogRead(audioPin)/512-1;
   peakDetection.add(data); 
   int peak = peakDetection.getPeak(); 
@@ -341,9 +311,7 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
     Serial.println("Still alive1");
     modeHandler.printCurrentMode();
     lastClap = millis();
-
-
-  handleLed.flash(125, 0, 125, 200, 1, 50);
+    handleLed.flash(125, 0, 125, 200, 1, 50);
 
   }
 
