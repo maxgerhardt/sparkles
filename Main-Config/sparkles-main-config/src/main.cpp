@@ -74,7 +74,7 @@ void IRAM_ATTR onTimer()
       messageHandler.timerMessage.sendTime = msgSendTime;
       messageHandler.timerMessage.counter = timerCounter;
       messageHandler.timerMessage.lastDelay = lastDelay;
-      Serial.println("Sending timer msg");
+      messageHandler.error_message = "Should have sent timer message ";
       esp_err_t result = esp_now_send(messageHandler.timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
       
     }
@@ -176,6 +176,14 @@ void setup() {
 }
 
 void loop() {
+      if (messageHandler.error_message != "") {
+        Serial.println("------");
+        Serial.println(messageHandler.error_message);
+        messageHandler.error_message = "";
+        Serial.print("Currently in mode");
+        modeHandler.printCurrentMode();
+        Serial.println("------");
+      }
     double data = (double)analogRead(audioPin)/512-1;  // converts the sensor value to a range between -1 and 1
     peakDetection.add(data);                     // adds a new data point
     int peak = peakDetection.getPeak();          // 0, 1 or -1
@@ -189,13 +197,10 @@ void loop() {
     }
     if (lastClap+5000 < millis()) {
       Serial.println("still alive");
-      messageHandler.printAddress(messageHandler.announceMessage.address);
       handleLed.flash(0, 255, 0, 200, 2, 50);
       lastClap = millis();
-      Serial.println("MessageHandler Timer receiver ");
-      messageHandler.printAddress(messageHandler.timerReceiver);
-      Serial.println("myAddress)");
-      messageHandler.printAddress(myAddress);
+      messageHandler.printAllPeers();
+
     }
     if (messageHandler.clapTime.clapCounter > oldClapCounter) {
       oldClapCounter = messageHandler.clapTime.clapCounter;

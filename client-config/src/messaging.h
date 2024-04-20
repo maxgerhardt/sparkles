@@ -13,10 +13,12 @@
 #define MSG_ANIMATION 7
 #define MSG_NOCLAPFOUND -1
 #define NUM_DEVICES 20
-  #ifndef CALIBRATION_FREQUENCY
-  #define CALIBRATION_FREQUENCY 1000
-  #endif
-
+#ifndef CALIBRATION_FREQUENCY
+#define CALIBRATION_FREQUENCY 1000
+#endif
+#ifndef TIMER_INTERVAL_MS
+#define TIMER_INTERVAL_MS 500
+#endif
 #define TIMER_ARRAY_COUNT 3
 #define LEDC_TIMER_12_BIT  12
 #define LEDC_BASE_FREQ     5000
@@ -86,7 +88,7 @@ struct client_address {
 
 class messaging {
     private:  
-        client_address clientAddresses[NUM_DEVICES];
+        client_address clientAddresses[2];
         int addressCounter = 0;
         modeMachine messagingModeHandler;
         modeMachine* globalModeHandler;
@@ -97,6 +99,7 @@ class messaging {
         int delayAvg = 0;
         ledHandler* handleLed;
         esp_now_peer_info_t* peerInfo;
+        
     public: 
 
         message_animate animationMessage;
@@ -108,6 +111,8 @@ class messaging {
         message_mode modeMessage;
         message_timer_received timerReceivedMessage;
         String error_message = "";
+        String message_received = "";
+        String message_sent = "";
         bool gotTimer = false;
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -147,6 +152,11 @@ class messaging {
         void respondTimer();
         int getMessagingMode();
         void setMessagingMode(int mode);
+        void handleErrors();
+        void addError(String error);
+        void handleReceived();
+        void handleSent();
+        void addSent(String sent);
         
 };
 
