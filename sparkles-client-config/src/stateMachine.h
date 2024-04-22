@@ -13,15 +13,21 @@
 #define MODE_NO_SEND 90
 #define MODE_RESPOND_ANNOUNCE 91
 #define MODE_RESPOND_TIMER 92
+#define MODE_WAIT_TIMER_RESPONSE 93
+#define MODE_WAIT_ANNOUNCE_RESPONCE 94
 
     class modeMachine {
         private: 
             int currentMode = MODE_INIT;
+            String modeLog = "";
         public:
             modeMachine();
             void switchMode(int mode);
+            void logMode(int mode);
+            void printLog();
             int getMode();
             void printMode(int mode);
+            String modeToText(int mode);
             void printCurrentMode();
     };
 #endif

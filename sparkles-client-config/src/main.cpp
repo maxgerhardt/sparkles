@@ -8,7 +8,7 @@
 #include <PeakDetection.h> 
 
 //#include "ESP32TimerInterrupt.h"
-#define TIMER_INTERVAL_MS       500
+#define TIMER_INTERVAL_MS       600
 #define USING_TIM_DIV1 true
 #include <messaging.h>
 #include <ledHandler.h>
@@ -24,7 +24,6 @@ float redfloat = 0, greenfloat = 0, bluefloat = 0;
 uint32_t timerDings;
 
 float rgb[3];
-#define TIMER_ARRAY_COUNT 3
 
 bool gotTimer = false;
 PeakDetection peakDetection; 
@@ -42,6 +41,7 @@ esp_now_peer_info_t peerInfo;
 esp_now_peer_num_t peerNum;
 
 //Variables for Time Offset
+/*
 message_animate animationMessage;
 message_clap_time clapTime;
 message_address addressMessage;
@@ -50,7 +50,7 @@ message_got_timer gotTimerMessage;
 message_announce announceMessage;
 message_mode modeMessage;
 message_timer_received timerReceivedMessage;
-
+*/
 
 
 
@@ -86,7 +86,7 @@ int addressSending = 0;
 //timer stuff
 //ESP32Timer ITimer(0);
 
-
+message_clap_time clapTime;
 
 
 /*
@@ -131,108 +131,73 @@ void receiveTimer(int messageArriveTime) {
 */
 
 
-
-
+int count = 0;
+bool didIreset = true;
 
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
-  Serial.print("received ");
-  messageHandler.printMessage(incomingData[0]);
-  msgReceiveTime = micros();
-  //memcpy(&messageHandler.hostAddress, mac->src_addr, sizeof(messageHandler.hostAddress));
-  switch (incomingData[0]) {
-    case MSG_ANNOUNCE: 
-    { 
-      messageHandler.handleAnnounce(mac->src_addr);
-      /*if (modeHandler.getMode() == MODE_WAIT_FOR_ANNOUNCE) {
-        if (messageHandler.addPeer(hostAddress) == 1) {
-          handleLed.flash(0, 125, 125, 200, 1, 50);
-          memcpy(&announceMessage, incomingData, sizeof(announceMessage));
-          Serial.println("printink");
-          messageHandler.printAddress(messageHandler.hostAddress);
-          modeHandler.printCurrentMode();
-          esp_now_send(messageHandler.hostAddress, (uint8_t*) &messageHandler.addressMessage, sizeof(messageHandler.addressMessage));
-          Serial.println("should have sent");
-          //modeSwitch(MODE_WAIT_FOR_TIMER);
-        }
-      }*/
-      
-    }
-      break;
-    case MSG_TIMER_CALIBRATION:  
-    { 
-      if (messageHandler.gotTimer == true) {
-        Serial.println("already got timer");
-        break;
-      }
-      //messageHandler.addPeer(hostAddress);
-      memcpy(&timerMessage,incomingData,sizeof(timerMessage));
-      handleLed.flash(125, 0, 0 , 200, 1, 50);
-      messageHandler.receiveTimer(msgReceiveTime);
-    }
-      break;
-    case MSG_ANIMATION:
-    Serial.println("animation message incoming");
-    if (modeHandler.getMode() == MODE_ANIMATE) {
-      Serial.println("Calling Blink");
-      memcpy(&animationMessage, incomingData, sizeof(animationMessage));
-      Serial.print("Animation Message speed");
-      Serial.println(animationMessage.speed);
-      handleLed.candle(animationMessage.speed, animationMessage.reps, animationMessage.delay);
-    }
-      break;
-    default: 
-      Serial.println("Data type not recognized");
-  }
+    msgReceiveTime = micros();
+    messageHandler.addMessageLog("Received: ");
+    messageHandler.addMessageLog(messageHandler.messageCodeToText((incomingData[0])));
+    messageHandler.addMessageLog("\n");
+    messageHandler.addMessageLog(modeHandler.modeToText(modeHandler.getMode()));
+    messageHandler.addMessageLog("\n");
   
+    messageHandler.pushDataToQueue(mac, incomingData, len, msgReceiveTime);
 }
 
 
 void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  Serial.println("Sent");
-  if (modeHandler.getMode() == MODE_RESPOND_ANNOUNCE) {
-    Serial.print("A");
-    messageHandler.printAddress(mac_addr);
+  count++;
+  if (messageHandler.getMessagingMode() == MODE_WAIT_ANNOUNCE_RESPONCE) {
     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      //msgArriveTime = micros();
-      //lastDelay = msgArriveTime-msgSendTime;
+      messageHandler.setMessagingMode(MODE_NO_SEND);
       modeHandler.switchMode(MODE_WAIT_FOR_TIMER);
     }
     else {
-     //msgArriveTime = 0;
+      messageHandler.setMessagingMode(MODE_RESPOND_ANNOUNCE);
+    }
+  }
+  else if (messageHandler.getMessagingMode() == MODE_WAIT_TIMER_RESPONSE) {
+    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+      modeHandler.switchMode(MODE_ANIMATE);
+      messageHandler.setMessagingMode(MODE_NO_SEND);
+    }
+    else {
+      messageHandler.setMessagingMode(MODE_RESPOND_TIMER);
     }
   }
   else {
     modeHandler.printCurrentMode();
   }
 }
+void ledsOff() {
+  ledcWrite(ledPinRed2, 0);
+  ledcWrite(ledPinGreen2, 0);
+  ledcWrite(ledPinBlue2, 0);
+  ledcWrite(ledPinRed1, 0);
+  ledcWrite(ledPinGreen1, 0);
+  ledcWrite(ledPinBlue1, 0);
 
-/*void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-  //turn into MODE WAIT FOR TIMER if message to host is saved.
-  Serial.println("sent message to");
-  messageHandler.printAddress(mac_addr);
-  modeHandler.printCurrentMode();
-  Serial.println("A");
-  if (modeHandler.getMode() == MODE_WAIT_FOR_ANNOUNCE) {
-    Serial.println("B");
-    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      Serial.println("C");
-      modeHandler.switchMode(MODE_WAIT_FOR_TIMER);
-    }
-  }
-  else if (modeHandler.getMode() == MODE_WAIT_FOR_TIMER) {
-    Serial.println("D");
-    Serial.println("should send");
-    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
-      Serial.println("E");
-      modeHandler.switchMode(MODE_ANIMATE);
-    }
-  }
-    else {
-      //esp_now_send(broadcastAddress,(uint8_t *) &timerReceivedMessage, sizeof(timerReceivedMessage) );
-    }
 }
-
-*/
+void flash(int r, int g, int b, int duration, int reps, int pause) {
+  for (int i = 0; i < reps; i++ ){
+    ledcFade(ledPinRed1, 0, r, duration);
+    ledcFade(ledPinGreen1, 0, g, duration);
+    ledcFade(ledPinBlue1, 0, b, duration);
+    ledcFade(ledPinRed2, 0, r, duration);
+    ledcFade(ledPinGreen2, 0, g, duration);
+    ledcFade(ledPinBlue2, 0, b, duration);
+    delay(duration);
+    ledcFade(ledPinRed1, r, 0, duration);
+    ledcFade(ledPinGreen1, g, 0, duration);
+    ledcFade(ledPinBlue1, b, 0, duration);
+    ledcFade(ledPinRed2, r, 0, duration);
+    ledcFade(ledPinGreen2, g, 0, duration);
+    ledcFade(ledPinBlue2, b, 0, duration);
+    delay(pause);
+    ledsOff(); 
+  }
+}   
 
 
 
@@ -256,6 +221,8 @@ void setup() {
     Serial.println("Failed to add peer");
     return;
   }
+
+  handleLed.setup();
   messageHandler.setup(modeHandler, handleLed, peerInfo);
   modeHandler.switchMode(MODE_WAIT_FOR_ANNOUNCE);
   esp_now_register_recv_cb(OnDataRecv);  
@@ -271,26 +238,29 @@ void setup() {
   delay(1000);
   timerDings = micros();
   clapTime.clapCounter = 0;
-  handleLed.flash(0, 255, 0, 200, 2, 50);
   lastFlash = 0;
 }
 
 void loop() {
+
+
+  messageHandler.handleErrors();
+  messageHandler.handleReceived();
+  messageHandler.handleSent();
+  messageHandler.processDataFromQueue();
   if (messageHandler.getMessagingMode() == MODE_RESPOND_ANNOUNCE) {
-    Serial.println("responding to announce");
-    messageHandler.respondAnnounce();
+    count = 0;
     messageHandler.setMessagingMode(MODE_NO_SEND);
+    messageHandler.respondAnnounce();
   }
   else if (messageHandler.getMessagingMode() == MODE_RESPOND_TIMER) {
-    Serial.println("responding to timer");
+    count = 0;
     messageHandler.respondTimer();
-    messageHandler.setMessagingMode(MODE_NO_SEND);
+    count++;
+
   }
 
 if (modeHandler.getMode() == MODE_ANIMATE) {
-  //flash(0, 255, 0, 200, 2, 50);
-
- 
   double data = (double)analogRead(audioPin)/512-1;
   peakDetection.add(data); 
   int peak = peakDetection.getPeak(); 
@@ -310,23 +280,29 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
   }
   else if (millis()>(lastClap+5000)) 
   {
+        //handleLed.flash(0, 255, 0, 200, 1, 50);
+
     Serial.println("Still alive");
     modeHandler.printCurrentMode();
+    Serial.println("message handler");
+    messageHandler.printMessageModeLog();
+    Serial.println("mode handler");
+    modeHandler.printLog();
     lastClap = millis();
-    handleLed.flash(0, 0, 125, 200, 1, 50);
-
+    Serial.println(messageHandler.getMessageLog());
   }
 
 }
-  else if (millis()>(lastClap+5000)) 
+  else if (millis()>(lastClap+2000)) 
   {
-    Serial.println("Still alive1");
-    modeHandler.printCurrentMode();
+  if (didIreset == true) {
+    Serial.println("I RESETTED. WTF");
+    didIreset = false;
+  }
+    //handleLed.flash(255, 0, 0, 200, 1, 50);
+    //modeHandler.printLog();
     lastClap = millis();
-    
-
-  handleLed.flash(125, 0, 125, 200, 1, 50);
-
+    Serial.println(messageHandler.getMessageLog());
   }
 
 /*    sensorValue = analogRead(microphonePin);

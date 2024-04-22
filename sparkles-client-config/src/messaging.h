@@ -2,6 +2,12 @@
 #include <esp_now.h>
 #include <stateMachine.h>
 #include <ledHandler.h>
+
+#include <iostream>
+#include <queue>
+#include <mutex>
+#include <vector>
+#include <cstdint>
 #ifndef MESSAGING_H
 #define MESSAGING_H
 #define MSG_HELLO 0
@@ -13,16 +19,13 @@
 #define MSG_ANIMATION 7
 #define MSG_NOCLAPFOUND -1
 #define NUM_DEVICES 20
-  #ifndef CALIBRATION_FREQUENCY
-  #define CALIBRATION_FREQUENCY 1000
-  #endif
-
-#define TIMER_ARRAY_COUNT 3
-#define LEDC_TIMER_12_BIT  12
-#define LEDC_BASE_FREQ     5000
-#define LEDC_START_DUTY   (0)
-#define LEDC_TARGET_DUTY  (4095)
-#define LEDC_FADE_TIME    (3000)
+#ifndef CALIBRATION_FREQUENCY
+#define CALIBRATION_FREQUENCY 1000
+#endif
+#ifndef TIMER_INTERVAL_MS
+#define TIMER_INTERVAL_MS 600
+#endif
+#define TIMER_ARRAY_COUNT 10
 
 
 //MESSAGE STRUCTS
@@ -84,9 +87,11 @@ struct client_address {
   float zLoc;
 } ;
 
+
+
 class messaging {
     private:  
-        client_address clientAddresses[NUM_DEVICES];
+        client_address clientAddresses[2];
         int addressCounter = 0;
         modeMachine messagingModeHandler;
         modeMachine* globalModeHandler;
@@ -95,10 +100,21 @@ class messaging {
         int timerArray[TIMER_ARRAY_COUNT];
         int arrayCounter =0;
         int delayAvg = 0;
+        unsigned long oldMsgReceiveTime; 
         ledHandler* handleLed;
         esp_now_peer_info_t* peerInfo;
-    public: 
+        bool haveSentAddress = false;
+      struct ReceivedData {
+          const esp_now_recv_info* mac;
+          const uint8_t* incomingData;
+          int len;
+          unsigned long msgReceiveTime;
+      };
+      std::queue<ReceivedData> dataQueue;
+      std::mutex queueMutex;
 
+    public: 
+        int msgSendTime;
         message_animate animationMessage;
         message_clap_time clapTime;
         message_address addressMessage;
@@ -107,12 +123,17 @@ class messaging {
         message_announce announceMessage;
         message_mode modeMessage;
         message_timer_received timerReceivedMessage;
+        String error_message = "";
+        String message_received = "";
+        String message_sent = "";
+        String messageLog = "";
         bool gotTimer = false;
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t hostAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t myAddress[6];
-        uint8_t timerReceiver[6] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        uint8_t timerReceiver[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        uint8_t esp_test_address[6] = {0x30, 0xAE, 0xA4, 0x8D, 0xCD, 0x4C};
         messaging();
         void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
         void blink();
@@ -146,8 +167,22 @@ class messaging {
         void respondTimer();
         int getMessagingMode();
         void setMessagingMode(int mode);
-        
+        void handleErrors();
+        void addError(String error);
+        void handleReceived();
+        void handleSent();
+        void addSent(String sent);
+        void pushDataToQueue(const esp_now_recv_info* mac, const uint8_t* incomingData, int len, unsigned long msgReceiveTime);
+        void processDataFromQueue();
+        void handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime);
+        void printMessagingMode();
+        String stringAddress(const uint8_t * mac_addr);
+        void printMessageModeLog();
+        String getMessageLog();
+        void addMessageLog(String message);
+        String messageCodeToText(int message);
 };
+
 
 
 

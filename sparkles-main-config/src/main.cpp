@@ -13,9 +13,10 @@
 
 //#include "ESP32TimerInterrupt.h"
 //#include "driver/gptimer.h"
-#define TIMER_INTERVAL_MS       500
+#define TIMER_INTERVAL_MS       600
 #define USING_TIM_DIV1 true
 
+        uint8_t myAddress[6];
 
 int mode;
 #define NUM_DEVICES 20
@@ -66,49 +67,49 @@ void IRAM_ATTR onTimer()
   //Serial.println(msgSendTime/1000);
     timerCounter++;
     //wait for timer vs wait for calibrate
+    
     if (modeHandler.getMode() == MODE_SENDING_TIMER) {
       messageHandler.timerMessage.messageType = MSG_TIMER_CALIBRATION; 
       messageHandler.timerMessage.sendTime = msgSendTime;
       messageHandler.timerMessage.counter = timerCounter;
       messageHandler.timerMessage.lastDelay = lastDelay;
       esp_err_t result = esp_now_send(messageHandler.timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
+      
     }
     else {
-      //Serial.println("broadcasting");
       messageHandler.announceMessage.sendTime = msgSendTime;
       esp_err_t result = esp_now_send(messageHandler.broadcastAddress, (uint8_t *) &messageHandler.announceMessage, sizeof(messageHandler.announceMessage));
     }
 
-  //return true;
 }
 
 
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
-  Serial.print("received ");
-  messageHandler.printMessage(incomingData[0]);
-  
+  msgReceiveTime = micros();
+  messageHandler.pushDataToQueue(mac, incomingData, len, msgReceiveTime);
 
   switch (incomingData[0]) {
     case MSG_HELLO: 
       messageHandler.setTimerReceiver(incomingData);
     break;
     case MSG_GOT_TIMER: 
-      Serial.println("GOT TIMER");
       messageHandler.removePeer(messageHandler.timerReceiver);
       timerCounter = 0;
       lastDelay = 0;
       modeHandler.switchMode(MODE_ANIMATE);
       break;
     case MSG_SEND_CLAP_TIME:
-      Serial.println("GOT CLAP");
       messageHandler.handleClapTime(incomingData);
 
-      Serial.println("--");
       break;
-
+    case MSG_ANNOUNCE:
+      messageHandler.addError("Received Announce Message, shouldn't have");
+      //Serial.println("why did i receive an announce message");
+      //messageHandler.printAddress(mac->src_addr);
+      break;
     default: 
-      Serial.println("MSG NOT RECOGNIZED");
-      Serial.println(incomingData[0]);
+      messageHandler.addError("Message not recognized "+incomingData[0]);
+      break;
     } 
 
   }
@@ -118,8 +119,6 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
 
 void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
   if (modeHandler.getMode() == MODE_SENDING_TIMER) {
-    Serial.print("Sent Timer to  ");
-    messageHandler.printAddress(mac_addr);
     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
       msgArriveTime = micros();
       lastDelay = msgArriveTime-msgSendTime;
@@ -145,6 +144,7 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
+  handleLed.setup();
   messageHandler.setup(modeHandler, handleLed, peerInfo);
   //esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
   memcpy(&peerInfo.peer_addr, messageHandler.broadcastAddress, 6);
@@ -162,14 +162,31 @@ void setup() {
   if (DEVICE == D1) {
     audioPin = 35;
   }
-  pinMode(audioPin, INPUT); 
-  peakDetection.begin(30, 3, 0);   
+  //pinMode(audioPin, INPUT); 
+  //peakDetection.begin(30, 3, 0);   
   lastClap = millis();
   timerCounter = 0;
   modeHandler.switchMode(MODE_SEND_ANNOUNCE);
+  WiFi.macAddress(myAddress);
 }
 
 void loop() {
+ if (oldTimerCounter != msgSendTime)  {
+  Serial.print("Timer called at ");
+  Serial.print(msgSendTime);
+  Serial.print(" -- us since last Timer called ");
+  Serial.println(msgSendTime-oldTimerCounter);
+  oldTimerCounter = msgSendTime;
+ }
+/*      if (messageHandler.error_message != "") {
+        Serial.println("------");
+        Serial.println(messageHandler.error_message);
+        messageHandler.error_message = "";
+        Serial.print("Currently in mode");
+        modeHandler.printCurrentMode();
+        Serial.println("------");
+      }*/
+      /*
     double data = (double)analogRead(audioPin)/512-1;  // converts the sensor value to a range between -1 and 1
     peakDetection.add(data);                     // adds a new data point
     int peak = peakDetection.getPeak();          // 0, 1 or -1
@@ -181,11 +198,18 @@ void loop() {
       Serial.println(lastClapTime);
       // print peak status
     }
+    */
+   /*
     if (lastClap+5000 < millis()) {
-      Serial.println("still alive");
-      messageHandler.printAddress(messageHandler.announceMessage.address);
+      Serial.println("stildl alive");
+      handleLed.flash(0, 255, 0, 200, 2, 50);
       lastClap = millis();
+      messageHandler.printAllPeers();
+      modeHandler.printCurrentMode();
+
     }
+*/
+    /*
     if (messageHandler.clapTime.clapCounter > oldClapCounter) {
       oldClapCounter = messageHandler.clapTime.clapCounter;
       Serial.println(messageHandler.clapTime.timeStamp);
@@ -198,6 +222,6 @@ void loop() {
       Serial.println((inMeters));
       delay(5000);
 
-    }
+    }*/
   
 }

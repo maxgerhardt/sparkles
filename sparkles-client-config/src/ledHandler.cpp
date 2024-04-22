@@ -9,6 +9,10 @@
 
 
 ledHandler::ledHandler() {
+
+};
+
+void ledHandler::setup() {
   ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinBlue1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -16,7 +20,7 @@ ledHandler::ledHandler() {
   ledcAttach(ledPinGreen2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledsOff();
-};
+}
 
 float ledHandler::fract(float x) { return x - int(x); }
 
@@ -44,7 +48,6 @@ void ledHandler::flash(int r, int g, int b, int duration, int reps, int pause) {
   if (DEVICE == D1) {
     return;
   }
-  Serial.println("should flash");
   for (int i = 0; i < reps; i++ ){
     ledcFade(ledPinRed1, 0, r, duration);
     ledcFade(ledPinGreen1, 0, g, duration);
@@ -148,6 +151,17 @@ return;
 
 }
 
+void ledHandler::addToQueue(std::function<void()> func) {
+    queue.push(func);
+}
+
+void ledHandler::processQueue() {
+    while (!queue.empty()) {
+        auto func = queue.front();
+        func(); // Execute the function
+        queue.pop();
+    }
+}
 
 
 // IF BOARD == V2
