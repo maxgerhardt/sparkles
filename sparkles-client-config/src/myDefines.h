@@ -1,0 +1,159 @@
+#include <Arduino.h>
+#if DEVICE_USED == 4
+#include <espnow.h>
+#else 
+#include <esp_now.h>
+#endif
+
+#ifndef DEFINE_H
+#define DEFINE_H
+
+//LEDHANDLER
+#define LEDC_TIMER_12_BIT  8
+#define LEDC_BASE_FREQ     5000
+#define LEDC_START_DUTY   (0)
+#define LEDC_TARGET_DUTY  (4095)
+#define LEDC_FADE_TIME    (3000)
+
+/*
+#if (DEVICE == V1)
+    const int ledPinBlue1 = 20;  // 16 corresponds to GPIO16
+    const int ledPinRed1 = 9; // 17 corresponds to GPIO17
+    const int ledPinGreen1 = 3;  // 5 corresponds to GPIO5
+    const int ledPinGreen2 = 8;
+    const int ledPinRed2 = 19;
+    const int ledPinBlue2 = 18;
+#elif (DEVICE == V2)
+*/
+
+    const int ledPinBlue1 = 18;  // 16 corresponds to GPIO16
+    const int ledPinRed1 = 38; // 17 cmsgrorresponds to GPIO17
+    const int ledPinGreen1 = 8;  // 5 corresponds to GPIO5
+    const int ledPinGreen2 = 3;
+    const int ledPinRed2 = 9;
+    const int ledPinBlue2 = 37;
+
+//#endif
+const int ledChannelRed1 = 0;
+const int ledChannelGreen1 = 1;
+const int ledChannelBlue1 = 2;
+const int ledChannelRed2 = 3;
+const int ledChannelGreen2 = 4;
+const int ledChannelBlue2 = 5;
+
+
+//MESSAGING
+#define MSG_HELLO 0
+#define MSG_ANNOUNCE 1
+#define MSG_TIMER_CALIBRATION 2
+#define MSG_GOT_TIMER 3
+#define MSG_ASK_CLAP_TIME 5
+#define MSG_SEND_CLAP_TIME 6
+#define MSG_ANIMATION 7
+#define MSG_NOCLAPFOUND -
+#define MSG_COMMANDS 101
+#define MSG_ADDRESS_LIST 102
+
+#define CMD_MSG_SEND_ADDRESS_LIST 201
+
+#define NUM_DEVICES 20
+#ifndef CALIBRATION_FREQUENCY
+#define CALIBRATION_FREQUENCY 1000
+#endif
+#ifndef TIMER_INTERVAL_MS
+#define TIMER_INTERVAL_MS 600
+#endif
+#define TIMER_ARRAY_COUNT 10
+
+
+//MESSAGE STRUCTS
+struct message_timer {
+  uint8_t messageType;
+  uint16_t counter;
+  unsigned long sendTime;
+  uint16_t lastDelay;
+} ;
+
+
+struct message_got_timer {
+  uint8_t messageType = MSG_GOT_TIMER;
+  uint16_t delayAvg;
+};
+
+struct message_mode {
+  uint8_t messageType;
+  uint8_t mode;
+} ;
+
+struct message_timer_received {
+  uint8_t messageType = MSG_GOT_TIMER;
+  uint8_t address[6];
+  uint32_t timerOffset;
+} ;
+struct message_announce {
+  uint8_t messageType = MSG_ANNOUNCE;
+  unsigned long sendTime;
+  uint8_t address[6];
+} ;
+struct message_address{
+  uint8_t messageType = MSG_HELLO;
+  uint8_t address[6];
+} ;
+struct message_address_list {
+  uint8_t messageType = MSG_ADDRESS_LIST;
+  int index;
+  uint8_t address[6];
+  int delay;
+};
+
+struct message_clap_time {
+  uint8_t messageType = MSG_SEND_CLAP_TIME;
+  int clapCounter;
+  unsigned long timeStamp; //offsetted.
+};
+
+struct message_animate {
+  uint8_t messageType = MSG_ANIMATION; 
+  uint8_t animationType;
+  uint16_t speed;
+  uint16_t delay;
+  uint16_t reps;
+  uint8_t rgb1[3];
+  uint8_t rgb2[3];
+  unsigned long startTime;
+} ;
+
+struct client_address {
+  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  int id;
+  float xLoc;
+  float yLoc;
+  float zLoc;
+} ;
+
+
+struct message_command {
+  int messageType = MSG_COMMANDS;
+  int messageId;
+  
+} ;
+
+
+//STATE MACHINE
+#define MODE_INIT -1
+#define MODE_SEND_ANNOUNCE 0
+#define MODE_SENDING_TIMER 1
+#define MODE_WAIT_FOR_ANNOUNCE 2
+#define MODE_WAIT_FOR_TIMER 3
+
+#define MODE_CALIBRATE 4
+#define MODE_ANIMATE 7
+
+
+#define MODE_NO_SEND 90
+#define MODE_RESPOND_ANNOUNCE 91
+#define MODE_RESPOND_TIMER 92
+#define MODE_WAIT_TIMER_RESPONSE 93
+#define MODE_WAIT_ANNOUNCE_RESPONCE 94
+
+#endif

@@ -1,7 +1,10 @@
 #include <Arduino.h>
+
 #include <esp_now.h>
 #include <WiFi.h>
 #include <messaging.h>
+
+
 
 messaging::messaging() {
 };
@@ -53,6 +56,7 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
             addPeer(timerReceiver);
             addError("should have added timerReceiver");
             addError(stringAddress(timerReceiver));
+            addError("\n");
             addressCounter++;
             addMessageLog("Switching Global Mode to Mode Sending Timer\n");
             globalModeHandler->switchMode( MODE_SENDING_TIMER);
@@ -63,6 +67,7 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
             globalModeHandler->switchMode(MODE_SENDING_TIMER);
             addError("address was already in list");
             addError(stringAddress(timerReceiver));
+            addError("\n");
             break;
         }
     }
@@ -72,6 +77,7 @@ int messaging::addPeer(uint8_t * address) {
     memcpy(&peerInfo->peer_addr, address, 6);
     
     if (esp_now_get_peer(peerInfo->peer_addr, peerInfo) == ESP_OK) {
+        addError("found peer\n");
         //Serial.println("Found Peer");
         return 0;
     }
@@ -79,38 +85,19 @@ int messaging::addPeer(uint8_t * address) {
     peerInfo->encrypt = false;
          // Add peer        
     if (esp_now_add_peer(peerInfo) != ESP_OK){
+        addError("failed to add peer\n");
         //Serial.println("Failed to add peer");
         return -1;
     }
     else {
+        addError("added peer\n");
         //Serial.println("Added Peer");
         return 1;
     }
     
 }
 
-void messaging::handleAddressMessage(const esp_now_recv_info * mac) {
-    for (int i = 0; i < NUM_DEVICES; i++) {
-        if (memcmp(clientAddresses[i].address, emptyAddress, 6) == 0) {
-            Serial.println("need to add peer");
-            memcpy(clientAddresses[i].address, addressMessage.address, 6);
-            memcpy(&timerReceiver, mac->src_addr, 6);
-            addPeer(timerReceiver);
-            addressCounter++;
-                addMessageLog("Switching Messaging Mode to Mode Sending Timer\n");
-            globalModeHandler->switchMode(MODE_SENDING_TIMER);
-            break;
-            }
-            else if (memcmp(&clientAddresses[i].address, &addressMessage.address, 6) == true) {
-            Serial.print("found: ");
-            printAddress(addressMessage.address);
-            globalModeHandler->switchMode(MODE_SENDING_TIMER);
 
-            break;
-            }
-        }
-
-}
 void messaging::handleGotTimer() {
     removePeer(timerReceiver);
     timerCounter = 0;
@@ -304,6 +291,11 @@ void messaging::printAllPeers() {
     }
       
 }
+void messaging::printAllAddresses() {
+    for (int i=0;i<addressCounter; i++) {
+        printAddress(clientAddresses[i].address);
+    }
+}
 
 void messaging::handleAnnounce(uint8_t address[6]) {
     haveSentAddress = true;
@@ -311,14 +303,20 @@ void messaging::handleAnnounce(uint8_t address[6]) {
         return;
     }
     addError("Should have handled announce \n");
-    setHostAddress(address);    
-    if (addPeer(hostAddress) == 1) {
+    setHostAddress(address);
+    int peerMsg = addPeer(hostAddress);
+    if (peerMsg == 1) {
         //handleLed->flash(0, 125, 125, 200, 1, 50);
     }
-    else {
-        addError("COULD NOT ADD PEER");
+    else if (peerMsg == -1) {
+        addError("COULD NOT ADD PEER ");
+        addError(stringAddress(address));
+        addError ("--");
+        addError(stringAddress(hostAddress));
+        addError("\n");
     }
-    handleLed->flash(0, 0, 125, 100, 2, 50);
+    
+    //handleLed->flash(0, 0, 125, 100, 2, 50);
     addMessageLog("Switching Messaging Mode to Respond Announce\n");
     messagingModeHandler.switchMode(MODE_RESPOND_ANNOUNCE);
 }
@@ -330,6 +328,7 @@ void messaging::respondAnnounce() {
     addMessageLog("Sent: ");
     addMessageLog(messageCodeToText((MSG_HELLO)));
     addMessageLog("\n");
+    addMessageLog(stringAddress(hostAddress));
     esp_now_send(hostAddress, (uint8_t*) &addressMessage, sizeof(addressMessage));
     addMessageLog("Switching Global Mode to Wait Announce Responce\n");
     globalModeHandler->switchMode(MODE_WAIT_FOR_TIMER);
@@ -346,9 +345,8 @@ void messaging::setMessagingMode(int mode) {
 }
 void messaging::respondTimer() {
     addError("Got Timer ");
+    addError("\n");
     addSent("Sent timerMessage");
-    addError("flashRed");
-    handleLed->flash(255, 125, 0, 200, 3, 50);
     addMessageLog("Switching Messaging Mode to Wait Timer Responce");
     messagingModeHandler.switchMode(MODE_WAIT_TIMER_RESPONSE);
     msgSendTime = millis();
@@ -356,6 +354,7 @@ void messaging::respondTimer() {
     addMessageLog(messageCodeToText((MSG_HELLO)));
     addMessageLog("\n");
     esp_now_send(hostAddress, (uint8_t *) &gotTimerMessage, sizeof(gotTimerMessage));
+    handleLed->flash(255, 0, 0 , 100, 3, 50);
 }
 void messaging::handleReceived() {
     if (message_received != "") {
@@ -379,9 +378,8 @@ void messaging::handleSent() {
     } 
 }
 void messaging::addError(String error) {
-    error_message += "\n";
     error_message += error;
-    error_message += "\n";
+
 }
 void messaging::addSent(String sent) {
     message_sent += "\n";
@@ -411,13 +409,35 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         Serial.println("WHY THE HELL");
     }
     switch (incomingData[0]) {
+        //cases for main
+        case MSG_COMMANDS: 
+            memcpy(&testMessage,incomingData,sizeof(testMessage));
+            messageLog += "TEST MSG RECEIVED";
+            messageLog += stringAddress(mac->src_addr);
+            messageLog += " - ";
+            messageLog += String(testMessage.messageId);
+            messageLog += "\n";
+            break;
+        case MSG_HELLO: 
+            messageLog += "Received message Hello from ";
+            messageLog += stringAddress(mac->src_addr);
+            messageLog += "\n";
+            setTimerReceiver(incomingData);
+            break;
+        case MSG_GOT_TIMER:
+            removePeer(timerReceiver);
+            timerCounter = 0;
+            lastDelay = 0;
+            globalModeHandler->switchMode(MODE_SEND_ANNOUNCE);
+            break; 
+        //cases for client
         case MSG_ANNOUNCE: 
         handleAnnounce(mac->src_addr);
         break;
     case MSG_TIMER_CALIBRATION:  
     { 
       if (gotTimer == true) {
-        addError("Already got timer");
+        addError("Already got timer\n");
         break;
       }
       addPeer(hostAddress);
@@ -427,15 +447,18 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
     }
     break;
     case MSG_ANIMATION:
-    addError("Animation Message Incoming");
+    addError("Animation Message Incoming\n");
     if (globalModeHandler->getMode() == MODE_ANIMATE) {
-      addError("Blinking");
+      addError("Blinking\n");
       memcpy(&animationMessage, incomingData, sizeof(animationMessage));
     handleLed->candle(animationMessage.speed, animationMessage.reps, animationMessage.delay);
     }
     break;
     default: 
         addError("message not recognized");
+        addError(messageCodeToText(incomingData[0]));
+        addError("\n");
+
         break;
     }
 }

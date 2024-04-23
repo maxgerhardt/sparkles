@@ -1,8 +1,9 @@
 #define V1 1
 #define V2 2 
 #define D1 3
+#ifndef DEVICE_USED
 #define DEVICE_USED V2
-#define DEVICE DEVICE_USED
+#endif
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
@@ -87,32 +88,7 @@ void IRAM_ATTR onTimer()
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
   msgReceiveTime = micros();
   messageHandler.pushDataToQueue(mac, incomingData, len, msgReceiveTime);
-
-  switch (incomingData[0]) {
-    case MSG_HELLO: 
-      messageHandler.setTimerReceiver(incomingData);
-    break;
-    case MSG_GOT_TIMER: 
-      messageHandler.removePeer(messageHandler.timerReceiver);
-      timerCounter = 0;
-      lastDelay = 0;
-      modeHandler.switchMode(MODE_ANIMATE);
-      break;
-    case MSG_SEND_CLAP_TIME:
-      messageHandler.handleClapTime(incomingData);
-
-      break;
-    case MSG_ANNOUNCE:
-      messageHandler.addError("Received Announce Message, shouldn't have");
-      //Serial.println("why did i receive an announce message");
-      //messageHandler.printAddress(mac->src_addr);
-      break;
-    default: 
-      messageHandler.addError("Message not recognized "+incomingData[0]);
-      break;
-    } 
-
-  }
+}
 
 
 
@@ -159,7 +135,7 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);  
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
   WiFi.macAddress(messageHandler.announceMessage.address);
-  if (DEVICE == D1) {
+  if (DEVICE_USED == D1) {
     audioPin = 35;
   }
   //pinMode(audioPin, INPUT); 
@@ -171,13 +147,19 @@ void setup() {
 }
 
 void loop() {
- if (oldTimerCounter != msgSendTime)  {
-  Serial.print("Timer called at ");
-  Serial.print(msgSendTime);
-  Serial.print(" -- us since last Timer called ");
-  Serial.println(msgSendTime-oldTimerCounter);
-  oldTimerCounter = msgSendTime;
- }
+  messageHandler.handleErrors();
+  messageHandler.handleReceived();
+  messageHandler.handleSent();
+  messageHandler.processDataFromQueue();
+  if (lastClap+1000 < millis()) {
+    modeHandler.printCurrentMode();
+    lastClap = millis();
+    Serial.println(messageHandler.getMessageLog());
+    Serial.println ("Addressses");
+    messageHandler.printAllAddresses();
+  }
+
+
 /*      if (messageHandler.error_message != "") {
         Serial.println("------");
         Serial.println(messageHandler.error_message);
