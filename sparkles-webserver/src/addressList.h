@@ -18,7 +18,7 @@ const char addressList[] PROGMEM = R"rawliteral(
     .cards { max-width: 700px; margin: 0 auto; display: grid; grid-gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     .reading { font-size: 2.8rem; }
     .packet { color: #bebebe; }
-    .card.temperature { color: #fd7e14; }
+    .devicenum { color: #fd7e14; }
     .card.humidity { color: #1b78e2; }
   </style>
 </head>
@@ -28,19 +28,17 @@ const char addressList[] PROGMEM = R"rawliteral(
   </div>
   <div class="content">
     <div class="cards">
-        <div class="card temperature">
+        <div class="deviceList">
             <h4>
                 <i class="fas fa-thermometer-half"></i> 
-                BOARD #1 - TEMPERATURE
+                DEVICE LIST
             </h4>
             <p>
                 <span class="reading">
-                    <span id="t1"></span> &deg;C
+                    <span id="t1" class="devicenum"te></span>
                 </span>
             </p>
-            <p class="packet" id="pk1">
-                Reading ID: <span id="rt1"></span>
-            </p>      
+
 
         </div>
     </div>
@@ -65,13 +63,51 @@ if (!!window.EventSource) {
  source.addEventListener('new_readings', function(e) {
   console.log("new_readings", e.data);
   var obj = JSON.parse(e.data);
-  var newPacketElement = document.createElement('p');
-  newPacketElement.className = 'packet'+e.index;
-  var newSpanElement = document.createElement('span');
-  newSpanElement.id = 'rt'; 
-  newSpanElement.textContent = e.address;
- }, false);
+  var existingPacket = document.getElementById("pk" + obj.index);
+  if (!existingPacket) {
+    var newPacket = document.createElement("p");
+    newPacket.className = "packet";
+    newPacket.id = "pk" + obj.index;
+    newPacket.innerHTML = "Board ID "+obj.index+": <span id='rt" + obj.index + "'></span>";
+    var cardsContainer = document.querySelector(".deviceList");
+    cardsContainer.appendChild(newPacket);
+  }
+  document.getElementById("rt" + obj.index).textContent = obj.address;
+  document.getElementById("t1").textContent = String("Click me"+String(parseInt(obj.index)+1));
+
+})};
+
+function sendHttpRequest() {
+    // Make a GET request to the /events endpoint using fetch
+    fetch('/updateDeviceList')
+        .then(response => {
+            // Check if the response is successful
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            // Parse the response as JSON
+            return response.json();
+        })
+        .then(data => {
+            // Handle the received data
+            console.log('Data received:', data);
+        })
+        .catch(error => {
+            // Handle errors
+            console.error('Fetch error:', error);
+        });
 }
+
+
+// Function to handle click on the t1 span element
+function handleSpanClick() {
+  console.log("clicked");
+    sendHttpRequest(); // Trigger HTTP request when span is clicked
+}
+
+// Add an event listener to the t1 span element
+document.getElementById('t1').addEventListener('click', handleSpanClick);
+
 </script>
 </body>
 </html>
