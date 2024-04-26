@@ -540,9 +540,9 @@
       "plot": "../../../",
       "pos_files": "JLCPCB",
       "specctra_dsn": "",
-      "step": "",
+      "step": "Blinky.step",
       "svg": "",
-      "vrml": ""
+      "vrml": "Blinky.wrl"
     },
     "page_layout_descr_file": ""
   },
