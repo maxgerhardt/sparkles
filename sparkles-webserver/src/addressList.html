@@ -10,12 +10,18 @@
     body {  margin: 0;}
     .topnav { overflow: hidden; background-color: #2f4468; color: white; font-size: 1.7rem; }
     .content { padding: 20px; }
-    .card { background-color: white; box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5); }
-    .cards { max-width: 700px; margin: 0 auto; display: grid; grid-gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .card { background-color: white; box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5); display: block; margin-bottom: 20px; flex: 1 1 100%}
+    .card span {display:block; margin-bottom:5px;}
+    .cards { max-width: 700px; margin: 0 auto; display:flex; flex-flow: row wrap; gap:0.5em; grid-gap: 0.2em;  flex-wrap: wrap; }
+    .card--50 {flex-basis: 50%}
     .reading { font-size: 2.8rem; }
     .packet { color: #bebebe; }
     .devicenum { color: #fd7e14; }
+    .active { background-color: rgba(0, 139, 0, 0.2); }
+    .inactive { background-color: rgba(255, 0, 0, 0.2) }
     .card.humidity { color: #1b78e2; }
+    .card.deviceList { color: #010702; }
+
   </style>
 </head>
 <body>
@@ -24,58 +30,125 @@
   </div>
   <div class="content">
     <div class="cards">
-        <div class="deviceList">
+        <div class="card deviceList">
             <h4>
-                <i class="fas fa-thermometer-half"></i> 
+                <i class="fas fa-wifi"></i> 
                 DEVICE LIST
             </h4>
             <p>
                 <span class="reading">
-                    <span id="t1" class="devicenum"te></span>
+                    <span id="t1" class="devicenum">0</span>
                 </span>
             </p>
-
-
+          </div>
+          
         </div>
+        <div class="card card--50">
+          <h4>
+              <i class="fas fa-wifi"></i> 
+              CARD 50
+          </h4>
+          <p>
+              <span class="reading">
+                  <span id="t1" class="devicenum">0</span>
+              </span>
+          </p>
+        </div>
+        <div class="card card--50">
+          <h4>
+              <i class="fas fa-wifi"></i> 
+              CARD 50
+          </h4>
+          <p>
+              <span class="reading">
+                  <span id="t1" class="devicenum">0</span>
+              </span>
+          </p>
+        </div>
+      </div>
     </div>
+
   </div>
 <script>
-if (!!window.EventSource) {
- var source = new EventSource('/events');
- 
- source.addEventListener('open', function(e) {
-  console.log("Events Connected");
- }, false);
- source.addEventListener('error', function(e) {
-  if (e.target.readyState != EventSource.OPEN) {
-    console.log("Events Disconnected");
-  }
- }, false);
- 
- source.addEventListener('message', function(e) {
-  console.log("message", e.data);
- }, false);
- 
- source.addEventListener('new_readings', function(e) {
-  console.log("new_readings", e.data);
-  var obj = JSON.parse(e.data);
-  var existingPacket = document.getElementById("pk" + obj.index);
+
+
+
+  var debug = 1;
+  function boardCards(obj) {
+    console.log(obj.index);
+    var existingPacket = document.getElementById("pk" + obj.index);
   if (!existingPacket) {
-    var newPacket = document.createElement("p");
-    newPacket.className = "packet";
-    newPacket.id = "pk" + obj.index;
-    newPacket.innerHTML = "Board ID "+obj.index+": <span id='rt" + obj.index + "'></span>";
-    var cardsContainer = document.querySelector(".deviceList");
-    cardsContainer.appendChild(newPacket);
+    console.log("bla");
+    var newCard = document.createElement("div");
+    newCard.className = "card";
+    newCard.id = "card" + obj.index;
+    newCard.innerHTML = "<span id='b"+obj.index+"'>Board ID "+obj.index+":</span>\n<span id='addr" + obj.index + "'></span><span id='del"+obj.index+"'></span>";
+    var cardsContainer = document.querySelector(".cards");
+    cardsContainer.appendChild(newCard);
   }
-  document.getElementById("rt" + obj.index).textContent = obj.address;
-  document.getElementById("t1").textContent = String("Click me"+String(parseInt(obj.index)+1));
+  
+  document.getElementById("addr" + obj.index).textContent = "Address: "+obj.address;
+  if (obj.delay == 0) {
+    document.getElementById("card"+obj.index).classList.remove("active");
+    document.getElementById("card"+obj.index).classList.add("inactive");
+  }
+  else {
+    document.getElementById("card"+obj.index).classList.add("active");
+    document.getElementById("card"+obj.index).classList.remove("inactive");
+  }
+  
+  document.getElementById("del"+obj.index).textContent = "Delay: "+obj.delay;
+  document.getElementById("t1").textContent = String(parseInt(obj.index)+1);
+  document.getElementById('card'+obj.index).addEventListener('click', function() {
+        handleSpanClick(obj.index);
+    });
 
-})};
+  }
+  if (debug == 0) {
+    if (!!window.EventSource) {
+    var source = new EventSource('/events');
+    
+    source.addEventListener('open', function(e) {
+      console.log("Events Connected");
+    }, false);
+    source.addEventListener('error', function(e) {
+      if (e.target.readyState != EventSource.OPEN) {
+        console.log("Events Disconnected");
+      }
+    }, false);
+    
+    source.addEventListener('message', function(e) {
+      console.log("message", e.data);
+    }, false);
+    
+    source.addEventListener('new_readings', function(e) {
+      boardCards(obj);
+    })};
+}
+else if (debug == 1) {
+  var boards = [];
+   boards[0] = {
+    index : 0,
+    address: "68:b6:b3:08:e0:60",
+    delay : 1001
+  };
+  boards[1] = {
+    index : 1,
+    address: "78:b6:b3:08:e0:66",
+    delay : 0
+  };
 
-function sendHttpRequest() {
+  boards.forEach(function(obj) {
+  boardCards(obj);
+  });
+  
+}
+
+function sendHttpRequest(id) {
     // Make a GET request to the /events endpoint using fetch
-    fetch('/updateDeviceList')
+  var fetchUrl = '/updateDeviceList'+ (id ? '?id='+id : '');
+  console.log(fetchUrl);
+    fetch(fetchUrl)
         .then(response => {
             // Check if the response is successful
             if (!response.ok) {
@@ -96,9 +169,9 @@ function sendHttpRequest() {
 
 
 // Function to handle click on the t1 span element
-function handleSpanClick() {
+function handleSpanClick(id) {
   console.log("clicked");
-    sendHttpRequest(); // Trigger HTTP request when span is clicked
+    sendHttpRequest(id); // Trigger HTTP request when span is clicked
 }
 
 // Add an event listener to the t1 span element

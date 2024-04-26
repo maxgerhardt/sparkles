@@ -28,6 +28,7 @@ const char* PARAM_INPUT_1 = "input1";
 const char* PARAM_INPUT_2 = "input2";
 const char* PARAM_INPUT_3 = "input3";
 
+#define ADDRESS_LIST 1
 
 message_command commandMessage;
 
@@ -77,8 +78,8 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
       Serial.println("received msg");
       memcpy(&addressListMessage,incomingData,sizeof(addressListMessage));
       receivedAddress["index"] = String(addressListMessage.index);
-      receivedAddress["address"] = addressToStr(addressListMessage.address);
-      receivedAddress["delay"] = String(addressListMessage.delay);
+      receivedAddress["address"] = addressToStr(addressListMessage.clientAddress.address);
+      receivedAddress["delay"] = String(addressListMessage.clientAddress.delay);
       String jsonString;
       serializeJson(receivedAddress, jsonString);
       pushDataToQueue(jsonString);
@@ -110,12 +111,14 @@ void setup() {
   WiFi.softAP(ssid, password);
 
 
-   Serial.print("Station IP Address: ");
+  Serial.print("Station IP Address: ");
   Serial.println(WiFi.localIP());
   Serial.print("Wi-Fi Channel: ");
   Serial.println(WiFi.channel());
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", index_html);
+    request->send_P(200, "text/html", addressList);
+    msgType = ADDRESS_LIST;
+
   });
   events.onConnect([](AsyncEventSourceClient *client){
 
@@ -182,31 +185,13 @@ void setup() {
 void loop() {
   sent = false;
   processDataFromQueue();
-  //Serial.print("sent:");
-  /*
-  if (sent == 1) {
-    Serial.println(" true");
-  }
-  else if (sent == -1) {
-    Serial.println(" false");
-  }
-  else if (sent == 0) {
-    Serial.println (" not called");
-  }
-  sent = 0;
-  if (lastDings + 5000 < millis() )
-  {
-    Serial.println("Still alive");
-    printAddress(myAddress);
-  }
-  */
   // put your main code here, to run repeatedly:
   if (outputJson != "")  {
     Serial.print ("JSON: \n");
     Serial.println(outputJson);
     outputJson = "";
   }
-  if (msgType != 0) {
+  if (msgType == ADDRESS_LIST) {
     commandMessage.messageId = CMD_MSG_SEND_ADDRESS_LIST;
     Serial.println("sending command");
      esp_now_send(hostAddress, (uint8_t *) &commandMessage, sizeof(commandMessage));
