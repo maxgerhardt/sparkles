@@ -2,6 +2,7 @@
 #define V2 2
 #define D1 3
 #define DEVICE V2
+
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
@@ -30,6 +31,7 @@ PeakDetection peakDetection;
 ledHandler handleLed;
 modeMachine modeHandler;
 messaging messageHandler;
+
 
 
 //Network
@@ -86,9 +88,8 @@ int addressSending = 0;
 //timer stuff
 //ESP32Timer ITimer(0);
 
-message_clap_time clapTime;
 
-
+int cycleCounter = 0;
 /*
 
 void receiveTimer(int messageArriveTime) {
@@ -135,6 +136,7 @@ int count = 0;
 bool didIreset = true;
 
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+    messageHandler.addError("RECEIVED MESSAGE");
     msgReceiveTime = micros();
     messageHandler.addMessageLog("Received: ");
     messageHandler.addMessageLog(messageHandler.messageCodeToText((incomingData[0])));
@@ -142,7 +144,7 @@ void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int 
     messageHandler.addMessageLog(modeHandler.modeToText(modeHandler.getMode()));
     messageHandler.addMessageLog("\n");
   
-    messageHandler.pushDataToQueue(mac, incomingData, len, msgReceiveTime);
+    messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);
 }
 
 
@@ -170,34 +172,6 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
     modeHandler.printCurrentMode();
   }
 }
-void ledsOff() {
-  ledcWrite(ledPinRed2, 0);
-  ledcWrite(ledPinGreen2, 0);
-  ledcWrite(ledPinBlue2, 0);
-  ledcWrite(ledPinRed1, 0);
-  ledcWrite(ledPinGreen1, 0);
-  ledcWrite(ledPinBlue1, 0);
-
-}
-void flash(int r, int g, int b, int duration, int reps, int pause) {
-  for (int i = 0; i < reps; i++ ){
-    ledcFade(ledPinRed1, 0, r, duration);
-    ledcFade(ledPinGreen1, 0, g, duration);
-    ledcFade(ledPinBlue1, 0, b, duration);
-    ledcFade(ledPinRed2, 0, r, duration);
-    ledcFade(ledPinGreen2, 0, g, duration);
-    ledcFade(ledPinBlue2, 0, b, duration);
-    delay(duration);
-    ledcFade(ledPinRed1, r, 0, duration);
-    ledcFade(ledPinGreen1, g, 0, duration);
-    ledcFade(ledPinBlue1, b, 0, duration);
-    ledcFade(ledPinRed2, r, 0, duration);
-    ledcFade(ledPinGreen2, g, 0, duration);
-    ledcFade(ledPinBlue2, b, 0, duration);
-    delay(pause);
-    ledsOff(); 
-  }
-}   
 
 
 
@@ -229,7 +203,6 @@ void setup() {
   esp_now_register_send_cb(OnDataSent);
    WiFi.macAddress(messageHandler.addressMessage.address);
    esp_now_get_peer_num(&peerNum);
-  
   Serial.print("Number of Peers start: ");
   Serial.println(peerNum.total_num);
    Serial.println("huch");
@@ -237,46 +210,28 @@ void setup() {
   peakDetection.begin(30, 3, 0);   
   delay(1000);
   timerDings = micros();
-  clapTime.clapCounter = 0;
   lastFlash = 0;
+  WiFi.macAddress(myAddress);
+  //messageHandler.addPeer(webserverAddress)
 }
 
 void loop() {
-
-
+  messageHandler.processDataFromSendQueue();
+  messageHandler.processDataFromReceivedQueue();
   messageHandler.handleErrors();
-  messageHandler.handleReceived();
   messageHandler.handleSent();
-  messageHandler.processDataFromQueue();
-  if (messageHandler.getMessagingMode() == MODE_RESPOND_ANNOUNCE) {
-    count = 0;
-    messageHandler.setMessagingMode(MODE_NO_SEND);
-    messageHandler.respondAnnounce();
-  }
-  else if (messageHandler.getMessagingMode() == MODE_RESPOND_TIMER) {
-    count = 0;
-    messageHandler.respondTimer();
-    count++;
 
-  }
 
-if (modeHandler.getMode() == MODE_ANIMATE) {
+if (modeHandler.getMode() == MODE_CALIBRATE) {
   double data = (double)analogRead(audioPin)/512-1;
   peakDetection.add(data); 
   int peak = peakDetection.getPeak(); 
   double filtered = peakDetection.getFilt(); 
   //Serial.println(sensorValue);
   if (peak == -1 and millis() > lastClap+1000) {
-    clapTime.clapCounter++;
-    clapTime.timeStamp = micros()-timeOffset;
-    Serial.print("Clap Time ") ;
-    Serial.println(clapTime.timeStamp);
-    Serial.print("Clap Counter ");
-    Serial.println(clapTime.clapCounter);
-    //esp_now_send(hostAddress, (uint8_t *) &clapTime, sizeof(clapTime));
-    //flash();
-    //esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
+     messageHandler.addClap(clapCounter, micros()-timeOffset);
     lastClap = millis();
+    clapCounter++;
   }
   else if (millis()>(lastClap+5000)) 
   {
@@ -290,6 +245,8 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
     modeHandler.printLog();
     lastClap = millis();
     Serial.println(messageHandler.getMessageLog());
+        Serial.println("-----");
+
   }
 
 }
@@ -302,7 +259,11 @@ if (modeHandler.getMode() == MODE_ANIMATE) {
     //handleLed.flash(255, 0, 0, 200, 1, 50);
     //modeHandler.printLog();
     lastClap = millis();
+    cycleCounter++;
+    Serial.println("-----\nStill Alive");
+    Serial.println(cycleCounter);
     Serial.println(messageHandler.getMessageLog());
+    modeHandler.printCurrentMode();
   }
 
 /*    sensorValue = analogRead(microphonePin);

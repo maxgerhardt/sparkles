@@ -35,6 +35,7 @@ esp_now_peer_info_t peerInfo;
 
 int audioPin = 5;
 int oldClapCounter = 0;
+int cycleCounter = 0;
 
 
 
@@ -86,8 +87,9 @@ void IRAM_ATTR onTimer()
 
 
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+  Serial.println("revd");
   msgReceiveTime = micros();
-  messageHandler.pushDataToQueue(mac, incomingData, len, msgReceiveTime);
+  messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);
 }
 
 
@@ -100,15 +102,19 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
       lastDelay = msgArriveTime-msgSendTime;
     }
     else {
+      messageHandler.addError("No SUCCESS");
      msgArriveTime = 0;
     }
+  }
+  else {
+    //messageHandler.addError("something happened");
   }
 }
 
 
 void setup() {
   Serial.begin(115200);
-
+  delay(5000);
   timer = timerBegin(1000000);           	// timer 0, prescalar: 80, UP counting
   timerAttachInterrupt(timer, &onTimer); 	// Attach interrupt
   timerWrite(timer, 0);  		// Match value= 1000000 for 1 sec. delay.
@@ -140,23 +146,28 @@ void setup() {
   }
   //pinMode(audioPin, INPUT); 
   //peakDetection.begin(30, 3, 0);   
-  lastClap = millis();
+  lastClap = millis(); 
   timerCounter = 0;
   modeHandler.switchMode(MODE_SEND_ANNOUNCE);
   WiFi.macAddress(myAddress);
+  
 }
 
 void loop() {
   messageHandler.handleErrors();
-  messageHandler.handleReceived();
-  messageHandler.handleSent();
-  messageHandler.processDataFromQueue();
-  if (lastClap+1000 < millis()) {
+  messageHandler.processDataFromReceivedQueue();
+  messageHandler.processDataFromSendQueue();
+  if (lastClap+5000 < millis()) {
     modeHandler.printCurrentMode();
     lastClap = millis();
-    Serial.println(messageHandler.getMessageLog());
-    Serial.println ("Addressses");
+    cycleCounter++;
+    Serial.print("-----\nStill Alive ");
+    Serial.println(cycleCounter);
     messageHandler.printAllAddresses();
+    Serial.println(messageHandler.getMessageLog());
+    Serial.println("-----");
+    messageHandler.printAddress(myAddress);
+
   }
 
 

@@ -15,6 +15,9 @@
 #define LEDC_TARGET_DUTY  (4095)
 #define LEDC_FADE_TIME    (3000)
 
+//clapping
+#define NUM_CLAPS 10
+
 /*
 #if (DEVICE == V1)
     const int ledPinBlue1 = 20;  // 16 corresponds to GPIO16
@@ -43,18 +46,24 @@ const int ledChannelBlue2 = 5;
 
 
 //MESSAGING
-#define MSG_HELLO 0
+#define MSG_ADDRESS 0
 #define MSG_ANNOUNCE 1
 #define MSG_TIMER_CALIBRATION 2
 #define MSG_GOT_TIMER 3
 #define MSG_ASK_CLAP_TIME 5
 #define MSG_SEND_CLAP_TIME 6
 #define MSG_ANIMATION 7
-#define MSG_NOCLAPFOUND -
+#define MSG_SWITCH_MODE 8
+#define MSG_NOCLAPFOUND -1
 #define MSG_COMMANDS 101
 #define MSG_ADDRESS_LIST 102
+#define MSG_STATUS_UPDATE 103
 
 #define CMD_MSG_SEND_ADDRESS_LIST 201
+#define CMD_START_CALIBRATION_MODE 202
+#define CMD_END_CALIBRATION_MODE 203
+#define CMD_BLINK 204
+#define CMD_MODE_NEUTRAL 205
 
 #define NUM_DEVICES 20
 #ifndef CALIBRATION_FREQUENCY
@@ -63,7 +72,7 @@ const int ledChannelBlue2 = 5;
 #ifndef TIMER_INTERVAL_MS
 #define TIMER_INTERVAL_MS 600
 #endif
-#define TIMER_ARRAY_COUNT 10
+#define TIMER_ARRAY_COUNT 2
 
 
 //MESSAGE STRUCTS
@@ -73,44 +82,66 @@ struct message_timer {
   unsigned long sendTime;
   uint16_t lastDelay;
 } ;
-
+// 13 bytes
 
 struct message_got_timer {
   uint8_t messageType = MSG_GOT_TIMER;
   uint16_t delayAvg;
+  uint32_t timerOffset;
 };
+//9 bytes
 
-struct message_mode {
-  uint8_t messageType;
+struct message_switch_mode {
+  uint8_t messageType = MSG_SWITCH_MODE;
   uint8_t mode;
 } ;
-
+//2 bytes
 struct message_timer_received {
   uint8_t messageType = MSG_GOT_TIMER;
   uint8_t address[6];
   uint32_t timerOffset;
 } ;
+//14 bytes
 struct message_announce {
   uint8_t messageType = MSG_ANNOUNCE;
   unsigned long sendTime;
   uint8_t address[6];
 } ;
+
+//15 bytes
 struct message_address{
-  uint8_t messageType = MSG_HELLO;
+  uint8_t messageType = MSG_ADDRESS;
   uint8_t address[6];
 } ;
+
+// 7 bytes
+struct message_clap_times {
+  uint8_t messageType = MSG_SEND_CLAP_TIME;
+  int clapCounter;
+  unsigned long timeStamp[NUM_CLAPS]; //offsetted.
+};
+
+//4+4*NUM_CLAPS, currently 44
+struct client_address {
+  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  int id;
+  float xLoc;
+  float yLoc;
+  float zLoc;
+  uint32_t timerOffset;
+  int delay;
+  message_clap_times clapTimes;
+} ;
+
+
 struct message_address_list {
   uint8_t messageType = MSG_ADDRESS_LIST;
   int index;
-  uint8_t address[6];
-  int delay;
+  client_address clientAddress;
+  int status;
 };
 
-struct message_clap_time {
-  uint8_t messageType = MSG_SEND_CLAP_TIME;
-  int clapCounter;
-  unsigned long timeStamp; //offsetted.
-};
+
 
 struct message_animate {
   uint8_t messageType = MSG_ANIMATION; 
@@ -123,20 +154,22 @@ struct message_animate {
   unsigned long startTime;
 } ;
 
-struct client_address {
-  uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  int id;
-  float xLoc;
-  float yLoc;
-  float zLoc;
-} ;
-
 
 struct message_command {
   int messageType = MSG_COMMANDS;
   int messageId;
+  int param = -1;
   
 } ;
+
+struct message_status_update {
+  int messageType = MSG_STATUS_UPDATE;
+  int mode;
+  
+} ;
+
+
+
 
 
 //STATE MACHINE
@@ -145,9 +178,10 @@ struct message_command {
 #define MODE_SENDING_TIMER 1
 #define MODE_WAIT_FOR_ANNOUNCE 2
 #define MODE_WAIT_FOR_TIMER 3
-
-#define MODE_CALIBRATE 4
+#define MODE_GOT_TIMER 4
+#define MODE_CALIBRATE 5
 #define MODE_ANIMATE 7
+#define MODE_NEUTRAL 8
 
 
 #define MODE_NO_SEND 90
@@ -155,5 +189,6 @@ struct message_command {
 #define MODE_RESPOND_TIMER 92
 #define MODE_WAIT_TIMER_RESPONSE 93
 #define MODE_WAIT_ANNOUNCE_RESPONCE 94
+#define MODE_SEND_ADDRESS_LIST 95
 
 #endif

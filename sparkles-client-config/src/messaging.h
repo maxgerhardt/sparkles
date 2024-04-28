@@ -35,31 +35,40 @@ class messaging {
           int len;
           unsigned long msgReceiveTime;
       };
+      struct SendData {
+        const uint8_t * address;
+        int messageId;
+      };
       std::queue<ReceivedData> dataQueue;
+      std::queue<SendData> sendQueue;
       std::mutex queueMutex;
 
     public: 
         int msgSendTime;
         message_animate animationMessage;
-        message_clap_time clapTime;
+        message_clap_times clapTimes;
         message_address addressMessage;
         message_timer timerMessage;
         message_got_timer gotTimerMessage;
         message_announce announceMessage;
-        message_mode modeMessage;
+        message_switch_mode switchModeMessage;
         message_timer_received timerReceivedMessage;
-        message_test testMessage;
+        message_address_list addressListMessage;
+        message_command commandMessage;
         String error_message = "";
         String message_received = "";
         String message_sent = "";
         String messageLog = "";
         bool gotTimer = false;
+        bool receivedAnnounce = false;
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t hostAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t myAddress[6];
         uint8_t timerReceiver[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        uint8_t esp_test_address[6] = {0x30, 0xAE, 0xA4, 0x8D, 0xCD, 0x4C};
+        //esp8266
+        //uint8_t webserverAddress[6] = {0xe8, 0xdb, 0x84, 0x99, 0x5e, 0x44};
+        uint8_t webserverAddress[6] = {0x68, 0xb6, 0xb3, 0x09, 0x56, 0x5e};
         messaging();
         void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
         void blink();
@@ -67,10 +76,12 @@ class messaging {
         void printAddress(const uint8_t * mac_addr);
         int addPeer(uint8_t * address);
         void setHostAddress(uint8_t address[6]);
-        void handleGotTimer();
+        void handleGotTimer(const uint8_t *incomingData, uint8_t * address);
         int getLastDelay();
         void setLastDelay(int delay);
-        void handleClapTime(const uint8_t *incomingData);
+        void handleClapTimes(const uint8_t *incomingData);
+        void addClap(int clapCounter, unsigned long timeStamp);
+        void getClapTimes();
         int getTimerCounter();
         void setTimerCounter(int counter);
         void incrementTimerCounter();
@@ -98,8 +109,10 @@ class messaging {
         void handleReceived();
         void handleSent();
         void addSent(String sent);
-        void pushDataToQueue(const esp_now_recv_info* mac, const uint8_t* incomingData, int len, unsigned long msgReceiveTime);
-        void processDataFromQueue();
+        void pushDataToReceivedQueue(const esp_now_recv_info* mac, const uint8_t* incomingData, int len, unsigned long msgReceiveTime);
+        void processDataFromReceivedQueue();
+        void pushDataToSendQueue(const uint8_t * address, int messageId);
+        void processDataFromSendQueue();
         void handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime);
         void printMessagingMode();
         String stringAddress(const uint8_t * mac_addr);
@@ -107,6 +120,9 @@ class messaging {
         String getMessageLog();
         void addMessageLog(String message);
         String messageCodeToText(int message);
+        void sendAddressList();
+        void updateAddressToWebserver(const uint8_t * address);
+        int getAddressId(const uint8_t * address);
 };
 
 
