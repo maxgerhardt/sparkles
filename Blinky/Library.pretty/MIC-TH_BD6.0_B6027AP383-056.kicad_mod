@@ -1,0 +1,149 @@
+(footprint "MIC-TH_BD6.0_B6027AP383-056"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(descr "MIC-TH_BD6.0_B6027AP383-056 footprint")
+	(tags "MIC-TH_BD6.0_B6027AP383-056 footprint")
+	(property "Reference" "MIC1"
+		(at 3.4 3.7 0)
+		(layer "F.SilkS")
+		(uuid "f0cc26d3-00c2-4441-8aa7-ce6ac4b19a9a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "B4013AM423-093"
+		(at -0.223495 3.016002 0)
+		(layer "F.Fab")
+		(uuid "8534ef49-197d-422e-bab6-d5634956a0f8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" "footprint:MIC-TH_BD6.0_B6027AP383-056"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ff59d4f2-631b-4afe-a8cc-22aa47c571bb")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Datasheet" "https://atta.szlcsc.com/upload/public/pdf/source/20180813/C233790_F5B864A011312A7BF4487DA03A0EE7FB.pdf"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "742f8c26-7994-4108-bcd7-4f2f45992948")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "970d02eb-f3f1-4731-a485-8c14906e9e6e")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "LCSC" "C233790"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "5d63575f-32f3-49ec-be0a-213a13a18fc0")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -1.396952 1.016002)
+		(end -0.63495 1.016002)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "5af218bc-536e-44b3-bb5d-ee1697a3be92")
+	)
+	(fp_circle
+		(center 0 1)
+		(end 3 1)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "6a473f2f-0f1c-49cd-9fd6-b77709926bf2")
+	)
+	(fp_circle
+		(center 3 -2.000076)
+		(end 3.029997 -2.000076)
+		(stroke
+			(width 0.059995)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "a303160c-7c0b-4e39-9fc9-17cfc8fa3a2d")
+	)
+	(fp_text user "REF**"
+		(at -0.223495 5.016002 0)
+		(layer "F.Fab")
+		(uuid "8b08d9da-03fc-436e-ae9b-3097ea95f81b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole circle
+		(at 0.949962 0)
+		(size 1.2 1.2)
+		(drill 0.700025)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "7a36ddf7-ad19-40ed-a5c1-89aa476a9a1c")
+	)
+	(pad "2" thru_hole circle
+		(at -0.949962 0)
+		(size 1.2 1.2)
+		(drill 0.700025)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "541e1183-ef0e-4ed3-bd9f-64aa0e532dcb")
+	)
+	(model "/Users/julian/Code/sparkles/JLC2KiCad_lib/footprint/packages3d/MIC-TH_BD6.0_B6027AP383-056.wrl"
+		(offset
+			(xyz 0.0000507999992371 -1.005331985 0.0001269999981)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
