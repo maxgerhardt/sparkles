@@ -1,0 +1,209 @@
+(footprint "HDR-TH_6P-P2.54-V-F"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(descr "HDR-TH_6P-P2.54-V-F footprint")
+	(tags "HDR-TH_6P-P2.54-V-F footprint")
+	(property "Reference" "J1"
+		(at 0.000013 -3.249987 180)
+		(layer "F.SilkS")
+		(uuid "a08088b0-3e9b-4507-933c-30d836c6bd6e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Conn_01x06_Socket"
+		(at 0.000013 3.249987 180)
+		(layer "F.Fab")
+		(uuid "cad13266-a0d0-4343-993d-fd72dcab8634")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" "footprint:HDR-TH_6P-P2.54-V-F"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "af219d5f-e748-46d1-8f3f-201b8661996c")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "3059194a-e925-4daf-b140-7d344ae585b8")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "07812aaa-7e5d-4665-8eff-c314e942ade0")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -7.849987 -1.249987)
+		(end 7.850013 -1.249987)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "0cbc19c5-2c58-4941-b43e-d5f5043b9aca")
+	)
+	(fp_line
+		(start -7.849987 -0.9)
+		(end -7.849987 -1.249987)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "8a86aacd-0dc2-4646-9a5e-36f3ef65d9d4")
+	)
+	(fp_line
+		(start -7.849987 1.249987)
+		(end -7.849987 -0.949987)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "b3beb653-1f8a-44d4-abba-2b9f6bec5d97")
+	)
+	(fp_line
+		(start 7.850013 -1.249987)
+		(end 7.850013 1.249987)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "25e210fb-f689-459e-bb99-df7f66724f17")
+	)
+	(fp_line
+		(start 7.850013 1.249987)
+		(end -7.849987 1.249987)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f5959d65-01c5-4a0b-b45b-53c76be44a5f")
+	)
+	(fp_circle
+		(center -7.869952 1.249936)
+		(end -7.83998 1.249936)
+		(stroke
+			(width 0.059995)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "a2b0a3f5-179f-457c-a367-f3f74520f8c3")
+	)
+	(fp_circle
+		(center -6.649987 -1.899924)
+		(end -6.350013 -1.899924)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "fa14f1d5-a2a2-4794-b97c-932557502cb1")
+	)
+	(fp_text user "REF**"
+		(at -0.099987 5.249987 180)
+		(layer "F.Fab")
+		(uuid "1ec2ec31-fe90-43be-b246-27786ea6f269")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole rect
+		(at -6.350013 0)
+		(size 1.8 1.6)
+		(drill 1.020015)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "2e345ebf-a296-4626-8307-68f10b55ce36")
+	)
+	(pad "2" thru_hole circle
+		(at -3.810008 0)
+		(size 1.6 1.6)
+		(drill 1.020015)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "634368b2-0f43-4906-bca8-09db1f58f956")
+	)
+	(pad "3" thru_hole circle
+		(at -1.270003 0)
+		(size 1.6 1.6)
+		(drill 1.020015)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "595ca367-563f-4077-9aee-92f840a52c2f")
+	)
+	(pad "4" thru_hole circle
+		(at 1.270003 0)
+		(size 1.6 1.6)
+		(drill 1.020015)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "6409b253-dc98-44e1-bf18-47b620dff3a3")
+	)
+	(pad "5" thru_hole circle
+		(at 3.810008 0)
+		(size 1.6 1.6)
+		(drill 1.020015)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "37712162-5eb8-4607-ac61-9bf8f786249d")
+	)
+	(pad "6" thru_hole circle
+		(at 6.350013 0)
+		(size 1.6 1.6)
+		(drill 1.020015)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "c91d4b0b-d726-4b53-bd6c-9a700091a946")
+	)
+	(model "/Users/julian/Code/sparkles/JLC2KiCad_lib/footprint/packages3d/HDR-TH_6P-P2.54-V-F.wrl"
+		(offset
+			(xyz 0 0 -0.0001015999985)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

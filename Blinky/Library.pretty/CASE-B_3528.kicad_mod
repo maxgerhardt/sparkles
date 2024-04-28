@@ -1,0 +1,162 @@
+(footprint "CASE-B_3528"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(descr "CASE-B_3528 footprint")
+	(tags "CASE-B_3528 footprint")
+	(property "Reference" "C10"
+		(at 0 -2.6 0)
+		(layer "F.SilkS")
+		(uuid "9711d0c5-6e46-4407-adfc-2517a0070705")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "100uf"
+		(at 0 3.4762 0)
+		(layer "F.Fab")
+		(uuid "a8363965-17cf-406d-9cf9-0c1d9155078b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" "footprint:CASE-B_3528"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "dc287ffa-08fe-4215-ba71-12f81fb7faa5")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "65c0a00c-faef-41b5-a7e6-068e1f2d07c1")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "4196537e-fad0-455c-bbf8-8f94e8a730c5")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -0.904318 1.4762)
+		(end -0.904318 -1.4762)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "14e9ef0a-6639-4f1d-8d4c-7ea3c2020c35")
+	)
+	(fp_line
+		(start 1.826187 -1.4762)
+		(end -1.826187 -1.4762)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "da39239d-2895-4f91-9910-12c0fd998366")
+	)
+	(fp_line
+		(start 1.826187 -1.4762)
+		(end 1.826187 -1.391237)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "552d82b0-0176-4b73-97bc-c68b9dd4cbae")
+	)
+	(fp_line
+		(start 1.826187 1.4762)
+		(end -1.826187 1.4762)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "22783ab9-44cb-4111-a851-033c9caf372f")
+	)
+	(fp_line
+		(start 1.826187 1.4762)
+		(end 1.826187 1.391237)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "fbc539fe-54b9-40e6-a5aa-60d954611afe")
+	)
+	(fp_circle
+		(center -1.979934 1.400051)
+		(end -1.949962 1.400051)
+		(stroke
+			(width 0.059995)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "30ddc0e1-f96e-4ecc-9ce3-f5d66f2f6e7f")
+	)
+	(fp_text user "REF**"
+		(at 0 5.4762 0)
+		(layer "F.Fab")
+		(uuid "b3a660ae-a605-474d-9fbd-a37fe79e1064")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" smd rect
+		(at -1.860554 0 180)
+		(size 1.506248 2.375997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "1dacbd46-b07b-41d0-92ef-d4d7c6146b23")
+	)
+	(pad "2" smd rect
+		(at 1.860554 0 180)
+		(size 1.506248 2.375997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "f30e4034-1afa-4960-8089-8a2ce45fd024")
+	)
+	(model "/Users/julian/Code/sparkles/JLC2KiCad_lib/footprint/packages3d/CASE-B_3528.wrl"
+		(offset
+			(xyz 0 0 1.049019984)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
