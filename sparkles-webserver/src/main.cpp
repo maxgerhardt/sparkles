@@ -3,11 +3,12 @@
 #include <WiFi.h>
 #include <FS.h>
 #include "ESPAsyncWebServer.h"
+#include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <myDefines.h>
 //#include <ESPAsyncTCP.h>
 #include <index_html.h>
-#include <addressList.h>
+//#include <addressList.h>
 #include <queue>
 #include <mutex>
 #include <cstdint>
@@ -22,7 +23,9 @@ uint8_t hostAddress[6] = {0x68, 0xb6, 0xb3, 0x08, 0xe9, 0xae};
 int sent = 0;
 int msgCounter = 0;
 
- const char* ssid = "Spargels";
+std::mutex sendQueueMutex;
+std::mutex receiveQueueMutex;
+const char* ssid = "Spargels";
 const char* password = "sparkles";
 esp_now_peer_info_t peerInfo;
 const char* PARAM_INPUT_1 = "input1";
@@ -38,12 +41,15 @@ struct SendData {
   int commandId;
   int param;
 };
+
+
 std::queue<ReceivedData> dataQueue;
 std::queue<SendData> sendQueue;
 
 message_command commandMessage;
 message_status_update statusUpdateMessage;
 message_address_list addressListMessage;
+FS* filesystem = &LittleFS;
 
 int msgType = 0;
 int deviceId = -1;
@@ -72,13 +78,48 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
     }
 }
 
-void handleReceive(const esp_now_recv_info *mac, const uint8_t *incomingData, uint8_t len) {
+
+void serveStaticFile(AsyncWebServerRequest *request) {
+  // Get the file path from the request
+  String path = request->url();
+
+  // Check if the file exists
+  if (path == "/" || path == "/index.html") { // Modify this condition as needed
+    path = "/addressList.html"; // Adjust the file path here
+  }
+
+  // Check if the file exists
+  if (LittleFS.exists(path)) {
+      // Open the file for reading
+      File file = LittleFS.open(path, "r");
+      if (file) {
+        // Read the contents of the file into a String
+        String fileContent;
+        while (file.available()) {
+          fileContent += char(file.read());
+        }
+
+        // Close the file
+        file.close();
+
+        // Send the file content as response
+        request->send(200, "text/html", fileContent);
+        return;
+      }
+  }
+
+  // If file not found, send 404
+  request->send(404, "text/plain", "File not found");
+}
+
+void handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, uint8_t len) {
   if (incomingData[0] != MSG_ANNOUNCE) {
     Serial.print("Received ");
     Serial.print(msgCounter);
     Serial.print(" - ");
     Serial.println(messageCodeToText(incomingData[0]));
-    printAddress(mac->src_addr);
+    //printAddress(mac->src_addr);
+    Serial.print("aha");
   }
   msgCounter++;
   String jsonString;
@@ -91,6 +132,7 @@ void handleReceive(const esp_now_recv_info *mac, const uint8_t *incomingData, ui
       receivedJson["address"] = addressToStr(addressListMessage.clientAddress.address);
       receivedJson["delay"] = String(addressListMessage.clientAddress.delay);
       receivedJson["status"] = modeToText(addressListMessage.status);
+      receivedJson["distance"] = String(addressListMessage.clientAddress.distance);
       serializeJson(receivedJson, jsonString);
       Serial.println(jsonString.c_str());
       events.send(jsonString.c_str(), "new_readings", millis());
@@ -110,16 +152,21 @@ void handleReceive(const esp_now_recv_info *mac, const uint8_t *incomingData, ui
 
 
 void pushDataToReceiveQueue(const esp_now_recv_info *mac, const uint8_t *incomingData, uint8_t len) {
+    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
   if (incomingData[0] != MSG_ANNOUNCE) {
+    Serial.println("recv");
+    printAddress(mac->src_addr);
     dataQueue.push({mac, incomingData, len}); // Push the received data into the queue
     }
 } 
 
 void pushDataToSendQueue(int commandId, int param) {
+    std::lock_guard<std::mutex> lock(sendQueueMutex);
     sendQueue.push({commandId, param}); // Push the received data into the queue
 } 
 
 void processDataFromSendQueue() {
+    std::lock_guard<std::mutex> lock(sendQueueMutex);
     while (!sendQueue.empty()) {
         SendData sendData = sendQueue.front(); // Get the front element
         // Process the received data here...
@@ -135,17 +182,21 @@ void processDataFromSendQueue() {
 } 
 
 void processDataFromReceiveQueue() {
+    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
     while (!dataQueue.empty()) {
         ReceivedData receivedData = dataQueue.front(); // Get the front element
 
         // Process the received data here...
         dataQueue.pop(); // Remove the front element from the queue
+        
         handleReceive(receivedData.mac, receivedData.incomingData, receivedData.len);
     }
 }  
 
 
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+  Serial.print("Received ");
+  printAddress(mac->src_addr);
   pushDataToReceiveQueue(mac, incomingData, len);
 }
 
@@ -158,7 +209,8 @@ int count = 0;
 
 void setup() {
     Serial.begin(115200);
-if (DEVICE_USED == 2) {
+    
+    if (DEVICE_USED == 2) {
     ledcAttach(ledPinRed1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinGreen1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledcAttach(ledPinBlue1, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
@@ -167,6 +219,12 @@ if (DEVICE_USED == 2) {
   ledcAttach(ledPinBlue2, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   ledsOff();
 }
+  if (!LittleFS.begin()) {
+    Serial.println("Failed to mount LittleFS");
+    return;
+  }
+ 
+
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(ssid, password);
   if (esp_now_init() != 0) {
@@ -179,20 +237,16 @@ if (DEVICE_USED == 2) {
   Serial.print("Wi-Fi Channel: ");
   Serial.println(WiFi.channel());
   
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", addressList);
-    msgType = ADDRESS_LIST;
-
-  });
-  
+  //server.on("/async", HTTP_GET, );)
   events.onConnect([](AsyncEventSourceClient *client){
-
     // send event with message "hello!", id current millis
     // and set reconnect delay to 1 second
     connected = true;
     client->send("");
   });
-  
+    server.onNotFound(serveStaticFile);
+
+
   server.on("/updateDeviceList", HTTP_GET, [] (AsyncWebServerRequest *request){
 
     Serial.println("Called UpdateDeviceList");
@@ -241,11 +295,6 @@ if (DEVICE_USED == 2) {
 
 
     }
-  request->send(200, "text/html", addressList);
-   //"HTTP GET request sent to your ESP on input field (" 
-     //                                + inputParam + ") with value: " + inputMessage +
-      //                               "<br><a href=\"/\">Return to Home Page</a>");
-    msgType = foo;
   });
 
   server.addHandler(&events);
@@ -264,9 +313,12 @@ if (DEVICE_USED == 2) {
   esp_now_register_recv_cb(OnDataRecv);
   
   WiFi.macAddress(myAddress);
-
+  
+  Serial.println("a");
   // put your setup code here, to run once:
 }
+
+
 void loop() {
   sent = false;
   processDataFromReceiveQueue();
@@ -279,7 +331,7 @@ void loop() {
   }
     if (lastDings + 5000 < millis() )
     {
-      Serial.print("Still alive ");
+      Serial.print("Webserver still alive ");
       Serial.println(count);
       Serial.println(WiFi.softAPIP());
       Serial.println(WiFi.channel());

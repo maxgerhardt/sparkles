@@ -27,6 +27,7 @@ class ledHandler {
     void candle(int duration, int reps, int pause);
     void addToQueue(std::function<void()> func);
     void processQueue() ;
+    void ledOn(int r, int g, int b, int duration, bool half);
 };
 
 #endif

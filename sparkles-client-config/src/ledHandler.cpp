@@ -65,7 +65,26 @@ void ledHandler::flash(int r, int g, int b, int duration, int reps, int pause) {
     delay(pause);
     ledsOff(); 
   }
+}  
+
+void ledHandler::ledOn(int r, int g, int b, int duration, bool half) {
+  if (DEVICE == D1) {
+    return;
+  }
+  if (half == true) {
+  ledcWrite(ledPinRed1, r);
+  ledcWrite(ledPinGreen1, g);
+  ledcWrite(ledPinBlue1, b);
+    
+  }
+  ledcWrite(ledPinRed2, r);
+  ledcWrite(ledPinGreen2, g);
+  ledcWrite(ledPinBlue2, b);
+
+    delay(duration);
+    ledsOff(); 
 }    
+
 
 
 void ledHandler::candle(int duration, int reps, int pause) {

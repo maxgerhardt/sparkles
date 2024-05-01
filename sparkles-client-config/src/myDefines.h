@@ -50,8 +50,8 @@ const int ledChannelBlue2 = 5;
 #define MSG_ANNOUNCE 1
 #define MSG_TIMER_CALIBRATION 2
 #define MSG_GOT_TIMER 3
-#define MSG_ASK_CLAP_TIME 5
-#define MSG_SEND_CLAP_TIME 6
+#define MSG_ASK_CLAP_TIMES 5
+#define MSG_SEND_CLAP_TIMES 6
 #define MSG_ANIMATION 7
 #define MSG_SWITCH_MODE 8
 #define MSG_NOCLAPFOUND -1
@@ -115,12 +115,16 @@ struct message_address{
 } ;
 
 // 7 bytes
-struct message_clap_times {
-  uint8_t messageType = MSG_SEND_CLAP_TIME;
+struct message_send_clap_times {
+  uint8_t messageType = MSG_SEND_CLAP_TIMES;
   int clapCounter;
   unsigned long timeStamp[NUM_CLAPS]; //offsetted.
 };
 
+struct message_ask_clap_times {
+  uint8_t message_type = MSG_ASK_CLAP_TIMES;
+  int deviceId;
+};
 //4+4*NUM_CLAPS, currently 44
 struct client_address {
   uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -130,7 +134,8 @@ struct client_address {
   float zLoc;
   uint32_t timerOffset;
   int delay;
-  message_clap_times clapTimes;
+  message_send_clap_times clapTimes;
+  float distance;
 } ;
 
 

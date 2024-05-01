@@ -16,10 +16,19 @@ void messaging::setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp
     peerInfo = &globalPeerInfo;
     if (DEVICE_MODE == 0) {
         addPeer(webserverAddress);
+        WiFi.macAddress(clientAddresses[0].address);
+        clientAddresses[0].xLoc = 0;
+        clientAddresses[0].yLoc = 0;
+        clientAddresses[0].zLoc = 0;
+        clientAddresses[0].timerOffset = 0;
+        clientAddresses[0].delay = 0;
+        addressCounter++;
     }
 }
 
 void messaging::removePeer(uint8_t address[6]) {
+        Serial.println("REMOVING PEER");
+        printAddress(address);
         if (esp_now_del_peer(address) != ESP_OK) {
         Serial.println("coudln't delete peer");
         return;
@@ -50,7 +59,7 @@ void messaging::printBroadcastAddress(){
 
 void messaging::setTimerReceiver(const uint8_t * incomingData) {
     memcpy(&addressMessage,incomingData,sizeof(addressMessage));
-    for (int i = 0; i < NUM_DEVICES; i++) {
+    for (int i = 1; i < NUM_DEVICES; i++) {
         if (memcmp(&clientAddresses[i].address, emptyAddress, 6) == 0) {
             //printAddress(addressMessage.address);
             memcpy(&clientAddresses[i].address, addressMessage.address, 6);
@@ -114,22 +123,61 @@ int messaging::getLastDelay() {
 void messaging::setLastDelay(int delay) {
     lastDelay = delay;
 }
-
-void messaging::handleClapTimes(const uint8_t *incomingdata) {
-    memcpy(&clapTimes, incomingdata, sizeof(clapTimes));
-
-}
  
 void messaging::getClapTimes(int i) {
-    if (i < NUM_ADDRESSES) {
-        pushDataToSendQueue(clientAddresses[i].address, MSG_ASK_CLAP_TIME);
+    if (i < NUM_DEVICES) {
+        pushDataToSendQueue(clientAddresses[i].address, MSG_ASK_CLAP_TIMES);
+    }
+}
+void messaging::calculateDistances() {
+    //go through all client devices
+    for (int i = 1;i < NUM_DEVICES;i++) {
+        int cumul = 0;
+        int clapCount = 0;
+        //go through all claps on the client device
+        for (int j = 0; j<clientAddresses[i].clapTimes.clapCounter; j++) {
+            //if the client device's clap from the counter isn't around the master's device one:
+            // this is until i have the clapping board ready
+            int clapId = -1;
+            unsigned long timeStampDifference = (clientAddresses[0].clapTimes.timeStamp[j] > clientAddresses[i].clapTimes.timeStamp[j]) ?
+                                                (clientAddresses[0].clapTimes.timeStamp[j] - clientAddresses[i].clapTimes.timeStamp[j]) :
+                                                (clientAddresses[i].clapTimes.timeStamp[j] - clientAddresses[0].clapTimes.timeStamp[j]);
+            if (timeStampDifference > 1000) {
+                for (int k = 0; k < clientAddresses[0].clapTimes.clapCounter; k++) {
+                    unsigned long timeStampDifference2 = (clientAddresses[0].clapTimes.timeStamp[k] > clientAddresses[i].clapTimes.timeStamp[j]) ?
+                                     (clientAddresses[0].clapTimes.timeStamp[k] - clientAddresses[i].clapTimes.timeStamp[j]) :
+                                     (clientAddresses[i].clapTimes.timeStamp[j] - clientAddresses[0].clapTimes.timeStamp[k]);
+
+                    if(timeStampDifference2 < 1000) {
+                        clapId = k;
+                    }
+                }
+            }
+            else {
+                clapId = j;
+            }
+            if (clapId != -1) {
+                clapCount++;
+                unsigned long timeStampDifference3 = (clientAddresses[0].clapTimes.timeStamp[clapId] > clientAddresses[i].clapTimes.timeStamp[j]) ?
+                                     (clientAddresses[0].clapTimes.timeStamp[clapId] - clientAddresses[i].clapTimes.timeStamp[j]) :
+                                     (clientAddresses[i].clapTimes.timeStamp[j] - clientAddresses[0].clapTimes.timeStamp[clapId]);
+
+                cumul += timeStampDifference3;
+            }
+        }
+        if( cumul > 0) {
+            clientAddresses[i].distance = (float)((float)cumul/clapCount);
+        }
+        else {
+            clientAddresses[i].distance = 0;
+        }
     }
 }
 
 
 void messaging::addClap(int clapCounter, unsigned long timeStamp) {
-    clapTimes.clapCounter = clapCounter;
-    clapTimes.timeStamp[clapCounter] = timeStamp;
+    sendClapTimes.clapCounter = clapCounter;
+    sendClapTimes.timeStamp[clapCounter] = timeStamp;
 }
 unsigned long messaging::getTimeOffset() {
     return timeOffset;
@@ -178,11 +226,11 @@ String messaging::messageCodeToText(int message) {
         case MSG_GOT_TIMER:
             out = "MSG_GOT_TIMER";
             break;
-        case MSG_ASK_CLAP_TIME:
-            out = "MSG_ASK_CLAP_TIME";
+        case MSG_ASK_CLAP_TIMES:
+            out = "MSG_ASK_CLAP_TIMES";
             break;
-        case MSG_SEND_CLAP_TIME:
-            out = "MSG_SEND_CLAP_TIME";
+        case MSG_SEND_CLAP_TIMES:
+            out = "MSG_SEND_CLAP_TIMES";
             break;
         case MSG_ANIMATION:
             out = "MSG_ANIMATION";
@@ -310,7 +358,7 @@ void messaging::printAllPeers() {
       
 }
 void messaging::printAllAddresses() {
-    for (int i=0;i<addressCounter; i++) {
+    for (int i=1;i<addressCounter; i++) {
         printAddress(clientAddresses[i].address);
     }
 }
@@ -376,16 +424,15 @@ void messaging::addError(String error) {
 
 }
 void messaging::addSent(String sent) {
-    message_sent += "\n";
     message_sent += sent;
     message_sent += "\n";
 }
 void messaging::pushDataToReceivedQueue(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime) {
-    std::lock_guard<std::mutex> lock(queueMutex); // Lock the mutex
+    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
     dataQueue.push({mac, incomingData, len, msgReceiveTime}); // Push the received data into the queue
 }
 void messaging::processDataFromReceivedQueue() {
-    std::lock_guard<std::mutex> lock(queueMutex); // Lock the mutex
+    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
     while (!dataQueue.empty()) {
         ReceivedData receivedData = dataQueue.front(); // Get the front element
         // Process the received data here...
@@ -398,18 +445,18 @@ void messaging::processDataFromReceivedQueue() {
 
 void messaging::pushDataToSendQueue(const uint8_t * address, int messageId) {
     Serial.println(messageCodeToText(messageId));
-    //std::lock_guard<std::mutex> lock(queueMutex); // Lock the mutex
+    std::lock_guard<std::mutex> lock(sendQueueMutex); // Lock the mutex
     SendData sendData {address, messageId};
     sendQueue.push(sendData); // Push the received data into the queue
 }
 void messaging::processDataFromSendQueue() {
-    std::lock_guard<std::mutex> lock(queueMutex); // Lock the mutex
+    std::lock_guard<std::mutex> lock(sendQueueMutex); // Lock the mutex
     uint8_t peerAddress[6];
     int foundPeer = 0;
     while (!sendQueue.empty()) {
         Serial.println("Processing Data from queue");
         SendData sendData = sendQueue.front(); // Get the front element
-        if (memcmp(sendData.address, broadcastAddress, 6) != 0) {
+        if (memcmp(sendData.address, broadcastAddress, 6) != 0 and memcmp(sendData.address, webserverAddress, 6) != 0) {
             Serial.println("not the same");
             memcpy(peerAddress, sendData.address, 6);
             foundPeer = addPeer(peerAddress);
@@ -425,6 +472,7 @@ void messaging::processDataFromSendQueue() {
 
         // Process the received data here...
         sendQueue.pop(); // Remove the front element from the queue
+        addSent(messageCodeToText(sendData.messageId));
         switch(sendData.messageId) {
             case MSG_ADDRESS:
                 esp_now_send(sendData.address, (uint8_t*) &addressMessage, sizeof(addressMessage));
@@ -438,13 +486,14 @@ void messaging::processDataFromSendQueue() {
             case MSG_GOT_TIMER:
                 esp_now_send(sendData.address, (uint8_t*) &gotTimerMessage, sizeof(gotTimerMessage));
                 break;
-            case MSG_ASK_CLAP_TIME:
-                // Handle MSG_ASK_CLAP_TIME message type
+            case MSG_ASK_CLAP_TIMES:
+                esp_now_send(sendData.address, (uint8_t*) &askClapTimesMessage, sizeof(askClapTimesMessage));
                 break;
             case MSG_SWITCH_MODE: 
+                printAddress(sendData.address);
                 esp_now_send(sendData.address, (uint8_t*) &switchModeMessage, sizeof(switchModeMessage));
-            case MSG_SEND_CLAP_TIME:
-                esp_now_send(sendData.address, (uint8_t*) &clapTimes, sizeof(clapTimes));
+            case MSG_SEND_CLAP_TIMES:
+                esp_now_send(sendData.address, (uint8_t*) &sendClapTimes, sizeof(sendClapTimes));
                 break;
             case MSG_ANIMATION:
                 esp_now_send(sendData.address, (uint8_t*) &animationMessage, sizeof(animationMessage));
@@ -463,7 +512,7 @@ void messaging::processDataFromSendQueue() {
                 addError("Message to send: unknown");
                 break;
         }
-        if (memcmp(sendData.address, broadcastAddress, 6) != 0 and foundPeer >0) {
+        if (memcmp(sendData.address, broadcastAddress, 6) != 0 and memcmp(sendData.address, webserverAddress, 6) != 0 and foundPeer >0) {
 
             removePeer(peerAddress);
         }
@@ -493,30 +542,30 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         case MSG_COMMANDS: 
             memcpy(&commandMessage,incomingData,sizeof(commandMessage));
             messageLog +="command:";
-            messageLog += String(commandMessage.messageId);
+            messageLog += messageCodeToText(commandMessage.messageId);
             switch (commandMessage.messageId) {
                 case CMD_MSG_SEND_ADDRESS_LIST: 
                 if (commandMessage.param != -1) {
                     messageLog +="should update one";
-
-                    addError(" should update one\n");
                     updateAddressToWebserver(clientAddresses[commandMessage.param].address);
                 }
                 else {
-                    addError(" should update all\n");
+                    messageLog += "Should update all";
                 sendAddressList();
                 }
                 break;
                 case CMD_START_CALIBRATION_MODE: 
                 globalModeHandler->switchMode(MODE_CALIBRATE);
                 switchModeMessage.mode = MODE_CALIBRATE;
+                messageLog += "Starting calib\n";
                 pushDataToSendQueue(broadcastAddress, MSG_SWITCH_MODE);
                 break;
                 case CMD_END_CALIBRATION_MODE: 
-                globalModeHandler->switchMode(MODE_ANNOUNCE);
+                globalModeHandler->switchMode(MODE_SEND_ANNOUNCE);
                 switchModeMessage.mode = MODE_NEUTRAL;
+                messageLog += "ending calib\n";
                 pushDataToSendQueue(broadcastAddress, MSG_SWITCH_MODE);
-                getClapTimes();
+                getClapTimes(0);
                 break;
                 case CMD_MODE_NEUTRAL:
                 switchModeMessage.mode = MODE_NEUTRAL;
@@ -543,7 +592,7 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
             if (switchModeMessage.mode == MODE_CALIBRATE) {
                 handleLed->flash(0, 255, 0, 100, 1, 50);
             }
-            else if (switchModemessage.mode = MODE_NEUTRAL and globalModeHandler->getMode() == MODE_CALIBRATE) {
+            else if (switchModeMessage.mode = MODE_NEUTRAL and globalModeHandler->getMode() == MODE_CALIBRATE) {
                 handleLed->flash(0, 255, 0, 100, 3, 50);
             }
             globalModeHandler->switchMode(switchModeMessage.mode);
@@ -559,7 +608,24 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         receiveTimer(msgReceiveTime);
         }
         break;
-        case MSG_GET_TIMERS
+        case MSG_ASK_CLAP_TIMES: 
+        {
+            pushDataToSendQueue(hostAddress, MSG_SEND_CLAP_TIMES);
+        }
+        break;
+        case MSG_SEND_CLAP_TIMES:
+        {
+            int id = getAddressId(mac->src_addr);
+            memcpy(&clientAddresses[id].clapTimes, incomingData, sizeof(incomingData));
+            clapsReceived++;
+            if (clapsReceived+1 == addressCounter) {
+                calculateDistances();
+                clapsReceived = 0;
+                globalModeHandler->switchMode(MODE_NEUTRAL);
+                sendAddressList();
+            }
+        }
+        break;
         case MSG_ANIMATION:
         addError("Animation Message Incoming\n");
         if (globalModeHandler->getMode() == MODE_ANIMATE) {
@@ -581,14 +647,14 @@ void messaging::printMessageModeLog() {
 }
 
 void messaging::sendAddressList() {
-
-    for (int i = 0;i < addressCounter; i++){
+    messageLog += "sending address list\n";
+    for (int i = 1;i < addressCounter; i++){
+        messageLog += String(i);
+        messageLog += stringAddress(clientAddresses[i].address);
         memcpy(&addressListMessage.clientAddress, &clientAddresses[i], 6);
         addressListMessage.index = i;
-        addError("sent address");
+        messageLog +="sent address";
         pushDataToSendQueue(webserverAddress, MSG_ADDRESS_LIST);
-    
-
     }
 }
 

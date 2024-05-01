@@ -80,11 +80,11 @@ String messageCodeToText(int message) {
         case MSG_GOT_TIMER:
             out = "MSG_GOT_TIMER";
             break;
-        case MSG_ASK_CLAP_TIME:
-            out = "MSG_ASK_CLAP_TIME";
+        case MSG_ASK_CLAP_TIMES:
+            out = "MSG_ASK_CLAP_TIMES";
             break;
-        case MSG_SEND_CLAP_TIME:
-            out = "MSG_SEND_CLAP_TIME";
+        case MSG_SEND_CLAP_TIMES:
+            out = "MSG_SEND_CLAP_TIMES";
             break;
         case MSG_ANIMATION:
             out = "MSG_ANIMATION";
@@ -125,6 +125,7 @@ String messageCodeToText(int message) {
 }
 
 void printAddress(const uint8_t * mac_addr){
+    Serial.println("behe");
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
             mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);

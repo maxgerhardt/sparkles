@@ -131,7 +131,7 @@ void receiveTimer(int messageArriveTime) {
 }
 */
 
-
+int testingMode = 0;
 int count = 0;
 bool didIreset = true;
 
@@ -216,11 +216,12 @@ void setup() {
 }
 
 void loop() {
+  if (testingMode == 0) {
+
   messageHandler.processDataFromSendQueue();
   messageHandler.processDataFromReceivedQueue();
   messageHandler.handleErrors();
   messageHandler.handleSent();
-
 
 if (modeHandler.getMode() == MODE_CALIBRATE) {
   double data = (double)analogRead(audioPin)/512-1;
@@ -237,7 +238,7 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
   {
         //handleLed.flash(0, 255, 0, 200, 1, 50);
 
-    Serial.println("Still alive");
+    Serial.println("Client still alive");
     modeHandler.printCurrentMode();
     Serial.println("message handler");
     messageHandler.printMessageModeLog();
@@ -260,7 +261,7 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     //modeHandler.printLog();
     lastClap = millis();
     cycleCounter++;
-    Serial.println("-----\nStill Alive");
+    Serial.println("-----\nClient Still Alive");
     Serial.println(cycleCounter);
     Serial.println(messageHandler.getMessageLog());
     modeHandler.printCurrentMode();
@@ -280,6 +281,12 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
 
 
     //printAddress(addressMessage.address);
+}
+  else {
+    handleLed.ledOn(255, 0, 0, 10000, true);
+  handleLed.ledOn(0, 255, 0, 10000, true);
+    handleLed.ledOn(0, 0, 255, 10000, true);
 
+  }
 
 } 

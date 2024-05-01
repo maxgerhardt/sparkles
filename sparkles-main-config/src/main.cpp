@@ -26,6 +26,7 @@ PeakDetection peakDetection;
 ledHandler handleLed;
 modeMachine modeHandler;
 messaging messageHandler;
+message_send_clap_times clapTimes;
 
 int interruptCounter;  //for counting interrupt
 int totalInterruptCounter;   	//total interrupt counting
@@ -96,6 +97,7 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
 
 
 void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
+
   if (modeHandler.getMode() == MODE_SENDING_TIMER) {
     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
       msgArriveTime = micros();
@@ -106,8 +108,9 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
      msgArriveTime = 0;
     }
   }
-  else {
-    //messageHandler.addError("something happened");
+  else if (modeHandler.getMode() != MODE_SEND_ANNOUNCE) {
+     Serial.print("sent ");
+     Serial.println(sendStatus);
   }
 }
 
@@ -128,6 +131,7 @@ void setup() {
   }
   handleLed.setup();
   messageHandler.setup(modeHandler, handleLed, peerInfo);
+
   //esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
   memcpy(&peerInfo.peer_addr, messageHandler.broadcastAddress, 6);
   peerInfo.channel = 0;  
@@ -145,7 +149,7 @@ void setup() {
     audioPin = 35;
   }
   //pinMode(audioPin, INPUT); 
-  //peakDetection.begin(30, 3, 0);   
+  peakDetection.begin(30, 3, 0);   
   lastClap = millis(); 
   timerCounter = 0;
   modeHandler.switchMode(MODE_SEND_ANNOUNCE);
@@ -161,60 +165,31 @@ void loop() {
     modeHandler.printCurrentMode();
     lastClap = millis();
     cycleCounter++;
-    Serial.print("-----\nStill Alive ");
+    Serial.print(DEVICE_MODE);
+    Serial.print("-----\nMain still Alive ");
     Serial.println(cycleCounter);
-    messageHandler.printAllAddresses();
+
+    //messageHandler.printAllAddresses();
     Serial.println(messageHandler.getMessageLog());
     Serial.println("-----");
-    messageHandler.printAddress(myAddress);
+    //messageHandler.printAddress(myAddress);
 
   }
 
-
-/*      if (messageHandler.error_message != "") {
-        Serial.println("------");
-        Serial.println(messageHandler.error_message);
-        messageHandler.error_message = "";
-        Serial.print("Currently in mode");
-        modeHandler.printCurrentMode();
-        Serial.println("------");
-      }*/
-      /*
-    double data = (double)analogRead(audioPin)/512-1;  // converts the sensor value to a range between -1 and 1
-    peakDetection.add(data);                     // adds a new data point
-    int peak = peakDetection.getPeak();          // 0, 1 or -1
-    double filtered = peakDetection.getFilt();   // moving average
-    if (peak == -1 and lastClap+1000 < millis()) {
-      lastClapTime = micros();
+  if (modeHandler.getMode() == MODE_CALIBRATE) {
+    double data = (double)analogRead(audioPin)/512-1;
+    peakDetection.add(data); 
+    int peak = peakDetection.getPeak(); 
+    double filtered = peakDetection.getFilt(); 
+    //Serial.println(sensorValue);
+    if (peak == -1 and millis() > lastClap+1000) {
+      clapTimes.timeStamp[clapCounter] = micros();
       lastClap = millis();
-      Serial.println("Clapped at ");
-      Serial.println(lastClapTime);
-      // print peak status
+      clapCounter++;
     }
-    */
-   /*
-    if (lastClap+5000 < millis()) {
-      Serial.println("stildl alive");
-      handleLed.flash(0, 255, 0, 200, 2, 50);
-      lastClap = millis();
-      messageHandler.printAllPeers();
-      modeHandler.printCurrentMode();
-
-    }
-*/
-    /*
-    if (messageHandler.clapTime.clapCounter > oldClapCounter) {
-      oldClapCounter = messageHandler.clapTime.clapCounter;
-      Serial.println(messageHandler.clapTime.timeStamp);
-      Serial.print("Clap received at Base: ");
-      Serial.println(lastClapTime);
-      Serial.print("Difference ");
-      Serial.print(messageHandler.clapTime.timeStamp - lastClapTime);
-      Serial.print("ms \nIn Meters ");
-      double inMeters = (0.343*(messageHandler.clapTime.timeStamp-lastClapTime))/1000;
-      Serial.println((inMeters));
-      delay(5000);
-
-    }*/
-  
+  }
+  if (messageHandler.clapsReceived == messageHandler.addressCounter) {
+    Serial.println("All clap Times received");
+    messageHandler.clapsReceived = 0;
+  }
 }

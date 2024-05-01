@@ -17,7 +17,6 @@
 class messaging {
     private:  
         client_address clientAddresses[NUM_DEVICES];
-        int addressCounter = 0;
         modeMachine messagingModeHandler;
         modeMachine* globalModeHandler;
         unsigned long arriveTime, receiveTime, sendTime, lastDelay, lastTime, timeOffset;
@@ -41,12 +40,14 @@ class messaging {
       };
       std::queue<ReceivedData> dataQueue;
       std::queue<SendData> sendQueue;
-      std::mutex queueMutex;
+      std::mutex sendQueueMutex;
+      std::mutex receiveQueueMutex;
 
     public: 
+        int addressCounter = 0;
         int msgSendTime;
         message_animate animationMessage;
-        message_clap_times clapTimes;
+        message_send_clap_times sendClapTimes;
         message_address addressMessage;
         message_timer timerMessage;
         message_got_timer gotTimerMessage;
@@ -55,6 +56,7 @@ class messaging {
         message_timer_received timerReceivedMessage;
         message_address_list addressListMessage;
         message_command commandMessage;
+        message_ask_clap_times askClapTimesMessage;
         String error_message = "";
         String message_received = "";
         String message_sent = "";
@@ -66,9 +68,10 @@ class messaging {
         uint8_t hostAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t myAddress[6];
         uint8_t timerReceiver[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        int clapsReceived = 0;
         //esp8266
         //uint8_t webserverAddress[6] = {0xe8, 0xdb, 0x84, 0x99, 0x5e, 0x44};
-        uint8_t webserverAddress[6] = {0x68, 0xb6, 0xb3, 0x09, 0x56, 0x5e};
+        uint8_t webserverAddress[6] = {0x80, 0x65, 0x99, 0xc7, 0xc2, 0x3c};
         messaging();
         void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
         void blink();
@@ -80,8 +83,9 @@ class messaging {
         int getLastDelay();
         void setLastDelay(int delay);
         void handleClapTimes(const uint8_t *incomingData);
+        void calculateDistances();
         void addClap(int clapCounter, unsigned long timeStamp);
-        void getClapTimes();
+        void getClapTimes(int i);
         int getTimerCounter();
         void setTimerCounter(int counter);
         void incrementTimerCounter();

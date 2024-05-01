@@ -84,7 +84,7 @@ const char addressList[] PROGMEM = R"rawliteral(
 
   var debug = 0;
   function boardCards(obj) {
-    console.log(obj.index);
+    console.log(obj);
     var existingPacket = document.getElementById("boardCard" + obj.index);
   if (!existingPacket) {
     var newCard = document.createElement("div");
@@ -108,7 +108,7 @@ const char addressList[] PROGMEM = R"rawliteral(
     document.getElementById("boardCard"+obj.index).classList.add("active");
     document.getElementById("boardCard"+obj.index).classList.remove("inactive");
   }
-  
+
   document.getElementById("del"+obj.index).textContent = "Delay: "+obj.delay;
   document.getElementById("t1").textContent = String(parseInt(obj.index)+1);
 
@@ -120,7 +120,7 @@ const char addressList[] PROGMEM = R"rawliteral(
   }
   function calibrateUpdate(obj) {
     if (obj.status == "true") {
-      document.getElementById('cmd_calibrate').textContent = "END CALIBRATION";
+      document.getElementById('cmd_calibrate').textContent = "END CALIB";
     }
     else {
       document.getElementById('cmd_calibrate').textContent = "CALIBRATE";
