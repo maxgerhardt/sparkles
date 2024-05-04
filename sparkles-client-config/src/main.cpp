@@ -7,6 +7,8 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <PeakDetection.h> 
+#include <Preferences.h>
+
 
 //#include "ESP32TimerInterrupt.h"
 #define TIMER_INTERVAL_MS       600
@@ -31,7 +33,7 @@ PeakDetection peakDetection;
 ledHandler handleLed;
 modeMachine modeHandler;
 messaging messageHandler;
-
+Preferences preferences;
 
 
 //Network

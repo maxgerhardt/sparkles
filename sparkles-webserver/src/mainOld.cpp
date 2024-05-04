@@ -13,7 +13,6 @@
 #include <mutex>
 #include <cstdint>
 #include <helperFuncs.h>
-#include <webserver.h>
 // put function declarations here:
 
 bool timerRecvd = false;
@@ -31,8 +30,6 @@ const char* password = "sparkles";
 esp_now_peer_info_t peerInfo;
 const char* PARAM_INPUT_1 = "input1";
 #define ADDRESS_LIST 1
-
-webserver myWebserver;
 
 struct ReceivedData {
     const esp_now_recv_info * mac;
@@ -52,14 +49,18 @@ std::queue<SendData> sendQueue;
 message_command commandMessage;
 message_status_update statusUpdateMessage;
 message_address_list addressListMessage;
-
+FS* filesystem = &LittleFS;
 
 int msgType = 0;
 int deviceId = -1;
-
+String outputJson;
+AsyncWebServer server(80);
+AsyncEventSource events("/events");
 //AsyncEventSource calibrate("/commandCalibrate");
 bool calibrationStatus = false;
+
 unsigned long lastDings = 0;
+
 unsigned long lastPress = 0;
 unsigned long buttonPressTime = 0;
 bool buttonOn = false;
@@ -86,6 +87,39 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
     }
 }
 
+
+void serveStaticFile(AsyncWebServerRequest *request) {
+  // Get the file path from the request
+  String path = request->url();
+
+  // Check if the file exists
+  if (path == "/" || path == "/index.html") { // Modify this condition as needed
+    path = "/addressList.html"; // Adjust the file path here
+  }
+
+  // Check if the file exists
+  if (LittleFS.exists(path)) {
+      // Open the file for reading
+      File file = LittleFS.open(path, "r");
+      if (file) {
+        // Read the contents of the file into a String
+        String fileContent;
+        while (file.available()) {
+          fileContent += char(file.read());
+        }
+
+        // Close the file
+        file.close();
+
+        // Send the file content as response
+        request->send(200, "text/html", fileContent);
+        return;
+      }
+  }
+
+  // If file not found, send 404
+  request->send(404, "text/plain", "File not found");
+}
 
 void handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, uint8_t len) {
   if (incomingData[0] != MSG_ANNOUNCE) {
