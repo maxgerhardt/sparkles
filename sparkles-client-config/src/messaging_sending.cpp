@@ -16,7 +16,11 @@
     timerMessage.lastDelay = lastDelay;
   }
 void messaging::getClapTimes(int i) {
-    if (i < NUM_DEVICES) {
+    if (i == -1) {
+        pushDataToSendQueue(webserverAddress, MSG_ASK_CLAP_TIMES);
+        i = 0;
+    }
+    else if (i < NUM_DEVICES) {
         pushDataToSendQueue(clientAddresses[i].address, MSG_ASK_CLAP_TIMES);
     }
 }

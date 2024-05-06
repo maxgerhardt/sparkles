@@ -14,6 +14,8 @@
 #include <cstdint>
 #include <helperFuncs.h>
 #include <webserver.h>
+#include <messaging.h>
+#include <stateMachine.h>
 // put function declarations here:
 
 bool timerRecvd = false;
@@ -30,9 +32,10 @@ const char* ssid = "Spargels";
 const char* password = "sparkles";
 esp_now_peer_info_t peerInfo;
 const char* PARAM_INPUT_1 = "input1";
-#define ADDRESS_LIST 1
 
-webserver myWebserver;
+webserver myWebserver(&LittleFS);
+messaging messageHandler;
+modeMachine stateMachine;
 
 struct ReceivedData {
     const esp_now_recv_info * mac;
@@ -44,7 +47,7 @@ struct SendData {
   int commandId;
   int param;
 };
-
+String outputJson;
 
 std::queue<ReceivedData> dataQueue;
 std::queue<SendData> sendQueue;
@@ -54,27 +57,16 @@ message_status_update statusUpdateMessage;
 message_address_list addressListMessage;
 
 
+
 int msgType = 0;
 int deviceId = -1;
 
-//AsyncEventSource calibrate("/commandCalibrate");
 bool calibrationStatus = false;
 unsigned long lastDings = 0;
 unsigned long lastPress = 0;
 unsigned long buttonPressTime = 0;
 bool buttonOn = false;
-void IRAM_ATTR buttonInterrupt() {
-  if (buttonOn == false) {
-    buttonPressTime = micros();  
-    buttonOn = true;
-  }
-  else if (buttonOn == true) {
-    buttonOn = false;
-    buttonPressTime = micros();
-  }
-
-}
-
+bool previousButton = false;
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
   Serial.println("Sent");
@@ -85,102 +77,15 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
      sent = -1;
     }
 }
-
-
-void handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, uint8_t len) {
-  if (incomingData[0] != MSG_ANNOUNCE) {
-    Serial.print("Received ");
-    Serial.print(msgCounter);
-    Serial.print(" - ");
-    Serial.println(messageCodeToText(incomingData[0]));
-    //printAddress(mac->src_addr);
-    Serial.print("aha");
-  }
-  msgCounter++;
-  String jsonString;
-  JsonDocument receivedJson;
-  switch(incomingData[0]) {
-    case MSG_ADDRESS_LIST: 
-      Serial.println("received address List Msg");
-      memcpy(&addressListMessage,incomingData,sizeof(addressListMessage));
-      receivedJson["index"] = String(addressListMessage.index);
-      receivedJson["address"] = addressToStr(addressListMessage.clientAddress.address);
-      receivedJson["delay"] = String(addressListMessage.clientAddress.delay);
-      receivedJson["status"] = modeToText(addressListMessage.status);
-      receivedJson["distance"] = String(addressListMessage.clientAddress.distance);
-      serializeJson(receivedJson, jsonString);
-      Serial.println(jsonString.c_str());
-      events.send(jsonString.c_str(), "new_readings", millis());
-      break;
-    case MSG_STATUS_UPDATE: 
-
-      Serial.println("received status update");
-      memcpy(&statusUpdateMessage, incomingData, sizeof(statusUpdateMessage));
-      receivedJson["status"] = modeToText(statusUpdateMessage.mode);
-      receivedJson["statusId"] = String(statusUpdateMessage.mode);
-      serializeJson(receivedJson, jsonString);
-      events.send(jsonString.c_str(), "new_status", millis());
-      break;
-  }
-
-}
-
-
-void pushDataToReceiveQueue(const esp_now_recv_info *mac, const uint8_t *incomingData, uint8_t len) {
-    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
-  if (incomingData[0] != MSG_ANNOUNCE) {
-    Serial.println("recv");
-    printAddress(mac->src_addr);
-    dataQueue.push({mac, incomingData, len}); // Push the received data into the queue
-    }
-} 
-
-void pushDataToSendQueue(int commandId, int param) {
-    std::lock_guard<std::mutex> lock(sendQueueMutex);
-    sendQueue.push({commandId, param}); // Push the received data into the queue
-} 
-
-void processDataFromSendQueue() {
-    std::lock_guard<std::mutex> lock(sendQueueMutex);
-    while (!sendQueue.empty()) {
-        SendData sendData = sendQueue.front(); // Get the front element
-        // Process the received data here...
-        sendQueue.pop(); // Remove the front element from the queue
-        commandMessage.messageId = sendData.commandId;
-        commandMessage.param = sendData.param;
-        Serial.print("Sending");
-        Serial.print(sendData.commandId);
-        Serial.print(" -- ");
-        Serial.println(sendData.param);
-        esp_now_send(hostAddress, (uint8_t *) &commandMessage, sizeof(commandMessage));
-    }
-} 
-
-void processDataFromReceiveQueue() {
-    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
-    while (!dataQueue.empty()) {
-        ReceivedData receivedData = dataQueue.front(); // Get the front element
-
-        // Process the received data here...
-        dataQueue.pop(); // Remove the front element from the queue
-        
-        handleReceive(receivedData.mac, receivedData.incomingData, receivedData.len);
-    }
-}  
-
-
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
   Serial.print("Received ");
-  printAddress(mac->src_addr);
-  pushDataToReceiveQueue(mac, incomingData, len);
+  messageHandler.printAddress(mac->src_addr);
+  messageHandler.pushDataToReceivedQueue(mac, incomingData, len, micros());
 }
 
 
 bool connected = false;
 int count = 0;
-
-
-
 
 void setup() {
     Serial.begin(115200);
@@ -206,61 +111,16 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-
+  myWebserver.setup(messageHandler, stateMachine);
+  messageHandler.setup(myWebserver, stateMachine);
   Serial.print("Station IP Address: ");
   Serial.println(WiFi.localIP());
   Serial.print("Wi-Fi Channel: ");
   Serial.println(WiFi.channel());
   pinMode(CLAP_PIN, INPUT_PULLUP);
   //server.on("/async", HTTP_GET, );)
-  events.onConnect([](AsyncEventSourceClient *client){
-    // send event with message "hello!", id current millis
-    // and set reconnect delay to 1 second
-    connected = true;
-    client->send("");
-  });
-    server.onNotFound(serveStaticFile);
-
-
-  server.on("/updateDeviceList", HTTP_GET, [] (AsyncWebServerRequest *request){
-
-    Serial.println("Called UpdateDeviceList");
-    msgType=ADDRESS_LIST;
-    if (request->hasParam("id")) {
-      deviceId  = request->getParam("id")->value().toInt();
-    }
-    else {
-      deviceId = -1;
-    }
-    pushDataToSendQueue(CMD_MSG_SEND_ADDRESS_LIST, deviceId);
-     request->send(200, "text/html", "OK");
-  });
-  server.on("/commandCalibrate", HTTP_GET, [] (AsyncWebServerRequest *request){
-    Serial.println("Called Calibrate");
-    if (calibrationStatus == false) {
-    pushDataToSendQueue(CMD_START_CALIBRATION_MODE, -1);
-     request->send(204);
-     String jsonString;
-     jsonString = "{\"status\" : \"true\"}";
-     events.send(jsonString.c_str(), "calibrateStatus", millis());
-     attachInterrupt(digitalPinToInterrupt(CLAP_PIN), buttonInterrupt, CHANGE);
-  
-     calibrationStatus = true;
-    }
-    else if (calibrationStatus == true) {
-      pushDataToSendQueue(CMD_END_CALIBRATION_MODE, -1);
-      request->send(204);
-      String jsonString;
-      jsonString = "{\"status\" : \"false\"}";
-     events.send(jsonString.c_str(), "calibrateStatus", millis());
-     detachInterrupt(digitalPinToInterrupt(CLAP_PIN));
-  
-     calibrationStatus = false;
-    }
-  });
-
-//restart calibration mode//
-
+  stateMachine.switchMode(MODE_NEUTRAL);
+/*
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
     String inputMessage;
     String inputParam;
@@ -275,9 +135,8 @@ void setup() {
 
     }
   });
+*/
 
-  server.addHandler(&events);
-  server.begin();
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
   if (esp_now_add_peer(&peerInfo) != ESP_OK){
     Serial.println("Failed to add peer");
@@ -290,24 +149,29 @@ void setup() {
   }
   esp_now_register_send_cb(OnDataSent);
   esp_now_register_recv_cb(OnDataRecv);
-  
   WiFi.macAddress(myAddress);
-  
-  Serial.println("a");
-  // put your setup code here, to run once:
+    // put your setup code here, to run once:
 }
 
 
 void loop() {
   sent = false;
-  processDataFromReceiveQueue();
-  processDataFromSendQueue();
+  messageHandler.processDataFromReceivedQueue();
+  messageHandler.processDataFromSendQueue();
 
-  if (calibrationStatus == true) {
-    if (buttonOn) {
-      if (micros() - buttonPressTime > 10000) {
-        Serial.println("Clap Happened");
-      }
+  if (stateMachine.getMode() == MODE_CALIBRATE) {
+    buttonOn = digitalRead(CLAP_PIN);
+    if (buttonOn and previousButton == false) {
+      buttonPressTime = micros();
+      previousButton = true;
+    }
+    if (buttonOn and previousButton == true and micros() - buttonPressTime > 10000) {
+      Serial.println("Clap Happened");
+      messageHandler.addClap(buttonPressTime);
+    }
+    else
+    if (!buttonOn) {
+      previousButton = false;
     }
   }
   else {
@@ -323,7 +187,7 @@ void loop() {
         Serial.println(count);
         Serial.println(WiFi.softAPIP());
         Serial.println(WiFi.channel());
-        printAddress(myAddress);
+        messageHandler.printAddress(myAddress);
 
         count++;
         //printAddress(myAddress);

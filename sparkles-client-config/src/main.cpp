@@ -77,7 +77,6 @@ int delayAvg = 0;
 //calibration stuff
 int sensorValue;
 int microphonePin = A0;
-int clapCounter = 0;
 int lastClap;
 int lastFlash;
 bool clapSent = false;
@@ -232,9 +231,8 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
   double filtered = peakDetection.getFilt(); 
   //Serial.println(sensorValue);
   if (peak == -1 and millis() > lastClap+1000) {
-     messageHandler.addClap(clapCounter, micros()-timeOffset);
+     messageHandler.addClap(micros()-timeOffset);
     lastClap = millis();
-    clapCounter++;
   }
   else if (millis()>(lastClap+5000)) 
   {

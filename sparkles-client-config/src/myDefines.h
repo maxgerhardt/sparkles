@@ -44,6 +44,9 @@ const int ledChannelRed2 = 3;
 const int ledChannelGreen2 = 4;
 const int ledChannelBlue2 = 5;
 
+//webserv
+#define CLAP_PIN 47
+#define ADDRESS_LIST 1
 
 //MESSAGING
 #define MSG_ADDRESS 0
@@ -58,12 +61,16 @@ const int ledChannelBlue2 = 5;
 #define MSG_COMMANDS 101
 #define MSG_ADDRESS_LIST 102
 #define MSG_STATUS_UPDATE 103
+#define MSG_END_CALIBRATION 104
 
+#define CMD_START 200
 #define CMD_MSG_SEND_ADDRESS_LIST 201
 #define CMD_START_CALIBRATION_MODE 202
 #define CMD_END_CALIBRATION_MODE 203
 #define CMD_BLINK 204
 #define CMD_MODE_NEUTRAL 205
+#define CMD_GET_TIMER 206
+#define CMD_END 220
 
 #define NUM_DEVICES 20
 #ifndef CALIBRATION_FREQUENCY
@@ -125,6 +132,8 @@ struct message_ask_clap_times {
   uint8_t message_type = MSG_ASK_CLAP_TIMES;
   int deviceId;
 };
+
+
 //4+4*NUM_CLAPS, currently 44
 struct client_address {
   uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};

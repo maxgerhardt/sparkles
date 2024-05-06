@@ -7,6 +7,10 @@
 
 void messaging::setTimerReceiver(const uint8_t * incomingData) {
     memcpy(&addressMessage,incomingData,sizeof(addressMessage));
+    if (memcmp(&addressMessage.address, webserverAddress, 6) == 0) {
+        memcpy(&timerReceiver, addressMessage.address, 6);
+        return;
+    }
     for (int i = 1; i < NUM_DEVICES; i++) {
         if (memcmp(&clientAddresses[i].address, emptyAddress, 6) == 0) {
             //printAddress(addressMessage.address);
@@ -50,60 +54,19 @@ int messaging::addPeer(uint8_t * address) {
 
 void messaging::handleGotTimer(const uint8_t * incomingData, uint8_t * macAddress) {
     memcpy(&gotTimerMessage, incomingData, sizeof(incomingData));
-    removePeer(timerReceiver);
+    if (memcmp(timerReceiver, webserverAddress, 6) != 0) {
+        removePeer(timerReceiver);
+        int addressId = getAddressId(macAddress);
+        clientAddresses[addressId].delay=gotTimerMessage.delayAvg;
+        clientAddresses[addressId].timerOffset = gotTimerMessage.timerOffset;
+        updateAddressToWebserver(timerReceiver);
+    }
     timerCounter = 0;
     lastDelay = 0;
-    int addressId = getAddressId(macAddress);
-    clientAddresses[addressId].delay=gotTimerMessage.delayAvg;
-    clientAddresses[addressId].timerOffset = gotTimerMessage.timerOffset;
-    updateAddressToWebserver(timerReceiver);
     globalModeHandler->switchMode(MODE_SEND_ANNOUNCE);
     //messagingModeMachine.switchMode(MODE_ANIMATE);
 }
 
-void messaging::receiveTimer(int messageArriveTime) {
-  //add condition that if nothing happened after 5 seconds, situation goes back to start
-  //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
-  int difference = messageArriveTime - lastTime;
-  lastDelay = timerMessage.lastDelay;
-
-  if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) < 1000 and abs(timerMessage.lastDelay) <2500) {
-    addMessageLog("Counts. Arraycounter: ");
-    addMessageLog(String(arrayCounter));
-    addMessageLog("\n");
-
-    if (arrayCounter <TIMER_ARRAY_COUNT) {
-      timerArray[arrayCounter] = timerMessage.lastDelay;
-    }
-    else {
-      for (int i = 0; i< TIMER_ARRAY_COUNT; i++) {
-        delayAvg += timerArray[i];
-      } 
-      delayAvg = delayAvg/TIMER_ARRAY_COUNT;
-      gotTimerMessage.delayAvg = delayAvg;
-      timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
-      gotTimerMessage.timerOffset = timeOffset;
-      pushDataToSendQueue(hostAddress, MSG_GOT_TIMER);
-      gotTimer = true;
-      handleLed->flash(255,0,0, 200, 3, 300);
-      globalModeHandler->switchMode(MODE_GOT_TIMER);
-    }
-    arrayCounter++;
-  }
-  else {
-    addMessageLog("Doesn't Count.");
-    if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) >= 500) {
-        addMessageLog(" Difference ");
-        addMessageLog(String(abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS)));
-    }
-    else if (abs(timerMessage.lastDelay) >=2500) {
-    addMessageLog(" Last delay = ");
-    addMessageLog(String(abs(timerMessage.lastDelay)));
-    }
-    addMessageLog("\n");
-  }
-   lastTime = messageArriveTime;
-}
 
 void messaging::handleAnnounce(uint8_t address[6]) {
     haveSentAddress = true;
@@ -137,10 +100,6 @@ void messaging::handleAnnounce(uint8_t address[6]) {
 }
 
 
-void messaging::pushDataToReceivedQueue(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime) {
-    std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
-    dataQueue.push({mac, incomingData, len, msgReceiveTime}); // Push the received data into the queue
-}
 void messaging::processDataFromReceivedQueue() {
     std::lock_guard<std::mutex> lock(receiveQueueMutex); // Lock the mutex
     while (!dataQueue.empty()) {
@@ -172,7 +131,7 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
             Serial.println("never received announce");
         }
     }
-    if (DEVICE_MODE == 1 and gotTimer == false and (incomingData[0] != MSG_ANNOUNCE or incomingData[0] != MSG_TIMER_CALIBRATION) {
+    if (DEVICE_MODE == 1 and gotTimer == false and (incomingData[0] != MSG_ANNOUNCE or incomingData[0] != MSG_TIMER_CALIBRATION)) {
         handleAnnounce(mac->src_addr);
     }
     switch (incomingData[0]) {
@@ -192,6 +151,12 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                 sendAddressList();
                 }
                 break;
+                case CMD_GET_TIMER: 
+                    if (globalModeHandler->getMode() == MODE_SEND_ANNOUNCE or globalModeHandler->getMode()== MODE_ANIMATE) {
+                        setHostAddress(webserverAddress);
+                        globalModeHandler->switchMode(MODE_SENDING_TIMER);
+                    };
+                break;
                 case CMD_START_CALIBRATION_MODE: 
                 globalModeHandler->switchMode(MODE_CALIBRATE);
                 switchModeMessage.mode = MODE_CALIBRATE;
@@ -203,7 +168,7 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                 switchModeMessage.mode = MODE_NEUTRAL;
                 messageLog += "ending calib\n";
                 pushDataToSendQueue(broadcastAddress, MSG_SWITCH_MODE);
-                getClapTimes(0);
+                getClapTimes(-1);
                 break;
                 case CMD_MODE_NEUTRAL:
                 switchModeMessage.mode = MODE_NEUTRAL;
@@ -252,15 +217,26 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         }
         break;
         case MSG_SEND_CLAP_TIMES:
-        {
-            int id = getAddressId(mac->src_addr);
-            memcpy(&clientAddresses[id].clapTimes, incomingData, sizeof(incomingData));
-            clapsReceived++;
-            if (clapsReceived+1 == addressCounter) {
-                calculateDistances();
-                clapsReceived = 0;
-                globalModeHandler->switchMode(MODE_NEUTRAL);
-                sendAddressList();
+        {   
+            if (memcmp(mac->src_addr, webserverAddress, 6) == 0) {
+                memcpy(&webserverClapTimes, incomingData, sizeof(incomingData));
+                getClapTimes(0);
+                break;
+            }
+            else {
+                int id = getAddressId(mac->src_addr);
+                memcpy(&clientAddresses[id].clapTimes, incomingData, sizeof(incomingData));
+                clapsReceived++;
+                if (clapsReceived+1 == addressCounter) {
+                    calculateDistances();
+                    clapsReceived = 0;
+                    globalModeHandler->switchMode(MODE_NEUTRAL);
+                    sendAddressList();
+                }
+                else {
+                    clapsAsked++;
+                    getClapTimes(clapsAsked);
+                }
             }
         }
         break;

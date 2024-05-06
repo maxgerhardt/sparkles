@@ -1,8 +1,12 @@
 #include <myDefines.h>
 #include <Arduino.h>
-
 #include <stateMachine.h>
+#if DEVICE_MODE != 2
 #include <ledHandler.h>
+#else
+#include <webserver.h>
+class webserver;
+#endif
 #include <iostream>
 #include <queue>
 #include <mutex>
@@ -17,15 +21,27 @@
 class messaging {
     private:  
         client_address clientAddresses[NUM_DEVICES];
-        modeMachine messagingModeHandler;
         modeMachine* globalModeHandler;
+        #if DEVICE_MODE !=2
+        modeMachine messagingModeHandler;
+        ledHandler* handleLed;
+        struct SendData {
+          const uint8_t * address;
+          int messageId;
+        };
+        #else
+        webserver* webServer;
+      struct SendData {
+        int messageId;
+        int param;
+      };
+        #endif
         unsigned long arriveTime, receiveTime, sendTime, lastDelay, lastTime, timeOffset;
         int timerCounter = 0;
         int timerArray[TIMER_ARRAY_COUNT];
         int arrayCounter =0;
         int delayAvg = 0;
         unsigned long oldMsgReceiveTime; 
-        ledHandler* handleLed;
         esp_now_peer_info_t* peerInfo;
         bool haveSentAddress = false;
       struct ReceivedData {
@@ -34,15 +50,12 @@ class messaging {
           int len;
           unsigned long msgReceiveTime;
       };
-      struct SendData {
-        const uint8_t * address;
-        int messageId;
-      };
+
       std::queue<ReceivedData> dataQueue;
       std::queue<SendData> sendQueue;
       std::mutex sendQueueMutex;
       std::mutex receiveQueueMutex;
-
+      int msgCounter = 0;
     public: 
         int addressCounter = 0;
         int msgSendTime;
@@ -57,6 +70,8 @@ class messaging {
         message_address_list addressListMessage;
         message_command commandMessage;
         message_ask_clap_times askClapTimesMessage;
+        message_status_update statusUpdateMessage;
+        message_send_clap_times webserverClapTimes;
         String error_message = "";
         String message_received = "";
         String message_sent = "";
@@ -69,11 +84,16 @@ class messaging {
         uint8_t myAddress[6];
         uint8_t timerReceiver[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         int clapsReceived = 0;
+        int clapsAsked = 0;
         //esp8266
         //uint8_t webserverAddress[6] = {0xe8, 0xdb, 0x84, 0x99, 0x5e, 0x44};
         uint8_t webserverAddress[6] = {0x80, 0x65, 0x99, 0xc7, 0xc2, 0x3c};
         messaging();
+        #if DEVICE_MODE != 2
         void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
+        #else
+        void setup(webserver &Webserver, modeMachine &modeHandler);
+        #endif
         void blink();
         void removePeer(uint8_t address[6]);
         void printAddress(const uint8_t * mac_addr);
@@ -84,7 +104,7 @@ class messaging {
         void setLastDelay(int delay);
         void handleClapTimes(const uint8_t *incomingData);
         void calculateDistances();
-        void addClap(int clapCounter, unsigned long timeStamp);
+        void addClap(unsigned long timeStamp);
         void getClapTimes(int i);
         int getTimerCounter();
         void setTimerCounter(int counter);
@@ -116,6 +136,7 @@ class messaging {
         void pushDataToReceivedQueue(const esp_now_recv_info* mac, const uint8_t* incomingData, int len, unsigned long msgReceiveTime);
         void processDataFromReceivedQueue();
         void pushDataToSendQueue(const uint8_t * address, int messageId);
+        void pushDataToSendQueue(int messageId, int param);
         void processDataFromSendQueue();
         void handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime);
         void printMessagingMode();

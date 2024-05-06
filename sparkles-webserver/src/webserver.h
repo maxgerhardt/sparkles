@@ -10,8 +10,9 @@
 #include <queue>
 #include <mutex>
 #include <cstdint>
-#include <helperFuncs.h>
-#endif
+//#include <helperFuncs.h>
+#include <messaging.h>
+#include <stateMachine.h>
 
 class webserver {
     private:
@@ -21,15 +22,19 @@ class webserver {
         String outputJson;
         bool calibrationStatus = false;
         bool connected = false;
+
     public:
-    webserver(FS* fs) :  server(80), events("/events"), filesystem(fs) {}
-    void setup();
+    webserver(FS* fs);
+    void setup(messaging &Messaging, modeMachine &modeHandler);
     void serveStaticFile(AsyncWebServerRequest *request);
     AsyncWebServer server;
     AsyncEventSource events;
     FS* filesystem;
+    messaging* messageHandler;
+    modeMachine* stateMachine;
     void configRoutes();
     void handleClientConnect(AsyncEventSourceClient *client);
-    void updateDeviceList(AsyncWebServerRequest *request)
-}
-
+    void updateDeviceList(AsyncWebServerRequest *request);
+    void commandCalibrate(AsyncWebServerRequest *request);
+};
+#endif
