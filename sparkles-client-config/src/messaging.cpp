@@ -57,32 +57,45 @@ void messaging::filterClaps(int index) {
 
 void messaging::calculateDistances() {
     //filterClaps(0);
+    //go through all devices
     for (int i = 1; i < addressCounter; i++ ){
-        filterClaps(i);
+        //filterClaps(i);
+        //initialize cumulative distance value and clap counter
         int cumul = 0;
         int clapCount = 0;
+        //initialize bools for "this clap was found in the other device"
         bool countmeWeb = false;
-        bool countmeMain
+        bool countmeMain = false;
+        //initialize last clap index for webserver and main device so that i don't have to start the loops again
         int lastWebserverClap = 0;
         int lastMainClap = 0;
+        //output some stuff
         addError("Device: "+String(i)+"\n");
         addError("Clap Counter: "+String(clientAddresses[i].clapTimes.clapCounter)+"\n");
+        //if there are no claps, lets just move on
         if (clientAddresses[i].clapTimes.clapCounter == 0) { addError("No claps detected\n"); continue; }
+        //iterate through the claps of the device
         for (int j = 0 ; j < clientAddresses[i].clapTimes.clapCounter; j++) {
+            //iterate through the webserver/s claps
             for (int k = lastWebserverClap; k < webserverClapTimes.clapCounter; k++) {
+                //calculate the difference between the claps on the webserver and the device
                 unsigned long timeStampDifference = (clientAddresses[i].clapTimes.timeStamp[j] > webserverClapTimes.timeStamp[k]) ?
                                                 (clientAddresses[i].clapTimes.timeStamp[j] - webserverClapTimes.timeStamp[k]) :
                                                 (webserverClapTimes.timeStamp[k] - clientAddresses[i].clapTimes.timeStamp[j]);
+                //if the difference is less than a second we count the clap                                                
                 if (timeStampDifference < 1000) {
                     countmeWeb = true;
+                    //set the index so that the next iteration starts appropriately
                     lastWebserverClap = k-1;
                     break;
                 }
+                //if we have iterated too far, we break the loop. the device's clap could not be found on the webserver. false positive.
                 if (clientAddresses[i].clapTimes.timeStamp[j]+1000 < webserverClapTimes.timeStamp[k]) {
                     lastWebserverClap = k-1;
                     break;
                 }
             }
+            //do the same for the host device
             for (int k = lastMainClap; k < clientAddresses[0].clapTimes.clapCounter; k++) {
                 unsigned long timeStampDifference = (clientAddresses[i].clapTimes.timeStamp[j] > clientAddresses[0].clapTimes.timeStamp[k]) ?
                                                 (clientAddresses[i].clapTimes.timeStamp[j] - clientAddresses[0].clapTimes.timeStamp[k]) :
@@ -98,6 +111,7 @@ void messaging::calculateDistances() {
                     break;
                 }
             }
+            //for all claps that were found on all three devices devices, calculate the difference and add it to the cumulative distance
             if (countmeWeb and countmeMain) {
                 clapCount++;
                 unsigned long timeStampDifference = (clientAddresses[0].clapTimes.timeStamp[lastMainClap] > clientAddresses[i].clapTimes.timeStamp[j]) ?
@@ -106,10 +120,12 @@ void messaging::calculateDistances() {
                 cumul += timeStampDifference;
             }
         }
+        //make sure i don't divide by zero, then divide.
         if( cumul > 0 and clapCount != 0) {
             clientAddresses[i].distance = (float)((float)cumul/clapCount);
         }
         else {
+            //if there are no claps, or the claps are too far apart, set the distance to 0
             clientAddresses[i].distance = 0;
         }
     }
