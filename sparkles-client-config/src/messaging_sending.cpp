@@ -17,10 +17,12 @@
   }
 void messaging::getClapTimes(int i) {
     if (i == -1) {
+        addError("Asking Webserver for Clap Time\n");
         pushDataToSendQueue(webserverAddress, MSG_ASK_CLAP_TIMES);
         i = 0;
     }
     else if (i < NUM_DEVICES) {
+        addError("asking device " + String(i) + " for clap time\n");
         pushDataToSendQueue(clientAddresses[i].address, MSG_ASK_CLAP_TIMES);
     }
 }
@@ -36,25 +38,27 @@ void messaging::processDataFromSendQueue() {
     uint8_t peerAddress[6];
     int foundPeer = 0;
     while (!sendQueue.empty()) {
-        Serial.println("Processing Data from queue");
+        //Serial.println("Processing Data from queue");
         SendData sendData = sendQueue.front(); // Get the front element
         if (memcmp(sendData.address, broadcastAddress, 6) != 0 and memcmp(sendData.address, webserverAddress, 6) != 0) {
-            Serial.println("not the same");
+          //  Serial.println("not the same");
             memcpy(peerAddress, sendData.address, 6);
             foundPeer = addPeer(peerAddress);
+            addError("Sent "+messageCodeToText(sendData.messageId)+" to ");
+            addError(stringAddress(sendData.address)+"\n");
         }
         else {
-            Serial.println("memcmp didn't work");
-            printAddress(sendData.address);
-            Serial.print("Should send message ");
-            Serial.println(messageCodeToText(sendData.messageId));
+            //Serial.println("memcmp didn't work");
+            addError("Sent "+messageCodeToText(sendData.messageId)+" to ");
+            addError(stringAddress(sendData.address)+"\n");
+            //Serial.print("Should send message ");
+            //Serial.println(messageCodeToText(sendData.messageId));
             
 
         }
 
         // Process the received data here...
         sendQueue.pop(); // Remove the front element from the queue
-        addSent(messageCodeToText(sendData.messageId));
         switch(sendData.messageId) {
             case MSG_ADDRESS:
                 esp_now_send(sendData.address, (uint8_t*) &addressMessage, sizeof(addressMessage));
@@ -69,10 +73,10 @@ void messaging::processDataFromSendQueue() {
                 esp_now_send(sendData.address, (uint8_t*) &gotTimerMessage, sizeof(gotTimerMessage));
                 break;
             case MSG_ASK_CLAP_TIMES:
+                addError("ASK CLAP TIMES CALLED, sending to "+stringAddress(sendData.address)+" and ask clap times message type is "+askClapTimesMessage.message_type);
                 esp_now_send(sendData.address, (uint8_t*) &askClapTimesMessage, sizeof(askClapTimesMessage));
                 break;
             case MSG_SWITCH_MODE: 
-                printAddress(sendData.address);
                 esp_now_send(sendData.address, (uint8_t*) &switchModeMessage, sizeof(switchModeMessage));
             case MSG_SEND_CLAP_TIMES:
                 esp_now_send(sendData.address, (uint8_t*) &sendClapTimes, sizeof(sendClapTimes));
@@ -94,7 +98,7 @@ void messaging::processDataFromSendQueue() {
                 addError("Message to send: unknown");
                 break;
         }
-        if (memcmp(sendData.address, broadcastAddress, 6) != 0 and memcmp(sendData.address, webserverAddress, 6) != 0 and foundPeer >0) {
+        if (memcmp(sendData.address, hostAddress, 6) != 0 and memcmp(sendData.address, broadcastAddress, 6) != 0 and memcmp(sendData.address, webserverAddress, 6) != 0 and foundPeer >0) {
 
             removePeer(peerAddress);
         }
@@ -102,13 +106,13 @@ void messaging::processDataFromSendQueue() {
 }   
 
  void messaging::sendAddressList() {
-    messageLog += "sending address list\n";
+    addError( "sending address list\n");
     for (int i = 1;i < addressCounter; i++){
-        messageLog += String(i);
-        messageLog += stringAddress(clientAddresses[i].address);
+        addError( String(i));
+        addError(stringAddress(clientAddresses[i].address));
         memcpy(&addressListMessage.clientAddress, &clientAddresses[i], 6);
         addressListMessage.index = i;
-        messageLog +="sent address";
+        addError("sent address");
         pushDataToSendQueue(webserverAddress, MSG_ADDRESS_LIST);
     }
 }

@@ -29,28 +29,6 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
     }
 }
 
-int messaging::addPeer(uint8_t * address) {
-    memcpy(&peerInfo->peer_addr, address, 6);
-    
-    if (esp_now_get_peer(peerInfo->peer_addr, peerInfo) == ESP_OK) {
-        addError("found peer\n");
-        //Serial.println("Found Peer");
-        return 0;
-    }
-    peerInfo->channel = 0;  
-    peerInfo->encrypt = false;
-         // Add peer        
-    if (esp_now_add_peer(peerInfo) != ESP_OK){
-        addError("failed to add peer\n");
-        return -1;
-    }
-    else {
-        addError("added peer\n");
-        Serial.println("Added Peer");
-        return 1;
-    }
-    
-}
 
 void messaging::handleGotTimer(const uint8_t * incomingData, uint8_t * macAddress) {
     memcpy(&gotTimerMessage, incomingData, sizeof(incomingData));
@@ -60,10 +38,13 @@ void messaging::handleGotTimer(const uint8_t * incomingData, uint8_t * macAddres
         clientAddresses[addressId].delay=gotTimerMessage.delayAvg;
         clientAddresses[addressId].timerOffset = gotTimerMessage.timerOffset;
         updateAddressToWebserver(timerReceiver);
+        globalModeHandler->switchMode(MODE_SEND_ANNOUNCE);
+    }
+    else {
+        globalModeHandler->switchMode(MODE_NEUTRAL);
     }
     timerCounter = 0;
     lastDelay = 0;
-    globalModeHandler->switchMode(MODE_SEND_ANNOUNCE);
     //messagingModeMachine.switchMode(MODE_ANIMATE);
 }
 
@@ -78,18 +59,13 @@ void messaging::handleAnnounce(uint8_t address[6]) {
              return;   
         }
     }
-    addError("Should have handled announce \n");
     setHostAddress(address);
     int peerMsg = addPeer(hostAddress);
     if (peerMsg == 1) {
         //handleLed->flash(0, 125, 125, 200, 1, 50);
     }
     else if (peerMsg == -1) {
-        addError("COULD NOT ADD PEER ");
-        addError(stringAddress(address));
-        addError ("--");
-        addError(stringAddress(hostAddress));
-        addError("\n");
+        //
     }
     
     //handleLed->flash(0, 0, 125, 100, 2, 50);
@@ -119,11 +95,13 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
             return;
         }
     }
-    messageLog += "Received ";
-    messageLog += messageCodeToText(incomingData[0]);
-    messageLog += " at ";
-    messageLog += String(msgReceiveTime-oldMsgReceiveTime);
-    messageLog += " us since last message arrived\n";
+    if (incomingData[0] != MSG_ANNOUNCE or gotTimer == false) {
+        addError("Handling Received ");
+        addError(messageCodeToText(incomingData[0]));
+        addError(" from ");
+        addError(stringAddress(mac->src_addr));
+        addError("\n");
+    }
     oldMsgReceiveTime = msgReceiveTime;
     if (globalModeHandler->getMode() == MODE_WAIT_FOR_ANNOUNCE and incomingData[0] == MSG_TIMER_CALIBRATION and haveSentAddress == false) {
         Serial.println("WHY THE HELL");
@@ -131,42 +109,47 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
             Serial.println("never received announce");
         }
     }
-    if (DEVICE_MODE == 1 and gotTimer == false and (incomingData[0] != MSG_ANNOUNCE or incomingData[0] != MSG_TIMER_CALIBRATION)) {
+    if (DEVICE_MODE == 1 and gotTimer == false and (incomingData[0] != MSG_ANNOUNCE && incomingData[0] != MSG_TIMER_CALIBRATION)) {
+        addError("HANDLING ANNOUNCE BUT MESSAGE WAS "+String(messageCodeToText(incomingData[0]))+"\n");
+        addError("DEVICE MODE WAS "+String(DEVICE_MODE));
+        addError(" got timer is "+String(gotTimer));
+
         handleAnnounce(mac->src_addr);
     }
     switch (incomingData[0]) {
         //cases for main
         case MSG_COMMANDS: 
             memcpy(&commandMessage,incomingData,sizeof(commandMessage));
-            messageLog +="command:";
-            messageLog += messageCodeToText(commandMessage.messageId);
+            addError("command:");
+            addError(messageCodeToText(commandMessage.messageId));
+            addError("\n");
             switch (commandMessage.messageId) {
                 case CMD_MSG_SEND_ADDRESS_LIST: 
                 if (commandMessage.param != -1) {
-                    messageLog +="should update one";
+                    addError("should update one\n");
                     updateAddressToWebserver(clientAddresses[commandMessage.param].address);
                 }
                 else {
-                    messageLog += "Should update all";
+                    addError("Should update all\n");
                 sendAddressList();
                 }
                 break;
                 case CMD_GET_TIMER: 
                     if (globalModeHandler->getMode() == MODE_SEND_ANNOUNCE or globalModeHandler->getMode()== MODE_ANIMATE) {
-                        setHostAddress(webserverAddress);
+                        memcpy(&timerReceiver, webserverAddress, 6);
                         globalModeHandler->switchMode(MODE_SENDING_TIMER);
                     };
                 break;
                 case CMD_START_CALIBRATION_MODE: 
                 globalModeHandler->switchMode(MODE_CALIBRATE);
                 switchModeMessage.mode = MODE_CALIBRATE;
-                messageLog += "Starting calib\n";
+                addError("Starting calib\n");
                 pushDataToSendQueue(broadcastAddress, MSG_SWITCH_MODE);
                 break;
                 case CMD_END_CALIBRATION_MODE: 
-                globalModeHandler->switchMode(MODE_SEND_ANNOUNCE);
+                globalModeHandler->switchMode(MODE_NEUTRAL);
                 switchModeMessage.mode = MODE_NEUTRAL;
-                messageLog += "ending calib\n";
+                addError("ending calib\n");
                 pushDataToSendQueue(broadcastAddress, MSG_SWITCH_MODE);
                 getClapTimes(-1);
                 break;
@@ -220,15 +203,26 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         {   
             if (memcmp(mac->src_addr, webserverAddress, 6) == 0) {
                 memcpy(&webserverClapTimes, incomingData, sizeof(incomingData));
-                getClapTimes(0);
+                addError("Received Clap Times from Webserver\n");
+                addError("Clap Times: ");
+                addError(String(webserverClapTimes.clapCounter));
+                addError("\n");
+                getClapTimes(1);
                 break;
             }
             else {
                 int id = getAddressId(mac->src_addr);
                 memcpy(&clientAddresses[id].clapTimes, incomingData, sizeof(incomingData));
                 clapsReceived++;
+                addError("Received Clap Times from Address ");
+                addError(stringAddress(mac->src_addr)+"\n");
+                addError("Clap Times: ");
+                addError(String(clientAddresses[id].clapTimes.clapCounter));
+                addError("\n");
                 if (clapsReceived+1 == addressCounter) {
+                    addError("Received all clap times\n");
                     calculateDistances();
+                    addError("Calculated Distances\n");
                     clapsReceived = 0;
                     globalModeHandler->switchMode(MODE_NEUTRAL);
                     sendAddressList();

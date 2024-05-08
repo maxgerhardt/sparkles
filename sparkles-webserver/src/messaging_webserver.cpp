@@ -6,11 +6,17 @@
 
 
 
-void messaging::setup(webserver &Webserver, modeMachine &modeHandler) {
+void messaging::setup(webserver &Webserver, modeMachine &modeHandler, esp_now_peer_info_t &globalPeerInfo) {
     webServer = &Webserver;
     globalModeHandler = &modeHandler;
+    peerInfo = &globalPeerInfo;
 }
 
+
+void messaging::setHostAddress(uint8_t address[6]) {
+    memcpy (&hostAddress, address, 6);
+    addPeer(hostAddress);
+}
 
 void messaging::pushDataToSendQueue(int messageId, int param) {
     std::lock_guard<std::mutex> lock(sendQueueMutex);
@@ -40,17 +46,20 @@ void messaging::processDataFromSendQueue() {
           commandMessage.messageId = sendData.messageId;
           commandMessage.param = sendData.param;
           Serial.print("Sending");
-          Serial.print(sendData.messageId);
+          Serial.print(messageCodeToText(sendData.messageId));
           Serial.print(" -- ");
           Serial.println(sendData.param);
+          esp_now_send(hostAddress, (uint8_t *) &commandMessage, sizeof(commandMessage));
+          return;
         } 
         switch (sendData.messageId) {
           case MSG_SEND_CLAP_TIMES: 
+            Serial.println("Sending clap times");
+            Serial.print("Number of claps ");
+            Serial.println(sendClapTimes.clapCounter);
             esp_now_send(hostAddress, (uint8_t *) &sendClapTimes, sizeof(sendClapTimes));
             break;
-
         }
-        esp_now_send(hostAddress, (uint8_t *) &commandMessage, sizeof(commandMessage));
     }
 } 
 
@@ -70,6 +79,7 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
   switch(incomingData[0]) {
     case MSG_TIMER_CALIBRATION:
         memcpy(&timerMessage,incomingData,sizeof(timerMessage));
+        Serial.println("received timer calibration");
             //handleLed->flash(0, 0, 125 , 100, 2, 50); 
         receiveTimer(msgReceiveTime);
     break;
@@ -101,4 +111,54 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
   }
 
 }
+/*
+void messaging::receiveTimer(int messageArriveTime) {
+  //add condition that if nothing happened after 5 seconds, situation goes back to start
+  //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
+  int difference = messageArriveTime - lastTime;
+  lastDelay = timerMessage.lastDelay;
 
+  if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) < 1000 and abs(timerMessage.lastDelay) <2500) {
+    addMessageLog("Counts. Arraycounter: ");
+    addMessageLog(String(arrayCounter));
+    addMessageLog("\n");
+
+    if (arrayCounter <TIMER_ARRAY_COUNT) {
+      timerArray[arrayCounter] = timerMessage.lastDelay;
+    }
+    else {
+      for (int i = 0; i< TIMER_ARRAY_COUNT; i++) {
+        delayAvg += timerArray[i];
+      } 
+      delayAvg = delayAvg/TIMER_ARRAY_COUNT;
+      gotTimerMessage.delayAvg = delayAvg;
+      timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
+      gotTimerMessage.timerOffset = timeOffset;
+      pushDataToSendQueue(MSG_GOT_TIMER, -1);
+      gotTimer = true;
+      #if DEVICE_MODE != 2
+      handleLed->flash(255,0,0, 200, 3, 300);
+      globalModeHandler->switchMode(MODE_GOT_TIMER);
+      #else
+      pushDataToSendQueue(CMD_START_CALIBRATION_MODE, -1);
+      globalModeHandler->switchMode(MODE_CALIBRATE);
+      #endif
+      
+      
+    }
+    arrayCounter++;
+  }
+  else {
+    addMessageLog("Doesn't Count.");
+    if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) >= 500) {
+        addMessageLog(" Difference ");
+        addMessageLog(String(abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS)));
+    }
+    else if (abs(timerMessage.lastDelay) >=2500) {
+    addMessageLog(" Last delay = ");
+    addMessageLog(String(abs(timerMessage.lastDelay)));
+    }
+    addMessageLog("\n");
+  }
+   lastTime = messageArriveTime;
+}*/

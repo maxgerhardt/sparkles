@@ -92,7 +92,7 @@ class messaging {
         #if DEVICE_MODE != 2
         void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
         #else
-        void setup(webserver &Webserver, modeMachine &modeHandler);
+        void setup(webserver &Webserver, modeMachine &modeHandler, esp_now_peer_info_t &globalPeerInfo);
         #endif
         void blink();
         void removePeer(uint8_t address[6]);

@@ -66,14 +66,13 @@ void messaging::calculateDistances() {
         else {
             clientAddresses[i].distance = 0;
         }
+        addError("Distance: ");
+        addError(String(clientAddresses[i].distance));
     }
 }
 
 
-void messaging::addClap(int clapCounter, unsigned long timeStamp) {
-    sendClapTimes.clapCounter = clapCounter;
-    sendClapTimes.timeStamp[clapCounter] = timeStamp;
-}
+
 
 
 void messaging::setHostAddress(uint8_t address[6]) {

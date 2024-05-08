@@ -79,7 +79,8 @@ void IRAM_ATTR onTimer()
       esp_err_t result = esp_now_send(messageHandler.timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
       
     }
-    else {
+    else if (modeHandler.getMode() != MODE_CALIBRATE and modeHandler.getMode() != MODE_NEUTRAL) {
+      //todo announce thing raus und einfach host address hardcoden.
       messageHandler.announceMessage.sendTime = msgSendTime;
       esp_err_t result = esp_now_send(messageHandler.broadcastAddress, (uint8_t *) &messageHandler.announceMessage, sizeof(messageHandler.announceMessage));
     }
@@ -88,7 +89,6 @@ void IRAM_ATTR onTimer()
 
 
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
-  Serial.println("revd");
   msgReceiveTime = micros();
   messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);
 }
@@ -168,7 +168,10 @@ void loop() {
     Serial.print(DEVICE_MODE);
     Serial.print("-----\nMain still Alive ");
     Serial.println(cycleCounter);
-
+    Serial.println("My Address: "+messageHandler.stringAddress(myAddress));
+    Serial.println("---All addresses----");
+    messageHandler.printAllAddresses();
+    Serial.println("---All addresses----");
     //messageHandler.printAllAddresses();
     Serial.println(messageHandler.getMessageLog());
     Serial.println("-----");

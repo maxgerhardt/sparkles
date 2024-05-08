@@ -65,6 +65,9 @@ String modeMachine::modeToText(int mode) {
     case MODE_WAIT_ANNOUNCE_RESPONCE:
         out += "MODE_WAIT_ANNOUNCE_RESPONCE";
         break;
+    case MODE_NEUTRAL:
+        out += "MODE_NEUTRAL";
+        break;
     default: 
         out += "Mode unknown ";
         out += String(mode); // Convert 'mode' integer to String and concatenate

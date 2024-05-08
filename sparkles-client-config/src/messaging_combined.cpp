@@ -9,14 +9,22 @@ messaging::messaging() {
 };
 
 void messaging::removePeer(uint8_t address[6]) {
-        Serial.println("REMOVING PEER");
+        addError("REMOVING PEER");
         printAddress(address);
         if (esp_now_del_peer(address) != ESP_OK) {
-        Serial.println("coudln't delete peer");
+        addError("coudln't delete peer");
         return;
     }
 }
 void messaging::printAddress(const uint8_t * mac_addr){
+    if (memcmp(mac_addr, hostAddress, 6) == 0) {
+        Serial.println("HOST ADDRESS");
+        return;
+    }
+    if (memcmp(mac_addr, webserverAddress, 6) ==0) {
+        Serial.println("WEBSERVER");
+        return;
+    }
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
             mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
@@ -24,6 +32,13 @@ void messaging::printAddress(const uint8_t * mac_addr){
 }
 
 String messaging::stringAddress(const uint8_t * mac_addr){
+    if (memcmp(mac_addr, hostAddress, 6) == 0) {
+        return "HOST ADDRESS";
+    }
+    if (memcmp(mac_addr, webserverAddress, 6) ==0) {
+        return "WEBSERVER";
+
+    }
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
             mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
@@ -121,6 +136,12 @@ String messaging::messageCodeToText(int message) {
         case MSG_STATUS_UPDATE:
             out = "MSG_STATUS_UPDATE";
             break;
+        case MSG_END_CALIBRATION:
+            out = "MSG_END_CALIBRATION";
+            break;
+        case CMD_START:
+            out = "CMD_START";
+            break;
         case CMD_MSG_SEND_ADDRESS_LIST:
             out = "CMD_MSG_SEND_ADDRESS_LIST";
             break;
@@ -133,11 +154,21 @@ String messaging::messageCodeToText(int message) {
         case CMD_BLINK:
             out = "CMD_BLINK";
             break;
-    default: 
-        out += "Didn't recognize Message";
-        out += message;
-        break;       
+        case CMD_MODE_NEUTRAL:
+            out = "CMD_MODE_NEUTRAL";
+            break;
+        case CMD_GET_TIMER:
+            out = "CMD_GET_TIMER";
+            break;
+        case CMD_END:
+            out = "CMD_END";
+            break;
+        default:
+            out = "Didn't recognize Message";
+            out += message;
+            break;
     }
+
     return out;
 }
 String messaging::getMessageLog() {
@@ -179,7 +210,7 @@ void messaging::printAllPeers() {
 }
 void messaging::printAllAddresses() {
     for (int i=1;i<addressCounter; i++) {
-        printAddress(clientAddresses[i].address);
+        Serial.println(String(i)+": "+stringAddress(clientAddresses[i].address));
     }
 }
 
@@ -187,7 +218,7 @@ void messaging::printAllAddresses() {
 
 void messaging::handleErrors() {
     if (error_message != "") {
-        Serial.print("Error Message from Handler: ");
+        Serial.println("\nERRORS:");
         Serial.println(error_message);
         error_message = "";
     }
@@ -214,11 +245,14 @@ void messaging::receiveTimer(int messageArriveTime) {
   //wenn die letzte message maximal 300 mikrosekunden abweicht und der letzte delay auch nicht mehr als 1500ms her war, dann muss die msg korrekt sein
   int difference = messageArriveTime - lastTime;
   lastDelay = timerMessage.lastDelay;
+  addError("Difference: "+String(difference)+"\n");
+  addError("Message Arrive Time "+String(messageArriveTime)+"\n");
+  addError("Last Time "+String(lastTime)+"\n");
 
   if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) < 1000 and abs(timerMessage.lastDelay) <2500) {
-    addMessageLog("Counts. Arraycounter: ");
-    addMessageLog(String(arrayCounter));
-    addMessageLog("\n");
+    addError("Counts. Arraycounter: ");
+    addError(String(arrayCounter));
+    addError("\n");
 
     if (arrayCounter <TIMER_ARRAY_COUNT) {
       timerArray[arrayCounter] = timerMessage.lastDelay;
@@ -231,14 +265,18 @@ void messaging::receiveTimer(int messageArriveTime) {
       gotTimerMessage.delayAvg = delayAvg;
       timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
       gotTimerMessage.timerOffset = timeOffset;
-      pushDataToSendQueue(hostAddress, MSG_GOT_TIMER);
       gotTimer = true;
       #if DEVICE_MODE != 2
+      pushDataToSendQueue(hostAddress, MSG_GOT_TIMER);
+      gotTimer = true;
       handleLed->flash(255,0,0, 200, 3, 300);
       globalModeHandler->switchMode(MODE_GOT_TIMER);
       #else
       pushDataToSendQueue(CMD_START_CALIBRATION_MODE, -1);
+      addError("SWITCHING TO CALIBRATE");
       globalModeHandler->switchMode(MODE_CALIBRATE);
+      gotTimer = true;
+
       #endif
       
       
@@ -246,16 +284,16 @@ void messaging::receiveTimer(int messageArriveTime) {
     arrayCounter++;
   }
   else {
-    addMessageLog("Doesn't Count.");
+    addError("Doesn't Count.");
     if (abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS) >= 500) {
-        addMessageLog(" Difference ");
-        addMessageLog(String(abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS)));
+        addError(" Difference ");
+        addError(String(abs(difference-CALIBRATION_FREQUENCY*TIMER_INTERVAL_MS)));
     }
     else if (abs(timerMessage.lastDelay) >=2500) {
-    addMessageLog(" Last delay = ");
-    addMessageLog(String(abs(timerMessage.lastDelay)));
+    addError(" Last delay = ");
+    addError(String(abs(timerMessage.lastDelay)));
     }
-    addMessageLog("\n");
+    addError("\n");
   }
    lastTime = messageArriveTime;
 }
@@ -268,8 +306,40 @@ void messaging::pushDataToReceivedQueue(const esp_now_recv_info * mac, const uin
 
 void messaging::addClap(unsigned long timeStamp) {
     sendClapTimes.clapCounter++;
-    sendClapTimes.timeStamp[sendClapTimes.clapCounter] = timeStamp;
+    if (sendClapTimes.clapCounter < NUM_CLAPS) {
+        sendClapTimes.timeStamp[sendClapTimes.clapCounter] = timeStamp;
+    }
+    else {
+        addError("TOO MANY CLAPS");
+    }
 }
 
 
 
+int messaging::addPeer(uint8_t * address) {
+
+    memcpy(&peerInfo->peer_addr, address, 6);
+
+    if (esp_now_get_peer(peerInfo->peer_addr, peerInfo) == ESP_OK) {
+       // addError("found peer\n");
+        //Serial.println("Found Peer");
+        return 0;
+    }
+    else {
+      //  addError("couldn't find peer");
+    }
+    peerInfo->channel = 0;  
+    peerInfo->encrypt = false;
+         // Add peer        
+    if (esp_now_add_peer(peerInfo) != ESP_OK){
+       //addError("failed to add peer\n");
+        //addError("Failed to add peer");
+        return -1;
+    }
+    else {
+        //addError("added peer\n");
+        //Serial.println("Added Peer");
+        return 1;
+    }
+    
+}

@@ -137,14 +137,10 @@ int count = 0;
 bool didIreset = true;
 
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
-    messageHandler.addError("RECEIVED MESSAGE");
+    if (incomingData[0] != MSG_ANNOUNCE) {
+   messageHandler.addError("RECEIVED MESSAGE "+messageHandler.messageCodeToText(incomingData[0])+"\n");
+    } 
     msgReceiveTime = micros();
-    messageHandler.addMessageLog("Received: ");
-    messageHandler.addMessageLog(messageHandler.messageCodeToText((incomingData[0])));
-    messageHandler.addMessageLog("\n");
-    messageHandler.addMessageLog(modeHandler.modeToText(modeHandler.getMode()));
-    messageHandler.addMessageLog("\n");
-  
     messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);
 }
 
@@ -240,10 +236,9 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
 
     Serial.println("Client still alive");
     modeHandler.printCurrentMode();
-    Serial.println("message handler");
-    messageHandler.printMessageModeLog();
-    Serial.println("mode handler");
-    modeHandler.printLog();
+    messageHandler.printAddress(myAddress);
+
+
     lastClap = millis();
     Serial.println(messageHandler.getMessageLog());
         Serial.println("-----");
@@ -263,8 +258,9 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     cycleCounter++;
     Serial.println("-----\nClient Still Alive");
     Serial.println(cycleCounter);
-    Serial.println(messageHandler.getMessageLog());
+    //Serial.println(messageHandler.getMessageLog());
     modeHandler.printCurrentMode();
+    messageHandler.printAddress(myAddress);
   }
 
 /*    sensorValue = analogRead(microphonePin);

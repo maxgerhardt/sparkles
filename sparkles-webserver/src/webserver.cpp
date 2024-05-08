@@ -47,7 +47,7 @@ void webserver::handleClientConnect(AsyncEventSourceClient *client) {
 }
 
 void webserver::updateDeviceList(AsyncWebServerRequest *request) {
-    Serial.println("Called UpdateDeviceList");
+    messageHandler->addError("Called UpdateDeviceList");
     msgType = ADDRESS_LIST;
 
     messageHandler->pushDataToSendQueue(CMD_MSG_SEND_ADDRESS_LIST, request->hasParam("id") ? request->getParam("id")->value().toInt() : -1);
@@ -56,7 +56,7 @@ void webserver::updateDeviceList(AsyncWebServerRequest *request) {
 }
 
 void webserver::commandCalibrate(AsyncWebServerRequest *request) {
-      Serial.println("Called Calibrate");
+      messageHandler->addError("Called Calibrate");
       if (stateMachine->getMode() == MODE_WAIT_FOR_TIMER) {
         request->send(400);
         return;
@@ -68,6 +68,7 @@ void webserver::commandCalibrate(AsyncWebServerRequest *request) {
         jsonString = "{\"status\" : \"true\"}";
         events.send(jsonString.c_str(), "calibrateStatus", millis()); 
         stateMachine->switchMode(MODE_WAIT_FOR_TIMER);
+        messageHandler->addError("starting timer mode");
 
       }
       else if (stateMachine->getMode() == MODE_CALIBRATE) {
@@ -77,6 +78,8 @@ void webserver::commandCalibrate(AsyncWebServerRequest *request) {
         jsonString = "{\"status\" : \"false\"}";
         events.send(jsonString.c_str(), "calibrateStatus", millis());
         stateMachine->switchMode(MODE_NEUTRAL);
+        messageHandler->addError ("Ending calibration. Claps: ");
+        messageHandler->addError(String(messageHandler->sendClapTimes.clapCounter));
       }
       
     
@@ -89,7 +92,8 @@ void webserver::serveStaticFile(AsyncWebServerRequest *request) {
   if (path == "/" || path == "/index.html") { // Modify this condition as needed
     path = "/addressList.html"; // Adjust the file path here
   }
-
+  Serial.print("asked for static file");
+  Serial.println(path);
   // Check if the file exists
   if (LittleFS.exists(path)) {
       // Open the file for reading
