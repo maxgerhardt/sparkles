@@ -38,8 +38,8 @@ String modeMachine::modeToText(int mode) {
     case MODE_SENDING_TIMER:
         out += "MODE_SENDING_TIMER";
         break;
-    case MODE_WAIT_FOR_ANNOUNCE:
-        out += "MODE_WAIT_FOR_ANNOUNCE";
+    case MODE_STARTUP:
+        out += "MODE_STARTUP";
         break;
     case MODE_WAIT_FOR_TIMER:
         out += "MODE_WAIT_FOR_TIMER";

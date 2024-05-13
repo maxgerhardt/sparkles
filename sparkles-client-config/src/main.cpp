@@ -138,7 +138,7 @@ bool didIreset = true;
 
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
     if (incomingData[0] != MSG_ANNOUNCE) {
-   messageHandler.addError("RECEIVED MESSAGE "+messageHandler.messageCodeToText(incomingData[0])+"\n");
+    messageHandler.addError("RECEIVED MESSAGE "+messageHandler.messageCodeToText(incomingData[0])+"\n");
     } 
     msgReceiveTime = micros();
     messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);
@@ -168,6 +168,8 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
   else {
     modeHandler.printCurrentMode();
   }
+
+  //remove peer if conditions are met
 }
 
 
@@ -195,7 +197,7 @@ void setup() {
 
   handleLed.setup();
   messageHandler.setup(modeHandler, handleLed, peerInfo);
-  modeHandler.switchMode(MODE_WAIT_FOR_ANNOUNCE);
+  modeHandler.switchMode(MODE_STARTUP);
   esp_now_register_recv_cb(OnDataRecv);  
   esp_now_register_send_cb(OnDataSent);
    WiFi.macAddress(messageHandler.addressMessage.address);
@@ -209,10 +211,14 @@ void setup() {
   timerDings = micros();
   lastFlash = 0;
   WiFi.macAddress(myAddress);
-  //messageHandler.addPeer(webserverAddress)
+  messageHandler.announceAddress();
 }
 
 void loop() {
+  if (modeHandler.getMode() == MODE_STARTUP and millis() > 5000+messageHandler.announceTime) {
+    messageHandler.announceAddress();
+  }
+  
   if (testingMode == 0) {
 
   messageHandler.processDataFromSendQueue();
@@ -229,6 +235,8 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
   if (peak == -1 and millis() > lastClap+1000) {
      messageHandler.addClap(micros()-timeOffset);
     lastClap = millis();
+    Serial.println("Clap!");
+    handleLed.flash(125, 0, 55, 200, 1, 50);
   }
   else if (millis()>(lastClap+5000)) 
   {
@@ -263,20 +271,6 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     messageHandler.printAddress(myAddress);
   }
 
-/*    sensorValue = analogRead(microphonePin);
-    if (sensorValue < 50 and millis() > lastClap+1000) {
-      blinkMessage.color[0] = random(128);
-       blinkMessage.color[1] = random(128);
-       blinkMessage.color[2] = random(128);
-       esp_now_send(broadcastAddress, (uint8_t *) &blinkMessage, sizeof(blinkMessage));
-      lastClap = millis();
-      clapCounter++;
-      
-    }
-  }*/
-
-
-    //printAddress(addressMessage.address);
 }
   else {
     handleLed.ledOn(255, 0, 0, 10000, true);

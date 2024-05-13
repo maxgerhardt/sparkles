@@ -14,6 +14,8 @@ class ledHandler {
         float redfloat = 0, greenfloat = 0, bluefloat = 0;
         using MessageQueue = std::queue<std::function<void()>>;
         MessageQueue queue;
+        concentric_animation concentricAnimation;
+        float distance;
     public:
     ledHandler();
     void setup();
@@ -24,10 +26,12 @@ class ledHandler {
     void ledsOff();
     void flash(int r = 255, int g = 0, int b = 0, int duration = 50, int reps = 2, int pause = 50);
     void blink();
-    void candle(int duration, int reps, int pause);
+    void candle(int duration, int reps, int pause, unsigned long startTime, unsigned long timeOffset);
     void addToQueue(std::function<void()> func);
     void processQueue() ;
     void ledOn(int r, int g, int b, int duration, bool half);
+    void concentric();
+    void setDistance(float dist);
 };
 
 #endif

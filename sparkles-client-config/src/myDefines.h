@@ -17,6 +17,7 @@
 
 //clapping
 #define NUM_CLAPS 10
+#define CLAP_THRESHOLD 1000000
 
 /*
 #if (DEVICE == V1)
@@ -57,6 +58,7 @@ const int ledChannelBlue2 = 5;
 #define MSG_SEND_CLAP_TIMES 6
 #define MSG_ANIMATION 7
 #define MSG_SWITCH_MODE 8
+#define MSG_DISTANCE 9
 #define MSG_NOCLAPFOUND -1
 #define MSG_COMMANDS 101
 #define MSG_ADDRESS_LIST 102
@@ -70,7 +72,10 @@ const int ledChannelBlue2 = 5;
 #define CMD_BLINK 204
 #define CMD_MODE_NEUTRAL 205
 #define CMD_GET_TIMER 206
+#define CMD_START_ANIMATION 207
+#define CMD_STOP_ANIMATION 208
 #define CMD_END 220
+
 
 #define NUM_DEVICES 20
 #ifndef CALIBRATION_FREQUENCY
@@ -121,18 +126,24 @@ struct message_address{
   uint8_t address[6];
 } ;
 
-// 7 bytes
-struct message_send_clap_times {
-  uint8_t messageType = MSG_SEND_CLAP_TIMES;
-  int clapCounter;
-  unsigned long timeStamp[NUM_CLAPS]; //offsetted.
+struct message_distance{
+  uint8_t messageType = MSG_DISTANCE;
+  float distance;
 };
+
+// 7 bytes
 
 struct message_ask_clap_times {
   uint8_t message_type = MSG_ASK_CLAP_TIMES;
   int deviceId;
 };
 
+
+struct message_send_clap_times {
+  uint8_t messageType = MSG_SEND_CLAP_TIMES;
+  int clapCounter;
+  unsigned long timeStamp[NUM_CLAPS]; //offsetted.
+};
 
 //4+4*NUM_CLAPS, currently 44
 struct client_address {
@@ -183,14 +194,20 @@ struct message_status_update {
 } ;
 
 
-
+struct concentric_animation {
+  uint8_t speed = 0;
+  unsigned long startTime = 0;
+  uint8_t reps = 0;
+  uint8_t rgb1[3] = {0,0,0};
+  uint8_t rgb2[3] = {0,0,0};
+};
 
 
 //STATE MACHINE
 #define MODE_INIT -1
 #define MODE_SEND_ANNOUNCE 0
 #define MODE_SENDING_TIMER 1
-#define MODE_WAIT_FOR_ANNOUNCE 2
+#define MODE_STARTUP 2
 #define MODE_WAIT_FOR_TIMER 3
 #define MODE_GOT_TIMER 4
 #define MODE_CALIBRATE 5

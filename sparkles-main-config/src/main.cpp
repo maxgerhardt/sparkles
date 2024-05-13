@@ -35,7 +35,6 @@ bool start = true;
 esp_now_peer_info_t peerInfo;
 
 int audioPin = 5;
-int oldClapCounter = 0;
 int cycleCounter = 0;
 
 
@@ -55,7 +54,6 @@ int delayAvg = 0;
 
 //calibration
 int sensorValue;
-int clapCounter = 0;
 int lastClap = 0;
 uint32_t lastClapTime;
 
@@ -79,16 +77,17 @@ void IRAM_ATTR onTimer()
       esp_err_t result = esp_now_send(messageHandler.timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
       
     }
-    else if (modeHandler.getMode() != MODE_CALIBRATE and modeHandler.getMode() != MODE_NEUTRAL) {
+    /*else if (modeHandler.getMode() != MODE_CALIBRATE and modeHandler.getMode() != MODE_NEUTRAL) {
       //todo announce thing raus und einfach host address hardcoden.
       messageHandler.announceMessage.sendTime = msgSendTime;
       esp_err_t result = esp_now_send(messageHandler.broadcastAddress, (uint8_t *) &messageHandler.announceMessage, sizeof(messageHandler.announceMessage));
-    }
+    }*/
 
 }
 
 
 void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
+  Serial.println("rcvd");
   msgReceiveTime = micros();
   messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);
 }
@@ -108,16 +107,20 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
      msgArriveTime = 0;
     }
   }
-  else if (modeHandler.getMode() != MODE_SEND_ANNOUNCE) {
-     Serial.print("sent ");
-     Serial.println(sendStatus);
+  else{
+     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+       messageHandler.addError("Sent to  "+messageHandler.stringAddress(mac_addr)+"\n");
+     }
+     else {
+       messageHandler.addError("Not sent to "+messageHandler.stringAddress(mac_addr)+"\n");
+     }
+
   }
 }
 
 
 void setup() {
   Serial.begin(115200);
-  delay(5000);
   timer = timerBegin(1000000);           	// timer 0, prescalar: 80, UP counting
   timerAttachInterrupt(timer, &onTimer); 	// Attach interrupt
   timerWrite(timer, 0);  		// Match value= 1000000 for 1 sec. delay.
@@ -152,13 +155,13 @@ void setup() {
   peakDetection.begin(30, 3, 0);   
   lastClap = millis(); 
   timerCounter = 0;
-  modeHandler.switchMode(MODE_SEND_ANNOUNCE);
+  modeHandler.switchMode(MODE_NEUTRAL);
   WiFi.macAddress(myAddress);
   
 }
 
 void loop() {
-  messageHandler.handleErrors();
+  //messageHandler.handleErrors();
   messageHandler.processDataFromReceivedQueue();
   messageHandler.processDataFromSendQueue();
   if (lastClap+5000 < millis()) {
@@ -186,13 +189,13 @@ void loop() {
     double filtered = peakDetection.getFilt(); 
     //Serial.println(sensorValue);
     if (peak == -1 and millis() > lastClap+1000) {
-      clapTimes.timeStamp[clapCounter] = micros();
+      messageHandler.addClap(micros());
       lastClap = millis();
-      clapCounter++;
+      Serial.println("Clap!");
     }
   }
-  if (messageHandler.clapsReceived == messageHandler.addressCounter) {
+  if (messageHandler.clapsReceived == messageHandler.addressCounter && messageHandler.clapsReceived != 0) {
     Serial.println("All clap Times received");
-    messageHandler.clapsReceived = 0;
+    //messageHandler.clapsReceived = 0;
   }
 }

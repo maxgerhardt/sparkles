@@ -10,9 +10,10 @@ messaging::messaging() {
 
 void messaging::removePeer(uint8_t address[6]) {
         addError("REMOVING PEER");
-        printAddress(address);
+        addError(stringAddress(address));
         if (esp_now_del_peer(address) != ESP_OK) {
         addError("coudln't delete peer");
+
         return;
     }
 }
@@ -163,6 +164,9 @@ String messaging::messageCodeToText(int message) {
         case CMD_END:
             out = "CMD_END";
             break;
+        case MSG_DISTANCE:
+            out = "MSG_DISTANCE";
+            break;
         default:
             out = "Didn't recognize Message";
             out += message;
@@ -208,6 +212,12 @@ void messaging::printAllPeers() {
     }
       
 }
+void messaging::stringAllAddresses() {
+    for (int i=0;i<addressCounter; i++) {
+        addError("Address "+String(i)+": "+stringAddress(clientAddresses[i].address)+"\n");
+    }
+}
+
 void messaging::printAllAddresses() {
     for (int i=1;i<addressCounter; i++) {
         Serial.println(String(i)+": "+stringAddress(clientAddresses[i].address));
@@ -267,13 +277,19 @@ void messaging::receiveTimer(int messageArriveTime) {
       gotTimerMessage.timerOffset = timeOffset;
       gotTimer = true;
       #if DEVICE_MODE != 2
-      pushDataToSendQueue(hostAddress, MSG_GOT_TIMER);
+      pushDataToSendQueue(hostAddress, MSG_GOT_TIMER, -1);
       gotTimer = true;
-      handleLed->flash(255,0,0, 200, 3, 300);
+      handleLed->flash(125,0,0, 200, 3, 300);
       globalModeHandler->switchMode(MODE_GOT_TIMER);
       #else
       pushDataToSendQueue(CMD_START_CALIBRATION_MODE, -1);
       addError("SWITCHING TO CALIBRATE");
+      JsonDocument jsonDoc;
+
+      String jsonString;
+      jsonDoc["calibrateEnd"] = "true";
+      serializeJson(jsonDoc, jsonString);
+      webServer->events.send(jsonString.c_str(), "calibrationStatus", millis());
       globalModeHandler->switchMode(MODE_CALIBRATE);
       gotTimer = true;
 
@@ -305,16 +321,34 @@ void messaging::pushDataToReceivedQueue(const esp_now_recv_info * mac, const uin
 }
 
 void messaging::addClap(unsigned long timeStamp) {
-    sendClapTimes.clapCounter++;
+    #if DEVICE_MODE == 2 || DEVICE_MODE == 1
+    
     if (sendClapTimes.clapCounter < NUM_CLAPS) {
-        sendClapTimes.timeStamp[sendClapTimes.clapCounter] = timeStamp;
+        sendClapTimes.timeStamp[sendClapTimes.clapCounter] = timeStamp-timeOffset;
     }
     else {
         addError("TOO MANY CLAPS");
     }
+    sendClapTimes.clapCounter++;
+    #else
+        if (clientAddresses[0].clapTimes.clapCounter < NUM_CLAPS) {
+        clientAddresses[0].clapTimes.timeStamp[clientAddresses[0].clapTimes.clapCounter] = timeStamp-timeOffset;
+    }
+    clientAddresses[0].clapTimes.clapCounter++;
+    #endif
 }
 
+int messaging::getAddressId(const uint8_t * address) {
+    Serial.println("hmm");
+    delay(10);
+    for (int i = 0; i < NUM_DEVICES; i++) {
+        if (memcmp(&clientAddresses[i].address, address, 6) == 0) {
+            return i; // Found the address, return its ID
+        }
+    }
 
+    return -1; // Address not found
+}
 
 int messaging::addPeer(uint8_t * address) {
 

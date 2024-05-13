@@ -87,7 +87,14 @@ void ledHandler::ledOn(int r, int g, int b, int duration, bool half) {
 
 
 
-void ledHandler::candle(int duration, int reps, int pause) {
+void ledHandler::candle(int duration, int reps, int pause, unsigned long startTime, unsigned long timeOffset) {
+  Serial.println("should blink");
+  //entfernung einbauen
+  uint32_t currentTime = micros();
+  uint32_t difference = currentTime-timeOffset;
+  if (startTime-difference > 0) {
+    delayMicroseconds(startTime-difference+((distance/34300)*1000000*1500));
+  }
   bool heating = true;
   float redsteps = 255.0/(duration/3);
   float greensteps = 255.0/(duration/3);
@@ -182,6 +189,15 @@ void ledHandler::processQueue() {
     }
 }
 
+
+void ledHandler::concentric() {
+
+
+}
+
+void ledHandler::setDistance(float dist) {
+  distance = dist;
+}
 
 // IF BOARD == V2
 
