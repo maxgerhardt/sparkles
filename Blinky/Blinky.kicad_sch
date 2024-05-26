@@ -19074,7 +19074,7 @@
 				)
 			)
 		)
-		(property "Value" "ESP32-S2-SOLO-2-N4"
+		(property "Value" " ESP32-S3-WROOM-1-N16R8"
 			(at 200.66 167.64 0)
 			(effects
 				(font
