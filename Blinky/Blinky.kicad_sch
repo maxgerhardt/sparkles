@@ -6332,12 +6332,6 @@
 		)
 	)
 	(junction
-		(at 356.87 38.1)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "02eae247-327b-446e-bc0f-8beb9c7dcd7d")
-	)
-	(junction
 		(at 322.58 214.63)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -6408,6 +6402,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2261c0c0-2d0f-488a-92d5-c1ae064e0761")
+	)
+	(junction
+		(at 351.79 38.1)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2d20b889-30d2-4d1d-a9de-3c9fb5db16c5")
 	)
 	(junction
 		(at 300.99 214.63)
@@ -6691,7 +6691,7 @@
 	)
 	(wire
 		(pts
-			(xy 336.55 36.83) (xy 351.79 36.83)
+			(xy 336.55 36.83) (xy 346.71 36.83)
 		)
 		(stroke
 			(width 0)
@@ -6911,16 +6911,6 @@
 	)
 	(wire
 		(pts
-			(xy 346.71 29.21) (xy 346.71 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "131ad0db-1240-4e96-a3b5-c8c8f069f00e")
-	)
-	(wire
-		(pts
 			(xy 71.12 133.35) (xy 88.9 133.35)
 		)
 		(stroke
@@ -7021,7 +7011,7 @@
 	)
 	(wire
 		(pts
-			(xy 351.79 36.83) (xy 351.79 29.21)
+			(xy 346.71 36.83) (xy 346.71 29.21)
 		)
 		(stroke
 			(width 0)
@@ -7501,16 +7491,6 @@
 	)
 	(wire
 		(pts
-			(xy 356.87 38.1) (xy 356.87 29.21)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5bed0f90-575e-4971-a123-ea01d238cc34")
-	)
-	(wire
-		(pts
 			(xy 245.11 105.41) (xy 256.54 105.41)
 		)
 		(stroke
@@ -7698,16 +7678,6 @@
 			(type default)
 		)
 		(uuid "6b49ce7b-42dd-41a6-ae10-e007b8fad3ad")
-	)
-	(wire
-		(pts
-			(xy 346.71 35.56) (xy 337.82 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6ba81e94-0663-43b9-b86b-0db5d52977b9")
 	)
 	(wire
 		(pts
@@ -7928,16 +7898,6 @@
 			(type default)
 		)
 		(uuid "80ec4caa-4f22-48ad-91ab-a82606c5a492")
-	)
-	(wire
-		(pts
-			(xy 356.87 38.1) (xy 372.11 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8239dcce-25db-44b0-b5d1-ba76559cec55")
 	)
 	(wire
 		(pts
@@ -8168,16 +8128,6 @@
 			(type default)
 		)
 		(uuid "96137111-29a9-47d6-a122-d6e6046019b2")
-	)
-	(wire
-		(pts
-			(xy 337.82 31.75) (xy 337.82 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9660ad49-7443-4857-8ff4-25e9391dc306")
 	)
 	(wire
 		(pts
@@ -8508,6 +8458,16 @@
 			(type default)
 		)
 		(uuid "b9342217-6d10-403b-9dbf-6f5380da6347")
+	)
+	(wire
+		(pts
+			(xy 351.79 29.21) (xy 351.79 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b9376ebf-f9b2-4544-b16e-8fa34eedb009")
 	)
 	(wire
 		(pts
@@ -8971,7 +8931,7 @@
 	)
 	(wire
 		(pts
-			(xy 334.01 38.1) (xy 356.87 38.1)
+			(xy 334.01 38.1) (xy 351.79 38.1)
 		)
 		(stroke
 			(width 0)
@@ -8998,6 +8958,16 @@
 			(type default)
 		)
 		(uuid "e98aaa81-5e25-48c9-8031-9eb7c85425b1")
+	)
+	(wire
+		(pts
+			(xy 351.79 38.1) (xy 372.11 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ea372c66-be8e-464e-937e-fc0b08e5ebd9")
 	)
 	(wire
 		(pts
@@ -17326,73 +17296,6 @@
 			(project "Blinky"
 				(path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
 					(reference "R20")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_name "VBAT_11")
-		(lib_id "power:VBAT")
-		(at 337.82 31.75 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "d59f4b24-e72f-453d-9d91-c996c9dfbb5e")
-		(property "Reference" "#PWR051"
-			(at 337.82 35.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "CHARGE+"
-			(at 337.82 26.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 337.82 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 337.82 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 337.82 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "dd56b4e2-d827-402e-bc74-843d5bb42952")
-		)
-		(instances
-			(project "Blinky"
-				(path "/a854b35b-60aa-44a5-a34e-fbb2d526cb93"
-					(reference "#PWR051")
 					(unit 1)
 				)
 			)
