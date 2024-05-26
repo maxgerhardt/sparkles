@@ -1,4 +1,4 @@
-23206859842983342
+23239437090585795
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -63483,12 +63483,138 @@ Yellow 5381 Series LED
 2
 2
 Library
+CAP-SMD_BD8.0-L8.3-W8.3-FD
+CAP-SMD_BD8.0-L8.3-W8.3-FD footprint
+CAP-SMD_BD8.0-L8.3-W8.3-FD footprint
+0
+2
+2
+Library
+CASE-B_3528
+CASE-B_3528 footprint
+CASE-B_3528 footprint
+0
+2
+2
+Library
+ChargingNotches
+
+
+0
+2
+2
+Library
+ESOP-8_L4.9-W3.9-P1.27-LS6.0-BL-EP
+ESOP-8_L4.9-W3.9-P1.27-LS6.0-BL-EP footprint
+ESOP-8_L4.9-W3.9-P1.27-LS6.0-BL-EP footprint
+0
+9
+9
+Library
+HDR-TH_6P-P2.54-V-F
+HDR-TH_6P-P2.54-V-F footprint
+HDR-TH_6P-P2.54-V-F footprint
+0
+6
+6
+Library
+JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical
+JST PH series connector, B2B-PH-K (http://www.jst-mfg.com/product/pdf/eng/ePH.pdf), generated with kicad-footprint-generator
+connector JST PH side entry
+0
+2
+2
+Library
 LED-SMD_XL-HD6070RGBC-A46L
 LED-SMD_XL-HD6070RGBC-A46L footprint
 LED-SMD_XL-HD6070RGBC-A46L footprint
 0
 8
 7
+Library
+LED0603-RD_BLUE
+LED0603-RD_BLUE footprint
+LED0603-RD_BLUE footprint
+0
+2
+2
+Library
+LED0603-RD_GREEN
+LED0603-RD_GREEN footprint
+LED0603-RD_GREEN footprint
+0
+2
+2
+Library
+MIC-TH_BD6.0_B6027AP383-056
+MIC-TH_BD6.0_B6027AP383-056 footprint
+MIC-TH_BD6.0_B6027AP383-056 footprint
+0
+2
+2
+Library
+MICRO-USB-SMD_MICROXNJ
+MICRO-USB-SMD_MICROXNJ footprint
+MICRO-USB-SMD_MICROXNJ footprint
+0
+9
+9
+Library
+Mounting
+
+
+0
+1
+1
+Library
+SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR
+SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR footprint
+SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR footprint
+0
+5
+5
+Library
+SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL-2
+SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL-2 footprint
+SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL-2 footprint
+0
+4
+4
+Library
+SW-SMD_MK-12C02-G025
+SW-SMD_MK-12C02-G025 footprint
+SW-SMD_MK-12C02-G025 footprint
+0
+7
+7
+Library
+TSSOP-8_L4.4-W3.0-P0.65-LS6.4-BL-2
+TSSOP-8_L4.4-W3.0-P0.65-LS6.4-BL-2 footprint
+TSSOP-8_L4.4-W3.0-P0.65-LS6.4-BL-2 footprint
+0
+8
+8
+Library
+WIRELM-SMD_ESP32-S3-WROOM-1
+WIRELM-SMD_ESP32-S3-WROOM-1 footprint
+WIRELM-SMD_ESP32-S3-WROOM-1 footprint
+0
+49
+41
+Library
+XB4908A
+
+
+0
+4
+4
+Library
+solderchaos
+
+
+0
+0
+0
 Module
 A20_OLINUXINO_LIME2
 A20 Olinuxino LIME2, 1.2GHz, 512-1024MB RAM, Micro-SD, NAND or eMMC, 1000Mbit Ethernet
@@ -94954,6 +95080,13 @@ XB4908A
 0
 4
 4
+footprint
+artwork
+
+
+0
+0
+0
 footprint2
 WIRELM-SMD_ESP32-S3-WROOM-1
 WIRELM-SMD_ESP32-S3-WROOM-1 footprint
