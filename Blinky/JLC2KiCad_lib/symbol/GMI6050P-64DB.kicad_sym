@@ -1,0 +1,92 @@
+(kicad_symbol_lib (version 20210201) (generator TousstNicolas/JLC2KiCad_lib)
+  (symbol "GMI6050P-64DB" (pin_names hide)  (in_bom yes) (on_board yes)
+    (property "Reference" "U" (id 0) (at 0 1.27 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "GMI6050P-64DB" (id 1) (at 0 -2.54 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "footprint:MIC-TH_BD6.0-P1.90-D0.4-L-RD" (id 2) (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) italic) hide)
+    )
+    (property "Datasheet" "" (id 3) (at -2.286 0.127 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "ki_keywords" "C233953" (id 4) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "LCSC" "C233953" (id 5) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    
+    (symbol "GMI6050P-64DB_0_1"
+      (polyline
+        (pts
+          (xy 2.54000508001016 -1.0160020320040641)
+          (xy 2.54000508001016 0.5080010160020321)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy -3.3020066040132083 -0.25400050800101603)
+          (xy -1.7780035560071121 -0.25400050800101603)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy -2.54000508001016 -1.0160020320040641)
+          (xy -2.54000508001016 0.5080010160020321)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 5.08001016002032 2.54000508001016)
+          (xy -5.08001016002032 2.54000508001016)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (arc
+        (start 5.08001016002032 149.86029972059944)
+        (mid 0.0 144.78028956057912)
+        (end -5.08001016002032 149.86029972059944)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy -2.54000508001016 -1.7780035560071121)
+          (xy -2.54000508001016 -2.54000508001016)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 2.54000508001016 -1.7780035560071121)
+          (xy 2.54000508001016 -2.54000508001016)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (pin unspecified line
+        (at 2.54000508001016 -5.08001016002032 90)
+        (length 2.54000508001016)
+        (name "2" (effects (font (size 1.7526035052070106 1.7526035052070106))))
+        (number "2" (effects (font (size 1.7526035052070106 1.7526035052070106))))
+      )
+      (pin unspecified line
+        (at -2.54000508001016 -5.08001016002032 90)
+        (length 2.54000508001016)
+        (name "1" (effects (font (size 1.7526035052070106 1.7526035052070106))))
+        (number "1" (effects (font (size 1.7526035052070106 1.7526035052070106))))
+      )
+    )
+  )
+)

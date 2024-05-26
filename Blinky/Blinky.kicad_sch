@@ -16997,7 +16997,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:MIC-TH_BD6.0_B6027AP383-056"
+		(property "Footprint" "fpx:MIC-TH_BD4.0-P1.4-D0.4-L-FD"
 			(at 355.6 207.01 0)
 			(effects
 				(font
