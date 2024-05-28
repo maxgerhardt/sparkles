@@ -16988,7 +16988,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "B4013AM423-093"
+		(property "Value" "GMI4015P-66DB"
 			(at 372.11 208.2799 90)
 			(effects
 				(font
@@ -17026,7 +17026,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C233790"
+		(property "LCSC" "C529912"
 			(at 365.76 207.01 0)
 			(effects
 				(font
@@ -17609,7 +17609,7 @@
 				)
 			)
 		)
-		(property "Value" "TLV9002IDR"
+		(property "Value" "TLV9002IPWR"
 			(at 312.674 193.802 0)
 			(effects
 				(font
@@ -17646,7 +17646,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C398360"
+		(property "LCSC" "C398359"
 			(at 311.15 201.93 0)
 			(effects
 				(font
@@ -18311,7 +18311,7 @@
 		(fields_autoplaced yes)
 		(uuid "e8af5807-1a34-4801-96ba-42ea2e45d3a8")
 		(property "Reference" "U4"
-			(at 277.7489 191.77 0)
+			(at 279.5051 191.77 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18319,8 +18319,8 @@
 				(justify right)
 			)
 		)
-		(property "Value" "TLV9002IDR"
-			(at 277.7489 194.31 0)
+		(property "Value" "TLV9002IPWR"
+			(at 279.5051 194.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18357,7 +18357,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C398360"
+		(property "LCSC" "C398359"
 			(at 276.86 201.93 0)
 			(effects
 				(font
