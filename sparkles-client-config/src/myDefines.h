@@ -15,8 +15,11 @@
 #define LEDC_TARGET_DUTY  (4095)
 #define LEDC_FADE_TIME    (3000)
 
+//flash
+#define FLASH_NAMESPACE "sparkles"
+
 //clapping
-#define NUM_CLAPS 10
+#define NUM_CLAPS 20
 #define CLAP_THRESHOLD 1000000
 
 /*
@@ -64,6 +67,7 @@ const int ledChannelBlue2 = 5;
 #define MSG_ADDRESS_LIST 102
 #define MSG_STATUS_UPDATE 103
 #define MSG_END_CALIBRATION 104
+#define MSG_WAKEUP 105
 
 #define CMD_START 200
 #define CMD_MSG_SEND_ADDRESS_LIST 201
@@ -74,6 +78,12 @@ const int ledChannelBlue2 = 5;
 #define CMD_GET_TIMER 206
 #define CMD_START_ANIMATION 207
 #define CMD_STOP_ANIMATION 208
+#define CMD_DELETE_CLIENTS 209
+#define CMD_TIMER_CALIBRATION 210
+#define CMD_GO_TO_SLEEP 211
+#define CMD_RESET 212
+#define CMD_RESET_SYSTEM 213
+
 #define CMD_END 220
 
 
@@ -93,6 +103,7 @@ struct message_timer {
   uint16_t counter;
   unsigned long sendTime;
   uint16_t lastDelay;
+  bool reset = false;
 } ;
 // 13 bytes
 
@@ -136,6 +147,9 @@ struct message_distance{
 struct message_ask_clap_times {
   uint8_t message_type = MSG_ASK_CLAP_TIMES;
   int deviceId;
+  int millisA = 0;
+  int millisB = 0;
+  String debug = "";
 };
 
 
@@ -146,6 +160,15 @@ struct message_send_clap_times {
 };
 
 //4+4*NUM_CLAPS, currently 44
+enum activeStatus {
+  ACTIVE, 
+  INACTIVE, 
+  WAITING, 
+  SETTING_TIMER, 
+  DEAD,
+  UNREACHABLE
+
+};
 struct client_address {
   uint8_t address[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   int id;
@@ -156,6 +179,8 @@ struct client_address {
   int delay;
   message_send_clap_times clapTimes;
   float distance;
+  activeStatus active = INACTIVE;
+  int tries = 0;
 } ;
 
 
@@ -163,20 +188,33 @@ struct message_address_list {
   uint8_t messageType = MSG_ADDRESS_LIST;
   int index;
   client_address clientAddress;
+  int addressCounter = 0;
   int status;
 };
 
 
-
+enum animationEnum {
+    OFF,
+    FLASH,
+    BLINK,
+    CANDLE,
+    SYNC_ASYNC_BLINK,
+    LED_ON,
+    CONCENTRIC
+};
 struct message_animate {
   uint8_t messageType = MSG_ANIMATION; 
-  uint8_t animationType;
+  animationEnum animationType;
   uint16_t speed;
   uint16_t delay;
+  uint8_t pause;
   uint16_t reps;
   uint8_t rgb1[3];
   uint8_t rgb2[3];
   unsigned long startTime;
+  int num_devices;
+  int spread_time = 100;
+  float exponent = 5.0;
 } ;
 
 
@@ -209,7 +247,6 @@ struct concentric_animation {
 #define MODE_SENDING_TIMER 1
 #define MODE_STARTUP 2
 #define MODE_WAIT_FOR_TIMER 3
-#define MODE_GOT_TIMER 4
 #define MODE_CALIBRATE 5
 #define MODE_ANIMATE 7
 #define MODE_NEUTRAL 8
@@ -221,5 +258,7 @@ struct concentric_animation {
 #define MODE_WAIT_TIMER_RESPONSE 93
 #define MODE_WAIT_ANNOUNCE_RESPONCE 94
 #define MODE_SEND_ADDRESS_LIST 95
+#define MODE_RESET_TIMER 96
+#define MODE_PING_RESET 97
 
 #endif

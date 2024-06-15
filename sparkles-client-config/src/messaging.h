@@ -12,6 +12,8 @@ class webserver;
 #include <mutex>
 #include <vector>
 #include <cstdint>
+#include <LittleFS.h>
+
 
 
 #ifndef MESSAGING_H
@@ -59,6 +61,7 @@ class messaging {
       int msgCounter = 0;
     public: 
         int addressCounter = 0;
+        int updatingAddress = 0;
         int msgSendTime;
         int announceTime = 0;
         message_animate animationMessage;
@@ -84,10 +87,14 @@ class messaging {
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
         uint8_t emptyAddress[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         uint8_t hostAddress[6] = {0x68, 0xb6, 0xb3, 0x08, 0xe9, 0xae}; 
+        uint8_t clientAddress[6] = {0x68, 0xb6, 0xb3, 0x08, 0xbd, 0x8a};
         uint8_t myAddress[6];
         uint8_t timerReceiver[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         int clapsReceived = 0;
         int clapsAsked = 1;
+        int timersUpdated =1;
+        int timerUpdateCounter = 1; 
+        unsigned long lastTry = 0;
         //esp8266
         //uint8_t webserverAddress[6] = {0xe8, 0xdb, 0x84, 0x99, 0x5e, 0x44};
         uint8_t webserverAddress[6] = {0x80, 0x65, 0x99, 0xc7, 0xc2, 0x3c};
@@ -106,7 +113,7 @@ class messaging {
         int getLastDelay();
         void setLastDelay(int delay);
         void handleClapTimes(const uint8_t *incomingData);
-        void calculateDistances();
+        void calculateDistances(int id);
         void addClap(unsigned long timeStamp);
         void getClapTimes(int i);
         int getTimerCounter();
@@ -149,9 +156,19 @@ class messaging {
         void addMessageLog(String message);
         String messageCodeToText(int message);
         void sendAddressList();
+        void prepareSendAddress(int i);
         void updateAddressToWebserver(const uint8_t * address);
         int getAddressId(const uint8_t * address);
         void filterClaps(int index);
+        void writeStructsToFile(const client_address* data, int count, const char* filename);
+        bool readStructsFromFile(client_address* data, int count, const char* filename);
+        void updateTimers(int addressId);
+        void goToSleep(unsigned long sleepTime);
+        void handleTimerUpdates();
+        void globalHandleTimerUpdates();
+        void setNoSuccess();
+
+
 };
 
 

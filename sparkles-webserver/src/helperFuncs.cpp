@@ -24,9 +24,6 @@ String modeToText(int mode) {
     case MODE_SENDING_TIMER:
         out += "SENDING_TIMER";
         break;
-    case MODE_WAIT_FOR_ANNOUNCE:
-        out += "WAIT_FOR_ANNOUNCE";
-        break;
     case MODE_WAIT_FOR_TIMER:
         out += "WAIT_FOR_TIMER";
         break;
@@ -50,6 +47,9 @@ String modeToText(int mode) {
     break;      
     case MODE_WAIT_ANNOUNCE_RESPONCE:
         out += "WAIT_ANNOUNCE_RESPONCE";
+        break;
+    case MODE_NEUTRAL:
+        out += "NEUTRAL";
         break;
     default: 
         out += "Mode unknown ";
@@ -121,7 +121,6 @@ String messageCodeToText(int message) {
 }
 
 void printAddress(const uint8_t * mac_addr){
-    Serial.println("behe");
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
             mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);

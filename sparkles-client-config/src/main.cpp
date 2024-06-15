@@ -138,7 +138,7 @@ bool didIreset = true;
 
 void OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int len) {
     if (incomingData[0] != MSG_ANNOUNCE) {
-    messageHandler.addError("RECEIVED MESSAGE "+messageHandler.messageCodeToText(incomingData[0])+"\n");
+    messageHandler.addError("RECEIVED MESSAGE "+messageHandler.messageCodeToText(incomingData[0])+" from "+messageHandler.stringAddress(mac->src_addr)+"\n");
     } 
     msgReceiveTime = micros();
     messageHandler.pushDataToReceivedQueue(mac, incomingData, len, msgReceiveTime);

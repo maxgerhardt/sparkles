@@ -91,12 +91,12 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
       receivedJson["delay"] = String(addressListMessage.clientAddress.delay);
       receivedJson["status"] = modeToText(addressListMessage.status);
       receivedJson["distance"] = String(addressListMessage.clientAddress.distance);
+      receivedJson["addressCounter"] = String(addressListMessage.addressCounter);
       serializeJson(receivedJson, jsonString);
       Serial.println(jsonString.c_str());
       webServer->events.send(jsonString.c_str(), "new_readings", millis());
       break;
     case MSG_STATUS_UPDATE: 
-
       Serial.println("received status update");
       memcpy(&statusUpdateMessage, incomingData, sizeof(statusUpdateMessage));
       receivedJson["status"] = modeToText(statusUpdateMessage.mode);
@@ -105,7 +105,16 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
       webServer->events.send(jsonString.c_str(), "new_status", millis());
       break;
     case MSG_ASK_CLAP_TIMES: 
+    memcpy(&askClapTimesMessage, incomingData, sizeof(askClapTimesMessage));
     Serial.println(" asked for clap times");
+    Serial.println("Num Claps: "+String(sendClapTimes.clapCounter));
+    Serial.println("millisA: "+String(askClapTimesMessage.millisA));
+    Serial.println("millisB: "+String(askClapTimesMessage.millisB));
+    Serial.println("debug string "+String(askClapTimesMessage.debug));
+    for (int i = 0; i<sendClapTimes.clapCounter; i++) {
+      Serial.println("Clap: "+String(sendClapTimes.timeStamp[i]));
+    }
+    Serial.println("Pushing Send clap times to queue");
     pushDataToSendQueue(MSG_SEND_CLAP_TIMES, 0);
     break;
   }

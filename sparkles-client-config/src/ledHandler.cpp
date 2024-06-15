@@ -22,6 +22,33 @@ void ledHandler::setup() {
   ledsOff();
 }
 
+
+/*
+void ledHandler::setAnimation(int animationType) {
+  switch (animationType) {
+    case 1:
+      concentric();
+      break;
+    case 2:
+      blink();
+      break;
+    case 3:
+      candle(1000, 5, 100, 0, 0);
+      break;
+    case 4:
+      flash(255, 0, 0, 50, 2, 50);
+      break;
+    case 5:
+      ledOn(255, 0, 0, 1000, false);
+      break;
+    case 6:
+      ledOn(255, 0, 0, 1000, true);
+      break;
+    default:
+      break;
+  }
+}
+*/
 float ledHandler::fract(float x) { return x - int(x); }
 
 float ledHandler::mix(float a, float b, float t) { return a + (b - a) * t; }
@@ -85,7 +112,116 @@ void ledHandler::ledOn(int r, int g, int b, int duration, bool half) {
     ledsOff(); 
 }    
 
+/*
+void ledHandler::delayLoop(int duration) {
+  int start = millis();
+  while (true) {
+    if (millis()-start > duration) {
+      break;
+    }
+  }
+}
+*/
 
+
+void ledHandler::setupAnimation(message_animate animationSetupMessage) {
+  currentAnimation = animationMessage.animationType;
+  memcpy(&animationMessage, &animationSetupMessage, sizeof(animationSetupMessage));
+  run();
+}
+
+void ledHandler::run() {
+  switch (currentAnimation) {
+    case OFF:
+      ledsOff();
+      break;
+    case SYNC_ASYNC_BLINK:
+      cycleStart = animationMessage.startTime+timerOffset;
+      repeatRuntime = animationMessage.speed+animationMessage.pause;
+
+      syncAsyncBlink();
+      break;
+    default:
+      break;
+  }
+}
+void ledHandler::syncAsyncBlink() {
+  if (animationNextStep < micros()) {
+    return;
+  }
+  if (micros() > repeatRuntime*repeatCounter+animationMessage.startTime+timerOffset) {
+    repeatCounter++;
+    cycleStart = micros();
+  }
+   if (repeatCounter == animationMessage.reps) {
+    ledsOff();
+    currentAnimation = OFF;
+    return;
+  }
+  //hier kommt die tatsächliche animation rein
+  if (micros() > animationNextStep and micros() < cycleStart+repeatRuntime) {
+    //redsteps? and backwards?
+    //cyclestart berechnen auch abhängig vom spread und ansonsten einfach runterrattern dat ding
+    int elapsedTime = micros()-cycleStart;
+    redfloat  = calculateFlash(animationMessage.rgb1[0], elapsedTime);
+    greenfloat = calculateFlash(animationMessage.rgb1[1], elapsedTime);
+    bluefloat = calculateFlash(animationMessage.rgb1[2], elapsedTime);  
+    writeLeds();
+    // how to calculate?
+    animationNextStep = micros()+animationMessage.speed/255;
+  }
+  if (micros() > animationNextStep and micros() > cycleStart+repeatRuntime) {
+    if (repeatCounter <= animationMessage.reps/2) {
+    repeatRuntime = (animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*repeatCounter+animationMessage.speed+animationMessage.pause;
+    }
+    else {
+    repeatRuntime = (animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*(animationMessage.reps-repeatCounter)+animationMessage.speed+animationMessage.pause;
+    }
+    cycleStart = micros();        
+    ledsOff();
+
+    return;
+  }
+}
+
+
+float ledHandler::calculateFlash(int targetVal, unsigned long timeElapsed){
+  if (timeElapsed < 0) {
+    timeElapsed = 0;
+  }  else if (timeElapsed > animationMessage.speed) {
+    timeElapsed = animationMessage.speed;
+  }
+  float normalizedTime = timeElapsed/animationMessage.speed;
+  float factor;  
+  float colorValue;
+  if (normalizedTime <= 0.5) {
+    factor = pow(normalizedTime * 2, animationMessage.exponent);
+    colorValue = (targetVal * factor);
+  }
+  else {
+    factor = pow(abs(normalizedTime - 1) *2), animationMessage.exponent;
+    colorValue = (targetVal*factor);
+  }
+  if (colorValue < 0) {
+    return 0;
+  }
+  else if (colorValue > 255) {
+    return 255;
+  }
+  else {
+    return colorValue;
+  }
+
+}
+
+void ledHandler::writeLeds() {
+  ledcWrite(ledPinRed1, (int)floor(redfloat));
+  ledcWrite(ledPinGreen1, (int)floor(greenfloat));
+  ledcWrite(ledPinBlue1, (int)floor(bluefloat));
+  ledcWrite(ledPinRed2, (int)floor(redfloat));
+  ledcWrite(ledPinGreen2, (int)floor(greenfloat));
+  ledcWrite(ledPinBlue2, (int)floor(bluefloat));
+}
 
 void ledHandler::candle(int duration, int reps, int pause, unsigned long startTime, unsigned long timeOffset) {
   Serial.println("should blink");
@@ -93,7 +229,11 @@ void ledHandler::candle(int duration, int reps, int pause, unsigned long startTi
   uint32_t currentTime = micros();
   uint32_t difference = currentTime-timeOffset;
   if (startTime-difference > 0) {
+    Serial.println("time now: "+String(micros()));
+    Serial.println("Delaying for"+String(startTime-difference+((distance/34300)*1000000*1500)));
+    //todo turn this into sleep
     delayMicroseconds(startTime-difference+((distance/34300)*1000000*1500));
+    Serial.println("delay done");
   }
   bool heating = true;
   float redsteps = 255.0/(duration/3);
@@ -103,8 +243,6 @@ void ledHandler::candle(int duration, int reps, int pause, unsigned long startTi
   greenfloat = 0.0;
   bluefloat = 0.0;
   
-  Serial.println("candling");
-
 for (int i = 0; i < reps; i++ ){
   redfloat = 0.0;
   greenfloat = 0.0;
@@ -126,6 +264,13 @@ for (int i = 0; i < reps; i++ ){
     ledcWrite(ledPinRed1, (int)floor(redfloat));
     ledcWrite(ledPinGreen1, (int)floor(greenfloat));
     ledcWrite(ledPinBlue1, (int)floor(bluefloat));
+    int start = millis();
+    while (true) {
+      if (millis()-start > 100) {
+        break;
+      }
+
+    }
     delay(1);
   }
   for (int j = 0; j <=duration; j++ ) 
@@ -160,6 +305,11 @@ for (int i = 0; i < reps; i++ ){
   delay(1);
   }
 }
+
+
+
+
+
   void ledHandler::blink() {
     Serial.println("should blink");
   uint32_t currentTime = micros();
@@ -177,18 +327,6 @@ return;
 
 }
 
-void ledHandler::addToQueue(std::function<void()> func) {
-    queue.push(func);
-}
-
-void ledHandler::processQueue() {
-    while (!queue.empty()) {
-        auto func = queue.front();
-        func(); // Execute the function
-        queue.pop();
-    }
-}
-
 
 void ledHandler::concentric() {
 
@@ -199,6 +337,10 @@ void ledHandler::setDistance(float dist) {
   distance = dist;
 }
 
+
+void ledHandler::setTimerOffset(unsigned long setOffset) {
+  timerOffset = setOffset;
+}
 // IF BOARD == V2
 
 

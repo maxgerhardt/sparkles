@@ -10,9 +10,9 @@ messaging::messaging() {
 
 void messaging::removePeer(uint8_t address[6]) {
         addError("REMOVING PEER");
-        addError(stringAddress(address));
+        addError(stringAddress(address)+"\n");
         if (esp_now_del_peer(address) != ESP_OK) {
-        addError("coudln't delete peer");
+        addError("coudln't delete pee\n");
 
         return;
     }
@@ -213,13 +213,13 @@ void messaging::printAllPeers() {
       
 }
 void messaging::stringAllAddresses() {
-    for (int i=0;i<addressCounter; i++) {
+    for (int i=1;i<addressCounter; i++) {
         addError("Address "+String(i)+": "+stringAddress(clientAddresses[i].address)+"\n");
     }
 }
 
 void messaging::printAllAddresses() {
-    for (int i=1;i<addressCounter; i++) {
+    for (int i=0;i<addressCounter; i++) {
         Serial.println(String(i)+": "+stringAddress(clientAddresses[i].address));
     }
 }
@@ -275,13 +275,17 @@ void messaging::receiveTimer(int messageArriveTime) {
       gotTimerMessage.delayAvg = delayAvg;
       timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
       gotTimerMessage.timerOffset = timeOffset;
+      handleLed->setTimerOffset(timeOffset);
       gotTimer = true;
       #if DEVICE_MODE != 2
       pushDataToSendQueue(hostAddress, MSG_GOT_TIMER, -1);
       gotTimer = true;
       handleLed->flash(125,0,0, 200, 3, 300);
-      globalModeHandler->switchMode(MODE_GOT_TIMER);
+      globalModeHandler->switchMode(MODE_NEUTRAL);
+
+      addError("switched mode to Neutral");
       #else
+      //todo eigentlich quark
       pushDataToSendQueue(CMD_START_CALIBRATION_MODE, -1);
       addError("SWITCHING TO CALIBRATE");
       JsonDocument jsonDoc;
@@ -339,8 +343,6 @@ void messaging::addClap(unsigned long timeStamp) {
 }
 
 int messaging::getAddressId(const uint8_t * address) {
-    Serial.println("hmm");
-    delay(10);
     for (int i = 0; i < NUM_DEVICES; i++) {
         if (memcmp(&clientAddresses[i].address, address, 6) == 0) {
             return i; // Found the address, return its ID
@@ -376,4 +378,11 @@ int messaging::addPeer(uint8_t * address) {
         return 1;
     }
     
+}
+void messaging::goToSleep(unsigned long sleepTime) {
+    esp_sleep_enable_timer_wakeup(sleepTime*1000);
+    esp_light_sleep_start();
+    int randNum = random(1000, 5000);
+    delay(randNum);
+    pushDataToSendQueue(hostAddress, MSG_WAKEUP, -1);
 }

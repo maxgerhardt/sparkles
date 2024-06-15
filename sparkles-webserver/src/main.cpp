@@ -162,7 +162,7 @@ void loop() {
       buttonPressStarted = true;
       previousButton = true;
     }
-    if (buttonOn and previousButton == true and micros() - buttonPressTime > 10000) {
+    if (buttonOn and previousButton == true and micros() - buttonPressTime > 100000) {
       messageHandler.addClap(buttonPressTime);
       Serial.println("CLAP!");
       previousButton = false;

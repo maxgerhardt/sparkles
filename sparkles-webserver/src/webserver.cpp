@@ -38,6 +38,9 @@ void webserver::configRoutes() {
     server.on("/commandCalibrate", HTTP_GET, [this] (AsyncWebServerRequest *request){
       this->commandCalibrate(request);
     });
+    server.on("/commandAnimate", HTTP_GET, [this] (AsyncWebServerRequest *request){
+      this->commandAnimate(request);
+    });
 
 }
 
@@ -73,6 +76,7 @@ void webserver::commandCalibrate(AsyncWebServerRequest *request) {
       }
       else if (stateMachine->getMode() == MODE_CALIBRATE) {
         messageHandler->pushDataToSendQueue(CMD_END_CALIBRATION_MODE, -1);
+        Serial.println("ENDING CALIBRATION MODE");
         request->send(204);
         String jsonString;
         jsonString = "{\"status\" : \"false\"}";
@@ -84,6 +88,31 @@ void webserver::commandCalibrate(AsyncWebServerRequest *request) {
       
     
 }
+
+void webserver::commandAnimate(AsyncWebServerRequest *request) {
+  messageHandler->addError("Called Animate");
+  String jsonString;
+
+  if (stateMachine->getMode() == MODE_WAIT_FOR_TIMER || stateMachine->getMode() == MODE_CALIBRATE) {
+    request->send(400);
+    return;
+  }
+  else if (stateMachine->getMode() == MODE_NEUTRAL) {
+    request->send(204);
+    jsonString = "{\"status\" : \"true\"}";
+    events.send(jsonString.c_str(), "animateStatus", millis()); 
+    messageHandler->pushDataToSendQueue(CMD_START_ANIMATION, -1);
+    stateMachine->switchMode(MODE_ANIMATE);
+  }
+  else if (stateMachine->getMode() == MODE_ANIMATE) {
+    request->send(204);
+        jsonString = "{\"status\" : \"false\"}";
+    events.send(jsonString.c_str(), "animateStatus", millis()); 
+    messageHandler->pushDataToSendQueue(CMD_STOP_ANIMATION, -1);
+    stateMachine->switchMode(MODE_NEUTRAL);
+  }
+  }
+
 void webserver::serveStaticFile(AsyncWebServerRequest *request) {
   // Get the file path from the request
   String path = request->url();

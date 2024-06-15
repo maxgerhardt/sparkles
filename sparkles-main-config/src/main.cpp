@@ -11,7 +11,8 @@
 #include <ledHandler.h>
 #include <stateMachine.h>
 #include <messaging.h>
-
+#include <LittleFS.h>
+#define SWITCH_PIN 39
 //#include "ESP32TimerInterrupt.h"
 //#include "driver/gptimer.h"
 #define TIMER_INTERVAL_MS       600
@@ -31,7 +32,7 @@ message_send_clap_times clapTimes;
 int interruptCounter;  //for counting interrupt
 int totalInterruptCounter;   	//total interrupt counting
 bool start = true;
-
+bool lfs_started = true;
 esp_now_peer_info_t peerInfo;
 
 int audioPin = 5;
@@ -59,8 +60,7 @@ uint32_t lastClapTime;
 
 
 //receive addresses
-int addressCounter = 0;
-client_address clientAddresses[NUM_DEVICES];
+//client_address clientAddresses[NUM_DEVICES];
 
 void IRAM_ATTR onTimer()
 {   
@@ -69,11 +69,17 @@ void IRAM_ATTR onTimer()
     timerCounter++;
     //wait for timer vs wait for calibrate
     
-    if (modeHandler.getMode() == MODE_SENDING_TIMER) {
+    if (modeHandler.getMode() == MODE_SENDING_TIMER or modeHandler.getMode() == MODE_RESET_TIMER) {
       messageHandler.timerMessage.messageType = MSG_TIMER_CALIBRATION; 
       messageHandler.timerMessage.sendTime = msgSendTime;
       messageHandler.timerMessage.counter = timerCounter;
       messageHandler.timerMessage.lastDelay = lastDelay;
+      messageHandler.addError("Sending Timer+ "+String(timerCounter)+"\n");
+      if (modeHandler.getMode() == MODE_RESET_TIMER) {
+        messageHandler.timerMessage.reset = true;
+      }
+      messageHandler.addError(messageHandler.stringAddress(messageHandler.timerReceiver)+"\n");
+
       esp_err_t result = esp_now_send(messageHandler.timerReceiver, (uint8_t *) &messageHandler.timerMessage, sizeof(messageHandler.timerMessage));
       
     }
@@ -96,11 +102,19 @@ void  OnDataRecv(const esp_now_recv_info * mac, const uint8_t *incomingData, int
 
 
 void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
-
-  if (modeHandler.getMode() == MODE_SENDING_TIMER) {
+  if (modeHandler.getMode() == MODE_PING_RESET or modeHandler.getMode() == MODE_RESET_TIMER) {
+    if (sendStatus == ESP_NOW_SEND_SUCCESS) {
+      modeHandler.switchMode(MODE_RESET_TIMER);
+    }
+    else {
+      messageHandler.addError("Ping reset not sent\n");      
+    }
+  }
+  if (modeHandler.getMode() == MODE_SENDING_TIMER or modeHandler.getMode() == MODE_RESET_TIMER) {
     if (sendStatus == ESP_NOW_SEND_SUCCESS) {
       msgArriveTime = micros();
       lastDelay = msgArriveTime-msgSendTime;
+      messageHandler.addError("SUCCESS "+String(lastDelay)+"\n");
     }
     else {
       messageHandler.addError("No SUCCESS");
@@ -121,6 +135,16 @@ void  OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) {
 
 void setup() {
   Serial.begin(115200);
+  unsigned long startTime = millis();
+  while (!Serial) {
+    if (millis() - startTime > 2000) {
+      break;
+    }
+  }
+  if (!LittleFS.begin()) {
+    Serial.println("LittleFS mount failed");
+    lfs_started = false;
+  }
   timer = timerBegin(1000000);           	// timer 0, prescalar: 80, UP counting
   timerAttachInterrupt(timer, &onTimer); 	// Attach interrupt
   timerWrite(timer, 0);  		// Match value= 1000000 for 1 sec. delay.
@@ -133,8 +157,9 @@ void setup() {
     return;
   }
   handleLed.setup();
+  modeHandler.switchMode(MODE_NEUTRAL);
   messageHandler.setup(modeHandler, handleLed, peerInfo);
-
+  Serial.println("after setup");
   //esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
   memcpy(&peerInfo.peer_addr, messageHandler.broadcastAddress, 6);
   peerInfo.channel = 0;  
@@ -155,16 +180,41 @@ void setup() {
   peakDetection.begin(30, 3, 0);   
   lastClap = millis(); 
   timerCounter = 0;
-  modeHandler.switchMode(MODE_NEUTRAL);
   WiFi.macAddress(myAddress);
+  pinMode(SWITCH_PIN, INPUT_PULLDOWN); 
   
 }
 
 void loop() {
-  //messageHandler.handleErrors();
   messageHandler.processDataFromReceivedQueue();
   messageHandler.processDataFromSendQueue();
+  if (digitalRead(SWITCH_PIN) == HIGH) {
+    if (LittleFS.format()) {
+      Serial.println("LittleFS formatted successfully");
+    }
+    else {
+      Serial.println("LittleFS formatting failed");
+    }
+    delay(5000);
+    ESP.restart();
+  }
   if (lastClap+5000 < millis()) {
+    if (lfs_started == false) {
+      if (LittleFS.format()) {
+        Serial.println("LittleFS formatted successfully, retrying mount...");
+        if (LittleFS.begin()) {
+            Serial.println("LittleFS mount succeeded after formatting");
+            lfs_started = true;
+        } else {
+            Serial.println("LittleFS mount failed after formatting");
+            lfs_started = false;
+        }
+      } else {
+        Serial.println("LittleFS formatting failed");
+        lfs_started = false;
+      }
+    }
+    messageHandler.handleErrors();
     modeHandler.printCurrentMode();
     lastClap = millis();
     cycleCounter++;
@@ -172,9 +222,9 @@ void loop() {
     Serial.print("-----\nMain still Alive ");
     Serial.println(cycleCounter);
     Serial.println("My Address: "+messageHandler.stringAddress(myAddress));
-    Serial.println("---All addresses----");
+    Serial.println("---All addresses---- "+String(messageHandler.addressCounter));
     messageHandler.printAllAddresses();
-    Serial.println("---All addresses----");
+    Serial.println("-----------");
     //messageHandler.printAllAddresses();
     Serial.println(messageHandler.getMessageLog());
     Serial.println("-----");
@@ -197,5 +247,8 @@ void loop() {
   if (messageHandler.clapsReceived == messageHandler.addressCounter && messageHandler.clapsReceived != 0) {
     Serial.println("All clap Times received");
     //messageHandler.clapsReceived = 0;
+  }
+  if (modeHandler.getMode() != MODE_SENDING_TIMER and modeHandler.getMode() != MODE_RESET_TIMER and modeHandler.getMode() != MODE_PING_RESET) {
+    messageHandler.handleTimerUpdates();
   }
 }

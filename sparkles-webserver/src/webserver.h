@@ -36,5 +36,6 @@ class webserver {
     void handleClientConnect(AsyncEventSourceClient *client);
     void updateDeviceList(AsyncWebServerRequest *request);
     void commandCalibrate(AsyncWebServerRequest *request);
+    void commandAnimate(AsyncWebServerRequest *request);
 };
 #endif
