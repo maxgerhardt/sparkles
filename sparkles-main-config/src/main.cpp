@@ -68,8 +68,13 @@ void IRAM_ATTR onTimer()
   //Serial.println(msgSendTime/1000);
     timerCounter++;
     //wait for timer vs wait for calibrate
-    
+    if (timerCounter == 100) {
+      modeHandler.switchMode(MODE_NEUTRAL);
+      messageHandler.setTimerReceiverUnavailable();
+      return;
+    }    
     if (modeHandler.getMode() == MODE_SENDING_TIMER or modeHandler.getMode() == MODE_RESET_TIMER) {
+
       messageHandler.timerMessage.messageType = MSG_TIMER_CALIBRATION; 
       messageHandler.timerMessage.sendTime = msgSendTime;
       messageHandler.timerMessage.counter = timerCounter;
@@ -228,6 +233,8 @@ void loop() {
     //messageHandler.printAllAddresses();
     Serial.println(messageHandler.getMessageLog());
     Serial.println("-----");
+    int* sysTime = messageHandler.getSystemTime();
+    Serial.println("Time is: "+String(sysTime[0])+":"+String(sysTime[1])+":"+String(sysTime[2]));
     //messageHandler.printAddress(myAddress);
 
   }
@@ -251,4 +258,5 @@ void loop() {
   if (modeHandler.getMode() != MODE_SENDING_TIMER and modeHandler.getMode() != MODE_RESET_TIMER and modeHandler.getMode() != MODE_PING_RESET) {
     messageHandler.handleTimerUpdates();
   }
+  //messageHandler.goodNight();
 }

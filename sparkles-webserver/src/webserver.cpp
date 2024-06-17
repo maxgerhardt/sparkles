@@ -41,6 +41,15 @@ void webserver::configRoutes() {
     server.on("/commandAnimate", HTTP_GET, [this] (AsyncWebServerRequest *request){
       this->commandAnimate(request);
     });
+    server.on("/submitPositions", HTTP_GET, [this] (AsyncWebServerRequest *request){
+      this->submitPositions(request);
+    });
+    server.on("/setTime", HTTP_GET, [this] (AsyncWebServerRequest *request){
+      this->setTime(request);
+    });
+    server.on("/sendSyncAsyncAnimation", HTTP_GET, [this] (AsyncWebServerRequest *request){
+      this->sendSyncAsyncAnimation(request);
+    });
 
 }
 
@@ -145,4 +154,39 @@ void webserver::serveStaticFile(AsyncWebServerRequest *request) {
 
   // If file not found, send 404
   request->send(404, "text/plain", "File not found");
+}
+
+void webserver::submitPositions(AsyncWebServerRequest *request) {
+  messageHandler->addError("Called SubmitPositions");
+  float xpos = request->getParam("xpos")->value().toFloat();
+  float ypos = request->getParam("ypos")->value().toFloat();
+  float zpos = request->getParam("zpos")->value().toFloat();
+  messageHandler->pushDataToSendQueue(MSG_SET_POSITIONS, -1);
+  request->send(200, "text/html", "OK");
+}
+void webserver::setTime(AsyncWebServerRequest *request) {
+  messageHandler->addError("Called SetTime");
+  int hours = request->getParam("hours")->value().toInt();
+  int minutes = request->getParam("minutes")->value().toInt();
+  int seconds = request->getParam("seconds")->value().toInt();
+  messageHandler->setSetTimeMessage(hours, minutes, seconds);
+  messageHandler->pushDataToSendQueue(MSG_SET_TIME, -1);
+  request->send(200, "text/html", "OK");
+}
+
+void webserver::sendSyncAsyncAnimation(AsyncWebServerRequest *request) {
+  messageHandler->addError("Called SendSyncAsyncAnimation");
+  message_animate animationMessage;
+  animationMessage.speed = request->getParam("speed")->value().toInt();
+  animationMessage.animationType == SYNC_ASYNC_BLINK;
+  animationMessage.pause = request->getParam("pause")->value().toInt();
+  animationMessage.reps = request->getParam("reps")->value().toInt();
+  animationMessage.rgb1[0] = request->getParam("red")->value().toInt();
+  animationMessage.rgb1[1] = request->getParam("green")->value().toInt();
+  animationMessage.rgb1[2] = request->getParam("blue")->value().toInt();
+  Serial.println("Speed "+String(animationMessage.speed));
+  Serial.println("Red"+String(animationMessage.rgb1[0]));
+  messageHandler->setAnimation(&animationMessage);
+  messageHandler->pushDataToSendQueue(MSG_ANIMATION, -1);
+  request->send(200, "text/html", "OK");
 }

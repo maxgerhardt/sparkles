@@ -94,22 +94,22 @@ void ledHandler::flash(int r, int g, int b, int duration, int reps, int pause) {
   }
 }  
 
-void ledHandler::ledOn(int r, int g, int b, int duration, bool half) {
+void ledHandler::ledOn(int r, int g, int b, int duration, int  frontback) {
   if (DEVICE == D1) {
     return;
   }
-  if (half == true) {
+  if (frontback == 0 or frontback == 2) {
   ledcWrite(ledPinRed1, r);
   ledcWrite(ledPinGreen1, g);
   ledcWrite(ledPinBlue1, b);
     
   }
+  if (frontback == 1 or frontback == 2) {
   ledcWrite(ledPinRed2, r);
   ledcWrite(ledPinGreen2, g);
   ledcWrite(ledPinBlue2, b);
-
+  }
     delay(duration);
-    ledsOff(); 
 }    
 
 /*
@@ -124,10 +124,38 @@ void ledHandler::delayLoop(int duration) {
 */
 
 
-void ledHandler::setupAnimation(message_animate animationSetupMessage) {
+void ledHandler::setupAnimation(message_animate *animationSetupMessage) {
+  memcpy(&animationMessage, animationSetupMessage, sizeof(animationMessage));
+  if (currentAnimation != OFF) {
+    return;
+  }
+  if (animationMessage.animationType == OFF) {
+    ledsOff();
+    return;
+  }
+  else if (animationMessage.animationType == SYNC_ASYNC_BLINK) {
+    setupSyncAsyncBlink();
+  }
+  else {
+    return;
+  }
+ 
+}
+
+void ledHandler::setupSyncAsyncBlink() {
+  repeatCounter = 0;
+  cycleStart = 0;
+  animationNextStep = 0;
   currentAnimation = animationMessage.animationType;
-  memcpy(&animationMessage, &animationSetupMessage, sizeof(animationSetupMessage));
-  run();
+  unsigned long cycleStartMicros = animationMessage.startTime+timerOffset;
+  unsigned long microdiff = micros()-cycleStartMicros;
+  cycleStart = millis()+microdiff/1000;
+  repeatRuntime = animationMessage.speed+animationMessage.pause;
+  animationNextStep = cycleStart;
+  cycleTotalRuntime = repeatRuntime;
+  for (int i = 0; i < animationMessage.reps/2;i++) {
+    cycleTotalRuntime += 2*((animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*i+animationMessage.speed+animationMessage.pause);
+  }
 }
 
 void ledHandler::run() {
@@ -136,8 +164,6 @@ void ledHandler::run() {
       ledsOff();
       break;
     case SYNC_ASYNC_BLINK:
-      cycleStart = animationMessage.startTime+timerOffset;
-      repeatRuntime = animationMessage.speed+animationMessage.pause;
 
       syncAsyncBlink();
       break;
@@ -146,38 +172,55 @@ void ledHandler::run() {
   }
 }
 void ledHandler::syncAsyncBlink() {
-  if (animationNextStep < micros()) {
+  if (animationNextStep > millis() or repeatCounter >= animationMessage.reps) {
     return;
   }
-  if (micros() > repeatRuntime*repeatCounter+animationMessage.startTime+timerOffset) {
+  if (millis() > repeatRuntime*repeatCounter+animationMessage.startTime+timerOffset) {
+
     repeatCounter++;
-    cycleStart = micros();
+    //cycle start noch timen
+    if (repeatCounter <= animationMessage.reps/2) {
+      cycleStart = millis() + (animationMessage.spread_time/(animationMessage.reps/2))*position*repeatCounter;
+    }
+    else {
+      cycleStart = millis() + (animationMessage.spread_time/(animationMessage.reps/2))*position*(animationMessage.reps-repeatCounter);
+    }
   }
    if (repeatCounter == animationMessage.reps) {
-    ledsOff();
-    currentAnimation = OFF;
-    return;
+    if (animationRepeatCounter == animationMessage.animationreps) {
+      ledsOff();
+      currentAnimation = OFF;
+      return;
+    }
+    else {
+      animationRepeatCounter++;
+      repeatCounter = 0;
+      cycleStart = millis()+cycleTotalRuntime;
+
+    }
   }
   //hier kommt die tatsächliche animation rein
-  if (micros() > animationNextStep and micros() < cycleStart+repeatRuntime) {
+  if (millis() > animationNextStep and millis() < cycleStart+repeatRuntime) {
+
     //redsteps? and backwards?
     //cyclestart berechnen auch abhängig vom spread und ansonsten einfach runterrattern dat ding
-    int elapsedTime = micros()-cycleStart;
+    int elapsedTime = millis()-cycleStart;
     redfloat  = calculateFlash(animationMessage.rgb1[0], elapsedTime);
     greenfloat = calculateFlash(animationMessage.rgb1[1], elapsedTime);
     bluefloat = calculateFlash(animationMessage.rgb1[2], elapsedTime);  
     writeLeds();
     // how to calculate?
-    animationNextStep = micros()+animationMessage.speed/255;
+    animationNextStep = millis()+animationMessage.speed/255;
   }
-  if (micros() > animationNextStep and micros() > cycleStart+repeatRuntime) {
+  if (millis() > animationNextStep and millis() > cycleStart+repeatRuntime) {
     if (repeatCounter <= animationMessage.reps/2) {
     repeatRuntime = (animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*repeatCounter+animationMessage.speed+animationMessage.pause;
     }
     else {
     repeatRuntime = (animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*(animationMessage.reps-repeatCounter)+animationMessage.speed+animationMessage.pause;
     }
-    cycleStart = micros();        
+    cycleStart = millis();
+    animationNextStep = cycleStart;
     ledsOff();
 
     return;
@@ -191,7 +234,7 @@ float ledHandler::calculateFlash(int targetVal, unsigned long timeElapsed){
   }  else if (timeElapsed > animationMessage.speed) {
     timeElapsed = animationMessage.speed;
   }
-  float normalizedTime = timeElapsed/animationMessage.speed;
+  float normalizedTime = (float)timeElapsed/(float)animationMessage.speed;
   float factor;  
   float colorValue;
   if (normalizedTime <= 0.5) {
@@ -199,9 +242,10 @@ float ledHandler::calculateFlash(int targetVal, unsigned long timeElapsed){
     colorValue = (targetVal * factor);
   }
   else {
-    factor = pow(abs(normalizedTime - 1) *2), animationMessage.exponent;
+    factor = pow(abs(normalizedTime - 1) *2, animationMessage.exponent);
     colorValue = (targetVal*factor);
   }
+
   if (colorValue < 0) {
     return 0;
   }
@@ -340,6 +384,16 @@ void ledHandler::setDistance(float dist) {
 
 void ledHandler::setTimerOffset(unsigned long setOffset) {
   timerOffset = setOffset;
+}
+
+void ledHandler::setPosition(int id) {
+  position = id;
+}
+
+void ledHandler::setLocation(int xposition, int yposition, int zposition) {
+  xPos = xposition;
+  yPos = yposition;
+  zPos = zposition;
 }
 // IF BOARD == V2
 

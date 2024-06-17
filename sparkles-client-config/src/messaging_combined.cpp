@@ -167,6 +167,12 @@ String messaging::messageCodeToText(int message) {
         case MSG_DISTANCE:
             out = "MSG_DISTANCE";
             break;
+        case MSG_SET_TIME:
+            out = "MSG_SET_TIME";
+            break;
+        case MSG_SET_POSITIONS:
+            out = "MSG_SET_POSITIONS";
+            break;
         default:
             out = "Didn't recognize Message";
             out += message;
@@ -275,9 +281,9 @@ void messaging::receiveTimer(int messageArriveTime) {
       gotTimerMessage.delayAvg = delayAvg;
       timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
       gotTimerMessage.timerOffset = timeOffset;
-      handleLed->setTimerOffset(timeOffset);
       gotTimer = true;
-      #if DEVICE_MODE != 2
+      #if DEVICE_MODE != WEBSERVER
+      handleLed->setTimerOffset(timeOffset);
       pushDataToSendQueue(hostAddress, MSG_GOT_TIMER, -1);
       gotTimer = true;
       handleLed->flash(125,0,0, 200, 3, 300);
@@ -325,7 +331,7 @@ void messaging::pushDataToReceivedQueue(const esp_now_recv_info * mac, const uin
 }
 
 void messaging::addClap(unsigned long timeStamp) {
-    #if DEVICE_MODE == 2 || DEVICE_MODE == 1
+    #if DEVICE_MODE == WEBSERVER || DEVICE_MODE == CLIENT
     
     if (sendClapTimes.clapCounter < NUM_CLAPS) {
         sendClapTimes.timeStamp[sendClapTimes.clapCounter] = timeStamp-timeOffset;
@@ -380,9 +386,35 @@ int messaging::addPeer(uint8_t * address) {
     
 }
 void messaging::goToSleep(unsigned long sleepTime) {
-    esp_sleep_enable_timer_wakeup(sleepTime*1000);
+    esp_sleep_enable_timer_wakeup(sleepTime);
     esp_light_sleep_start();
     int randNum = random(1000, 5000);
     delay(randNum);
     pushDataToSendQueue(hostAddress, MSG_WAKEUP, -1);
 }
+void messaging::setBattery() {
+    analogReadResolution(12);
+    analogSetPinAttenuation(BATTERY_PIN, ADC_11db);  
+    int adcValue = analogRead(BATTERY_PIN); // Read the ADC value
+    float voltage = adcValue * (4.2 / 3220.0);
+    float percentage;
+    if (voltage >= 4.2) {
+        percentage = 100.0;
+    } else if (voltage >= 3.8 && voltage < 4.2) {
+        percentage =  70.0 + (voltage - 3.8) / (4.2 - 3.8) * (100.0 - 70.0);
+    } else if (voltage >= 3.6 && voltage < 3.8) {
+        percentage = 15.0 + (voltage - 3.6) / (3.8 - 3.6) * (70.0 - 15.0);
+    } else if (voltage >= 3.0 && voltage < 3.6) {
+        percentage =  (voltage - 3.0) / (3.6 - 3.0) * 15.0;
+    } else {
+        percentage = 0.0;
+    }
+    percentage = round(percentage * 100) / 100;
+    batteryStatusMessage.batteryStatus = percentage;
+
+}
+void messaging::setAnimation(message_animate* messageAnimate) {
+    Serial.println("Red bevor"+String(messageAnimate->rgb1[0]));
+    memcpy(&animationMessage, messageAnimate, sizeof(animationMessage));
+    Serial.println("Red danach"+String(animationMessage.rgb1[0]));
+}   

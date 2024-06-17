@@ -5,6 +5,7 @@
 #include <esp_now.h>
 #endif
 
+#include <time.h>
 #ifndef DEFINE_H
 #define DEFINE_H
 
@@ -15,12 +16,24 @@
 #define LEDC_TARGET_DUTY  (4095)
 #define LEDC_FADE_TIME    (3000)
 
+//device modes
+
+#define MAIN 0
+#define CLIENT 1
+#define WEBSERVER 2
+
+#define GOODNIGHT_HOUR 22
+#define GOODNIGHT_MINUTE 30
+#define GOODMORNING_HOUR 4
+#define GOODMORNING_MINUTE 30
+
 //flash
 #define FLASH_NAMESPACE "sparkles"
 
 //clapping
 #define NUM_CLAPS 20
 #define CLAP_THRESHOLD 1000000
+
 
 /*
 #if (DEVICE == V1)
@@ -50,6 +63,7 @@ const int ledChannelBlue2 = 5;
 
 //webserv
 #define CLAP_PIN 47
+#define BATTERY_PIN 4
 #define ADDRESS_LIST 1
 
 //MESSAGING
@@ -68,6 +82,10 @@ const int ledChannelBlue2 = 5;
 #define MSG_STATUS_UPDATE 103
 #define MSG_END_CALIBRATION 104
 #define MSG_WAKEUP 105
+#define MSG_SET_TIME 106
+#define MSG_SET_POSITIONS 107
+#define MSG_BATTERY_STATUS 108
+#define MSG_SET_SLEEP_WAKEUP 109
 
 #define CMD_START 200
 #define CMD_MSG_SEND_ADDRESS_LIST 201
@@ -83,6 +101,7 @@ const int ledChannelBlue2 = 5;
 #define CMD_GO_TO_SLEEP 211
 #define CMD_RESET 212
 #define CMD_RESET_SYSTEM 213
+#define CMD_GET_BATTERY_STATUS 214
 
 #define CMD_END 220
 
@@ -104,6 +123,7 @@ struct message_timer {
   unsigned long sendTime;
   uint16_t lastDelay;
   bool reset = false;
+  int addressId = 0;
 } ;
 // 13 bytes
 
@@ -112,8 +132,21 @@ struct message_got_timer {
   uint16_t delayAvg;
   uint32_t timerOffset;
 };
-//9 bytes
 
+struct message_set_sleep_wakeup {
+  uint8_t message_type = MSG_SET_SLEEP_WAKEUP;
+  unsigned long hours;
+  unsigned long minutes;
+  unsigned long seconds;
+  bool sleep_wakeup;
+};
+
+struct message_battery_status {
+  uint8_t messageType = MSG_BATTERY_STATUS;
+  uint8_t batteryStatus;
+};
+
+//9 bytes
 struct message_switch_mode {
   uint8_t messageType = MSG_SWITCH_MODE;
   uint8_t mode;
@@ -159,6 +192,11 @@ struct message_send_clap_times {
   unsigned long timeStamp[NUM_CLAPS]; //offsetted.
 };
 
+struct sleep_wakeup_time {
+  int hours;
+  int minutes;
+  int seconds;
+};
 //4+4*NUM_CLAPS, currently 44
 enum activeStatus {
   ACTIVE, 
@@ -181,6 +219,7 @@ struct client_address {
   float distance;
   activeStatus active = INACTIVE;
   int tries = 0;
+  int batteryStatus;
 } ;
 
 
@@ -207,7 +246,7 @@ struct message_animate {
   animationEnum animationType;
   uint16_t speed;
   uint16_t delay;
-  uint8_t pause;
+  uint16_t pause;
   uint16_t reps;
   uint8_t rgb1[3];
   uint8_t rgb2[3];
@@ -215,6 +254,7 @@ struct message_animate {
   int num_devices;
   int spread_time = 100;
   float exponent = 5.0;
+  uint16_t animationreps;
 } ;
 
 
@@ -224,6 +264,22 @@ struct message_command {
   int param = -1;
   
 } ;
+
+struct message_set_positions {
+  int messageType = MSG_SET_POSITIONS;
+  int id;
+  float xpos;
+  float ypos;
+  float zpos;
+} ;
+struct message_set_time {
+  int messageType = MSG_SET_TIME;
+  int hours;
+  int minutes;
+  int seconds;
+
+} ;
+
 
 struct message_status_update {
   int messageType = MSG_STATUS_UPDATE;
@@ -261,4 +317,8 @@ struct concentric_animation {
 #define MODE_RESET_TIMER 96
 #define MODE_PING_RESET 97
 
+
+
+
 #endif
+

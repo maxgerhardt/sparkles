@@ -1,7 +1,7 @@
 #include <myDefines.h>
 #include <Arduino.h>
 #include <stateMachine.h>
-#if DEVICE_MODE != 2
+#if DEVICE_MODE != WEBSERVER
 #include <ledHandler.h>
 #else
 #include <webserver.h>
@@ -24,7 +24,7 @@ class messaging {
     private:  
         client_address clientAddresses[NUM_DEVICES];
         modeMachine* globalModeHandler;
-        #if DEVICE_MODE !=2
+        #if DEVICE_MODE !=WEBSERVER
         modeMachine messagingModeHandler;
         ledHandler* handleLed;
         struct SendData {
@@ -64,6 +64,7 @@ class messaging {
         int updatingAddress = 0;
         int msgSendTime;
         int announceTime = 0;
+        int myAddressId = 0;
         message_animate animationMessage;
         message_send_clap_times sendClapTimes;
         message_address addressMessage;
@@ -78,10 +79,16 @@ class messaging {
         message_status_update statusUpdateMessage;
         message_send_clap_times webserverClapTimes;
         message_distance distanceMessage;
+        message_set_positions setPositionsMessage;
+        message_set_time setTimeMessage;
+        message_battery_status batteryStatusMessage;
+        message_set_sleep_wakeup setSleepWakeupMessage;
         String error_message = "";
         String message_received = "";
         String message_sent = "";
         String messageLog = "";
+        sleep_wakeup_time sleepTime;
+        sleep_wakeup_time wakeupTime;
         bool gotTimer = false;
         bool receivedAnnounce = false;
         uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -94,12 +101,13 @@ class messaging {
         int clapsAsked = 1;
         int timersUpdated =1;
         int timerUpdateCounter = 1; 
+        int goToSleepTime = 0;
         unsigned long lastTry = 0;
         //esp8266
         //uint8_t webserverAddress[6] = {0xe8, 0xdb, 0x84, 0x99, 0x5e, 0x44};
         uint8_t webserverAddress[6] = {0x80, 0x65, 0x99, 0xc7, 0xc2, 0x3c};
         messaging();
-        #if DEVICE_MODE != 2
+        #if DEVICE_MODE != WEBSERVER
         void setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp_now_peer_info_t &globalPeerInfo);
         #else
         void setup(webserver &Webserver, modeMachine &modeHandler, esp_now_peer_info_t &globalPeerInfo);
@@ -167,6 +175,15 @@ class messaging {
         void handleTimerUpdates();
         void globalHandleTimerUpdates();
         void setNoSuccess();
+        void goodNight();
+        void setClock(int hours, int minutes, int seconds);
+        int* getSystemTime();
+        double calculateTimeDifference(int hours1, int minutes1, int seconds1, int hours2, int minutes2, int seconds2);
+        void setSetTimeMessage(int hours, int minutes, int seconds);
+        void setBattery();
+        void setTimerReceiverUnavailable();
+        void setAnimation(message_animate* message);
+
 
 
 };

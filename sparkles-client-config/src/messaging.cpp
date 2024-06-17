@@ -11,7 +11,13 @@ void messaging::setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp
     handleLed = &globalHandleLed;
     globalModeHandler = &modeHandler;
     peerInfo = &globalPeerInfo;
-    if (DEVICE_MODE == 0) {
+    sleepTime.hours = GOODNIGHT_HOUR;
+    sleepTime.minutes = GOODNIGHT_MINUTE;
+    sleepTime.seconds = 0; 
+    wakeupTime.hours = GOODMORNING_HOUR;
+    wakeupTime.minutes = GOODMORNING_MINUTE;
+    wakeupTime.seconds = 0;
+    if (DEVICE_MODE == MAIN) {
         if (!readStructsFromFile(clientAddresses, NUM_DEVICES,  "/clientAddress")) {
             addError("Failed to read client addresses from file");
         }
@@ -45,7 +51,7 @@ void messaging::setup(modeMachine &modeHandler, ledHandler &globalHandleLed, esp
         clientAddresses[0].timerOffset = 0;
         clientAddresses[0].delay = 0;
     }
-    if (DEVICE_MODE == 1) {
+    if (DEVICE_MODE == CLIENT) {
         int peerMsg = addPeer(hostAddress);
         if (peerMsg == 1) {
             //handleLed->flash(0, 125, 125, 200, 1, 50);
@@ -403,4 +409,104 @@ void messaging::setNoSuccess() {
         handleTimerUpdates();
     }
 
+}
+
+void messaging::goodNight() {
+    int* time;  
+    time = getSystemTime();
+    double difference;
+    if (time[0] >= sleepTime.hours and time[1] >= sleepTime.minutes and goToSleepTime == 0) {
+        Serial.println("should be time to say good night and waiting a minute");
+        difference = calculateTimeDifference(time[0], time[1], time[2], wakeupTime.hours, wakeupTime.minutes, wakeupTime.seconds);
+        commandMessage.messageType = CMD_GO_TO_SLEEP;
+        commandMessage.param = (int)difference+10;
+        pushDataToSendQueue(broadcastAddress, MSG_COMMANDS, difference);
+        goToSleepTime = (millis()+10000);
+    }
+    if (goToSleepTime != 0 and (millis() > goToSleepTime)) {
+        difference = calculateTimeDifference(time[0], time[1], time[2], wakeupTime.hours, wakeupTime.minutes-1, 0);
+        esp_sleep_enable_timer_wakeup((unsigned long)(difference*1000000));
+        esp_light_sleep_start();
+        goToSleepTime = 0;
+        globalModeHandler->switchMode(MODE_NEUTRAL);
+    }
+
+}
+
+void messaging::setClock(int hours, int minutes, int seconds) {
+    struct tm timeinfo;
+    memset(&timeinfo, 0, sizeof(timeinfo));
+    timeinfo.tm_hour = hours;
+    timeinfo.tm_min = minutes;
+    timeinfo.tm_sec = seconds;
+    timeinfo.tm_year = 2024;
+    timeinfo.tm_mon = 6;
+    timeinfo.tm_mday = 21;
+    struct timeval tv;
+    tv.tv_sec = mktime(&timeinfo);
+    tv.tv_usec = 0;
+    settimeofday(&tv, NULL);
+}
+
+int* messaging::getSystemTime() {
+    static int timeArray[3];
+    struct tm timeinfo;
+    time_t now;
+
+    time(&now);
+    localtime_r(&now, &timeinfo);
+
+    timeArray[0] = timeinfo.tm_hour;
+    timeArray[1] = timeinfo.tm_min;
+    timeArray[2] = timeinfo.tm_sec;
+
+    return timeArray;
+}
+double messaging::calculateTimeDifference(int hours1, int minutes1, int seconds1, int hours2, int minutes2, int seconds2) {
+    struct tm timeinfo1;
+    struct tm timeinfo2;
+    time_t time1;
+    time_t time2;
+
+    // Set the first time
+    timeinfo1.tm_hour = hours1;
+    timeinfo1.tm_min = minutes1;
+    timeinfo1.tm_sec = seconds1;
+    timeinfo1.tm_year = 2024;
+    timeinfo1.tm_mon = 6;
+    timeinfo1.tm_mday = 21;
+    time1 = mktime(&timeinfo1);
+
+    // Set the second time
+    timeinfo2.tm_hour = hours2;
+    timeinfo2.tm_min = minutes2;
+    timeinfo2.tm_sec = seconds2;
+    timeinfo2.tm_year = 2024;
+    timeinfo2.tm_mon = 6;
+    if (timeinfo2.tm_hour < timeinfo1.tm_hour) {
+        timeinfo2.tm_mday = 22;
+    }
+    else if (timeinfo2.tm_hour == timeinfo1.tm_hour and timeinfo2.tm_min < timeinfo1.tm_min) {
+        timeinfo2.tm_mday = 22;
+    }
+    else if (timeinfo2.tm_hour == timeinfo1.tm_hour and timeinfo2.tm_min == timeinfo1.tm_min and timeinfo2.tm_sec < timeinfo1.tm_sec) {
+        timeinfo2.tm_mday = 22;
+    }
+    else {
+        timeinfo2.tm_mday = 21;
+    }
+
+    time2 = mktime(&timeinfo2);
+
+    // Calculate the difference
+    double difference = difftime(time2, time1);
+
+    return difference;
+}
+
+void messaging::setTimerReceiverUnavailable() {
+    int addressId = getAddressId(timerReceiver);
+    clientAddresses[addressId].active = UNREACHABLE;
+    clientAddresses[addressId].tries++;
+    timerCounter = 0;
 }

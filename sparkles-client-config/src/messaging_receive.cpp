@@ -20,6 +20,7 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
             clientAddresses[i].id = i;
             memcpy(&timerReceiver, addressMessage.address, 6);
             addPeer(timerReceiver);
+            timerMessage.addressId = i;
             updateAddressToWebserver(timerReceiver);
             addressCounter++;
             handleLed->flash(0, 125, 0, 100, 2, 50);
@@ -27,6 +28,7 @@ void messaging::setTimerReceiver(const uint8_t * incomingData) {
         }
         else if (memcmp(&clientAddresses[i].address, addressMessage.address, 6) == 0) {
             memcpy(&timerReceiver, addressMessage.address, 6);
+            timerMessage.addressId = i;
             addPeer(timerReceiver);
             break;
         }
@@ -64,7 +66,6 @@ void messaging::handleGotTimer(const uint8_t * incomingData, uint8_t * macAddres
 
 
 void messaging::announceAddress() {
-    Serial.println("WHAT THE FUCK IS ACTUALLY GOING ON");
     haveSentAddress = true;
     if (gotTimer == true) {
         return;
@@ -104,7 +105,7 @@ void messaging::processDataFromReceivedQueue() {
 
 
 void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime) {
-    if (DEVICE_MODE == 1 and incomingData[0] != MSG_ANNOUNCE and incomingData[0] != MSG_TIMER_CALIBRATION) {
+    if (DEVICE_MODE == CLIENT and incomingData[0] != MSG_ANNOUNCE and incomingData[0] != MSG_TIMER_CALIBRATION) {
         if (memcmp(mac->src_addr, hostAddress, 6) !=0 ) {
             addError("received command from untrusted source\n");
             return;
@@ -136,6 +137,8 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                 case CMD_MSG_SEND_ADDRESS_LIST: 
                 if (commandMessage.param != -1) {
                     addError("should update one\n");
+                    commandMessage.param = CMD_GET_BATTERY_STATUS;
+                    pushDataToSendQueue(clientAddresses[commandMessage.param].address, MSG_COMMANDS, -1);
                     updateAddressToWebserver(clientAddresses[commandMessage.param].address);
                 }
                 else {
@@ -199,7 +202,7 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                     writeStructsToFile(clientAddresses, NUM_DEVICES, "/clientAddress");
                 break;
                 case CMD_GO_TO_SLEEP:
-                    goToSleep(commandMessage.param);
+                    goToSleep(commandMessage.param*1000000);
                 break;
                 case CMD_RESET:
                     ESP.restart();
@@ -208,6 +211,10 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                     commandMessage.messageId = CMD_RESET;
                     pushDataToSendQueue(broadcastAddress, MSG_COMMANDS, -1);
                 break;
+                case CMD_GET_BATTERY_STATUS:
+                    setBattery();
+                    pushDataToSendQueue(hostAddress, MSG_BATTERY_STATUS, -1);
+                
 
             }
             break;
@@ -252,6 +259,10 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         if (gotTimer == true and timerMessage.reset == false ) {
             addError("Timerreset = false");
             break;
+        }
+        if (timerMessage.addressId != 0) {
+            handleLed->setPosition(timerMessage.addressId);
+
         }
             //handleLed->flash(0, 0, 125 , 100, 2, 50); 
         globalModeHandler->switchMode(MODE_WAIT_FOR_TIMER);
@@ -314,22 +325,79 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
 
                 }
             }
-
-
         }
-
-
         break;
         case MSG_ANIMATION:
             addError("Animation Message Incoming\n");
-            if (globalModeHandler->getMode() == MODE_ANIMATE or globalModeHandler->getMode() == MODE_NEUTRAL) {
-            addError("Blinking\n");
-            globalModeHandler->switchMode(MODE_ANIMATE);
-            memcpy(&animationMessage, incomingData, sizeof(animationMessage));
+            if (DEVICE_MODE == MAIN and memcmp(mac->src_addr, webserverAddress, 6) == 0) {
+                memcpy(&animationMessage, incomingData, sizeof(animationMessage));
+                animationMessage.startTime = micros()+3000000;
+                Serial.println("Animation Message received");
+                Serial.println("Start time: "+String(animationMessage.startTime));
+                Serial.println("Repetitions: "+String(animationMessage.reps));
+                Serial.println("Delay: "+String(animationMessage.delay));
+                Serial.println("Pause: "+String(animationMessage.pause));
+                Serial.println("Speed: "+String(animationMessage.speed));
+                Serial.println("RGB1: "+String(animationMessage.rgb1[0])+","+String(animationMessage.rgb1[1])+","+String(animationMessage.rgb1[2]));
+                Serial.println("RGB2: "+String(animationMessage.rgb2[0])+","+String(animationMessage.rgb2[1])+","+String(animationMessage.rgb2[2]));
 
-            handleLed->candle(animationMessage.speed, animationMessage.reps, animationMessage.delay, animationMessage.startTime, timeOffset);
+            }
+            else {
+
+                if (globalModeHandler->getMode() == MODE_ANIMATE or globalModeHandler->getMode() == MODE_NEUTRAL) {
+                addError("Blinking\n");
+                globalModeHandler->switchMode(MODE_ANIMATE);
+                memcpy(&animationMessage, incomingData, sizeof(animationMessage));
+                handleLed->setupAnimation(&animationMessage);
+                }
             }
         break;
+        case MSG_SET_TIME: 
+            addError("Setting Time\n");
+            memcpy(&setTimeMessage, incomingData, sizeof(setTimeMessage));
+            addError("Setting Time to: "+String(setTimeMessage.hours)+":"+String(setTimeMessage.minutes)+":"+String(setTimeMessage.seconds)+"\n");
+            setClock(setTimeMessage.hours,setTimeMessage.minutes, setTimeMessage.seconds);
+        break;
+        case MSG_SET_POSITIONS: 
+            addError("Setting Positions\n");
+            if (DEVICE_MODE == MAIN) {
+                memcpy(&setPositionsMessage, incomingData, sizeof(setPositionsMessage));
+                clientAddresses[setPositionsMessage.id].xLoc = setPositionsMessage.xpos;
+                clientAddresses[setPositionsMessage.id].yLoc = setPositionsMessage.ypos;
+                clientAddresses[setPositionsMessage.id].zLoc = setPositionsMessage.zpos;
+                writeStructsToFile(clientAddresses, NUM_DEVICES, "/clientAddress");
+                pushDataToSendQueue(clientAddresses[setPositionsMessage.id].address, MSG_SET_POSITIONS, -1);
+            }
+            else if (DEVICE_MODE == CLIENT) {
+                memcpy(&setPositionsMessage, incomingData, sizeof(setPositionsMessage));
+                handleLed->setLocation(setPositionsMessage.xpos, setPositionsMessage.ypos, setPositionsMessage.zpos);
+            }
+        break;
+        case MSG_BATTERY_STATUS: {
+            memcpy(&batteryStatusMessage, incomingData, sizeof(batteryStatusMessage));
+            addError("Battery Status: "+String(batteryStatusMessage.batteryStatus)+"\n");
+            int id = getAddressId(mac->src_addr);
+            clientAddresses[id].batteryStatus = batteryStatusMessage.batteryStatus;
+            updateAddressToWebserver(mac->src_addr);
+        break;    
+        }
+        case MSG_SET_SLEEP_WAKEUP: {
+            memcpy(&setSleepWakeupMessage, incomingData, sizeof(setSleepWakeupMessage));
+            addError("Setting Sleep Wakeup\n");
+            if (setSleepWakeupMessage.sleep_wakeup == true) {
+                addError("Setting sleep: "+String(setSleepWakeupMessage.hours)+"\n");
+                sleepTime.hours = setSleepWakeupMessage.hours;
+                sleepTime.minutes = setSleepWakeupMessage.minutes;
+                sleepTime.seconds = setSleepWakeupMessage.seconds;
+            }
+            else {
+                addError("Setting wakeup: "+String(setSleepWakeupMessage.hours)+"\n");
+                wakeupTime.hours = setSleepWakeupMessage.hours;
+                wakeupTime.minutes = setSleepWakeupMessage.minutes;
+                wakeupTime.seconds = setSleepWakeupMessage.seconds;
+            }
+            break;
+        }
         default: 
             addError("message not recognized");
             addError(messageCodeToText(incomingData[0]));

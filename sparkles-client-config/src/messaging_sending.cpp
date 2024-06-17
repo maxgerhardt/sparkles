@@ -107,7 +107,17 @@ void messaging::processDataFromSendQueue() {
                 // Handle MSG_NOCLAPFOUND message type
                 break;
             case MSG_COMMANDS:
+                if (sendData.param != -1) {
+                    commandMessage.param = sendData.param;
+                }
                 esp_now_send(sendData.address, (uint8_t*) &commandMessage, sizeof(commandMessage));
+                commandMessage.param = -1;
+                if (commandMessage.messageId == CMD_RESET) {
+                    memset(clientAddresses, 0, sizeof(clientAddresses));
+                    addError("Resetting Addresses\n");
+                    writeStructsToFile(clientAddresses, NUM_DEVICES, "/clientAddress");
+                    ESP.restart();
+                }
                 break;
             case MSG_ADDRESS_LIST:
                 addError("addressList called for "+String(sendData.param));
@@ -122,6 +132,12 @@ void messaging::processDataFromSendQueue() {
                     addError("minus one called on msg_address_list(messaging_sending.cpp line 106)");
                 }
                 
+                break;
+            case MSG_SET_POSITIONS:
+                esp_now_send(sendData.address, (uint8_t*) &setPositionsMessage, sizeof(setPositionsMessage));
+                break;
+            case MSG_BATTERY_STATUS:
+                esp_now_send(sendData.address, (uint8_t*) &batteryStatusMessage, sizeof(batteryStatusMessage));
                 break;
             default: 
                 addError("Message to send: unknown\n");
@@ -159,6 +175,7 @@ void messaging::updateTimers(int addressId) {
     addPeer(timerReceiver);
     timerMessage.reset = true;
     updatingAddress = addressId;
+    timerMessage.addressId = addressId;
     pushDataToSendQueue(timerReceiver, MSG_TIMER_CALIBRATION, -1);
     clientAddresses[addressId].active = SETTING_TIMER;
 

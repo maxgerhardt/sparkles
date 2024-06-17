@@ -59,6 +59,18 @@ void messaging::processDataFromSendQueue() {
             Serial.println(sendClapTimes.clapCounter);
             esp_now_send(hostAddress, (uint8_t *) &sendClapTimes, sizeof(sendClapTimes));
             break;
+          case MSG_SET_TIME:
+            Serial.println("Sending set timer");
+            esp_now_send(hostAddress, (uint8_t *) &setTimeMessage, sizeof(setTimeMessage));
+            break;
+          case MSG_SET_POSITIONS:
+            Serial.println("Sending set positions");
+            esp_now_send(hostAddress, (uint8_t *) &setPositionsMessage, sizeof(setPositionsMessage));
+            break;
+          case MSG_ANIMATION: 
+            Serial.println("Sending Animation");
+            Serial.println("RGB1"+String(animationMessage.rgb1[0]));
+            esp_now_send(hostAddress, (uint8_t *) &animationMessage, sizeof(animationMessage));
         }
     }
 } 
@@ -171,3 +183,8 @@ void messaging::receiveTimer(int messageArriveTime) {
   }
    lastTime = messageArriveTime;
 }*/
+void messaging::setSetTimeMessage(int hours, int minutes, int seconds) {
+  setTimeMessage.hours = hours;
+  setTimeMessage.minutes = minutes;
+  setTimeMessage.seconds = seconds;
+}
