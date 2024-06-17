@@ -414,11 +414,10 @@ void ledHandler::printStatus() {
   Serial.println("Animation Spread Time"+String(animationMessage.spread_time));
   Serial.println("Current millis time "+String(millis()));
   Serial.println("Current Micros time "+String(micros()));
-  Serial.println("Cycle total runtime "+String(cycleTotalRuntime));
+
   Serial.println("repeatCounter "+String(repeatCounter));
   Serial.println("RepeatRuntime "+String(repeatRuntime));
   Serial.println("animationRepeatCounter "+String(animationRepeatCounter));
-  Serial.println("Cycle start "+String(cycleStart));
   Serial.println("Position"+String(position));
   
 }
