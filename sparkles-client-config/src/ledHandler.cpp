@@ -147,18 +147,24 @@ void ledHandler::setupAnimation(message_animate *animationSetupMessage) {
 }
 
 void ledHandler::setupSyncAsyncBlink() {
+  Serial.println("Setting up");
   repeatCounter = 0;
   localAnimationStart = 0;
   animationNextStep = 0;
   currentAnimation = animationMessage.animationType;
-  unsigned long localAnimationStartMicros = animationMessage.startTime+timerOffset;
+  unsigned long localAnimationStartMicros = animationMessage.startTime+(timeOffset*offsetMultiplier);
+  Serial.println("local animation start micros "+String(localAnimationStartMicros));
   if (micros() > localAnimationStartMicros) {
     Serial.println("not today");
     return;
   }
   //calculate start of first round
+  
   unsigned long microdiff = localAnimationStartMicros - micros();
+  Serial.println("microdiff "+String(microdiff));
+  Serial.println("Millis "+String(millis()));
   localAnimationStart = millis()+microdiff/1000;
+  Serial.println("localAnimationStart "+String(localAnimationStart));
   Serial.println("blinkStart "+String(localAnimationStart));
   animationNextStep = localAnimationStart;
   globalAnimationTimeframe = animationMessage.speed+animationMessage.pause;
@@ -190,12 +196,24 @@ void ledHandler::syncAsyncBlink() {
   if (millis() < animationNextStep) {
     return;
   }
+
+  if (millis() > animationNextStep and millis() < localAnimationStart+animationMessage.speed) {
+    //redsteps? and backwards?
+    //cyclestart berechnen auch abhängig vom spread und ansonsten einfach runterrattern dat ding
+    int elapsedTime = millis()-localAnimationStart;
+    redfloat  = calculateFlash(animationMessage.rgb1[0], elapsedTime);
+    greenfloat = calculateFlash(animationMessage.rgb1[1], elapsedTime);
+    bluefloat = calculateFlash(animationMessage.rgb1[2], elapsedTime);  
+    writeLeds();
+    // how to calculate?
+    animationNextStep = millis()+animationMessage.speed/256;
+  }
+
   //if a repeat should happen...
   if (millis()  >= globalAnimationStart + globalAnimationTimeframe) {
-    repeatCounter++;
+    //repeatCounter++;
     globalAnimationStart = globalAnimationStart+globalAnimationTimeframe;
 
-    Serial.println("Repeatcounter++ "+String(repeatCounter));
     //cycle start noch timen
     //and figure out the start of next cycle
     if (repeatCounter <= animationMessage.reps/2) {
@@ -222,17 +240,7 @@ void ledHandler::syncAsyncBlink() {
     }
   }
   //hier kommt die tatsächliche animation rein
-  if (millis() > animationNextStep and millis() < localAnimationStart+animationMessage.speed) {
-    //redsteps? and backwards?
-    //cyclestart berechnen auch abhängig vom spread und ansonsten einfach runterrattern dat ding
-    int elapsedTime = millis()-localAnimationStart;
-    redfloat  = calculateFlash(animationMessage.rgb1[0], elapsedTime);
-    greenfloat = calculateFlash(animationMessage.rgb1[1], elapsedTime);
-    bluefloat = calculateFlash(animationMessage.rgb1[2], elapsedTime);  
-    writeLeds();
-    // how to calculate?
-    animationNextStep = millis()+animationMessage.speed/256;
-  }
+
 
 }
 
@@ -391,8 +399,9 @@ void ledHandler::setDistance(float dist) {
 }
 
 
-void ledHandler::setTimerOffset(unsigned long setOffset) {
-  timerOffset = setOffset;
+void ledHandler::setTimeOffset(unsigned long setOffset, int setOffsetMultiplier) {
+  timeOffset = setOffset;
+  offsetMultiplier = setOffsetMultiplier;
 }
 
 void ledHandler::setPosition(int id) {
@@ -407,18 +416,22 @@ void ledHandler::setLocation(int xposition, int yposition, int zposition) {
 // IF BOARD == V2
 
 void ledHandler::printStatus() {
-  return;
   Serial.println("Status of LEDHandler");
   Serial.println("Current Animation "+String(currentAnimation));
   Serial.println("Animation next step "+String(animationNextStep));
   Serial.println("Animation Spread Time"+String(animationMessage.spread_time));
   Serial.println("Current millis time "+String(millis()));
   Serial.println("Current Micros time "+String(micros()));
-
+  Serial.println("Local animation start "+String(localAnimationStart));
+  Serial.println("Global animation start "+String(globalAnimationStart));
+  Serial.println("localAnimationTimeframe "+String(localAnimationTimeframe));
+  Serial.println("globalAnimationTimeframe "+String(globalAnimationTimeframe));
   Serial.println("repeatCounter "+String(repeatCounter));
-  Serial.println("RepeatRuntime "+String(repeatRuntime));
   Serial.println("animationRepeatCounter "+String(animationRepeatCounter));
   Serial.println("Position"+String(position));
+  Serial.println("timerOffset "+String(timeOffset));
+  Serial.println("animationMessage.startTime "+String(animationMessage.startTime));
   
 }
 
+;

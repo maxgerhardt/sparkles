@@ -279,11 +279,25 @@ void messaging::receiveTimer(int messageArriveTime) {
       } 
       delayAvg = delayAvg/TIMER_ARRAY_COUNT;
       gotTimerMessage.delayAvg = delayAvg;
+        Serial.println("Send time is "+String(timerMessage.sendTime));
+        Serial.println("Arrive time is: "+String(messageArriveTime));
+
+      if (timerMessage.sendTime > messageArriveTime) {
+        Serial.println("multiplier positive");
+        timeOffset = timerMessage.sendTime-messageArriveTime-delayAvg/2;
+        offsetMultiplier = 1;
+      }
+      else if (timerMessage.sendTime < messageArriveTime) {
+        Serial.println("multiplier negative");
+        timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
+        offsetMultiplier = -1;
+      }
+      delay(2000);
       timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
       gotTimerMessage.timerOffset = timeOffset;
       gotTimer = true;
       #if DEVICE_MODE != WEBSERVER
-      handleLed->setTimerOffset(timeOffset);
+      handleLed->setTimeOffset(timeOffset, offsetMultiplier);
       pushDataToSendQueue(hostAddress, MSG_GOT_TIMER, -1);
       gotTimer = true;
       handleLed->flash(125,0,0, 200, 3, 300);

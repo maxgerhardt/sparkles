@@ -25,8 +25,7 @@ class ledHandler {
         unsigned long globalAnimationStart = 0;
         unsigned long localAnimationTimeframe = 0;
         unsigned long globalAnimationTimeframe = 0;
-        unsigned long timerOffset = 0;
-        unsigned long repeatRuntime = 0;
+        unsigned long timeOffset = 0;
         int position;
         int runs = 0;
         int runs2 =0;
@@ -34,6 +33,7 @@ class ledHandler {
         int xPos = 0;
         int yPos = 0;
         int zPos = 0;
+        int offsetMultiplier;
     public:
     ledHandler();
     void setup();
@@ -49,7 +49,7 @@ class ledHandler {
     void candle(int duration, int reps, int pause, unsigned long startTime, unsigned long timeOffset);
     void syncAsyncBlink();
     void setupSyncAsyncBlink();
-    void setTimerOffset(unsigned long setOffset);
+    void setTimeOffset(unsigned long setOffset, int offsetMultiplier);
 
     void ledOn(int r, int g, int b, int duration, int frontback);
     void concentric();

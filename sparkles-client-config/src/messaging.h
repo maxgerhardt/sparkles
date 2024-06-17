@@ -40,6 +40,7 @@ class messaging {
       };
         #endif
         unsigned long arriveTime, receiveTime, sendTime, lastDelay, lastTime, timeOffset;
+        int offsetMultiplier = 1;
         int timerCounter = 0;
         int timerArray[TIMER_ARRAY_COUNT];
         int arrayCounter =0;
