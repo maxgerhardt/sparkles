@@ -244,17 +244,17 @@ enum animationEnum {
 struct message_animate {
   uint8_t messageType = MSG_ANIMATION; 
   animationEnum animationType;
-  uint16_t speed;
-  uint16_t delay;
-  uint16_t pause;
-  uint16_t reps;
-  uint8_t rgb1[3];
-  uint8_t rgb2[3];
-  unsigned long startTime;
-  int num_devices;
+  uint16_t speed = 0;
+  uint16_t delay = 0;
+  uint16_t pause = 0;
+  uint16_t reps = 0;
+  uint8_t rgb1[3] = {0,0,0};
+  uint8_t rgb2[3] = {0,0,0};
+  unsigned long startTime = 0;
+  int num_devices  = 0;
   int spread_time = 100;
   float exponent = 5.0;
-  uint16_t animationreps;
+  uint16_t animationreps = 0;
 } ;
 
 

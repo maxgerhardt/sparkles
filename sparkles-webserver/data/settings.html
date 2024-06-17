@@ -56,15 +56,23 @@
                   <div class='inputs'>
                     <div class="input-group">
                       <label for="red1">Red:</label>
-                      <input type='text' id='red1' value="255" placeholder='Red:255'>
+                      <input type='text' id='red1' value="125" placeholder='Red:255'>
                   </div>
                   <div class="input-group">
                       <label for="green1">Green:</label>
-                      <input type='text' id='green1' value="255" placeholder='Green:255'>
+                      <input type='text' id='green1' value="125" placeholder='Green:255'>
                   </div>
                   <div class="input-group">
                       <label for="blue1">Blue:</label>
-                      <input type='text' id='blue1' value="255" placeholder='Blue:255'>
+                      <input type='text' id='blue1' value="125" placeholder='Blue:255'>
+                  </div>
+                  <div class="input-group">
+                    <label for="exponent_1">Exponent:</label>
+                    <input type='text' id='exponent_1' value="5.0" >
+                  </div>
+                  <div class="input-group">
+                    <label for="anireps_1">AniReps:</label>
+                    <input type='text' id='anireps_1' value="10" placeholder='Repetitions: 20'>
                   </div>
                   </div>
               </span>
@@ -86,6 +94,10 @@
                   <div class="input-group">
                       <label for="reps_1">Reps:</label>
                       <input type='text' id='reps_1' value="20" placeholder='Repetitions: 20'>
+                  </div>
+                  <div class="input-group">
+                    <label for="spread_1">Spread:</label>
+                    <input type='text' id='spread_1' value="1000" placeholder='Repetitions: 20'>
                   </div>
                   <button id='submit_animation_1'>Submit</button>
                   </div>
@@ -190,9 +202,12 @@
     var red = document.getElementById('red1').value;
     var green = document.getElementById('green1').value;
     var blue = document.getElementById('blue1').value;
+    var anireps = document.getElementById('anireps_1').value;
+    var exponent = document.getElementById('exponent_1').value;
+    var spread = document.getElementById('spread_1').value;
     console.log(input1);
     // Handle form submission logic here
-    var fetchUrl = `/sendSyncAsyncAnimation?speed=${encodeURIComponent(input1)}&pause=${encodeURIComponent(input2)}&reps=${encodeURIComponent(input3)}&red=${encodeURIComponent(red)}&green=${encodeURIComponent(green)}&blue=${encodeURIComponent(blue)}`;
+    var fetchUrl = `/sendSyncAsyncAnimation?speed=${encodeURIComponent(input1)}&pause=${encodeURIComponent(input2)}&reps=${encodeURIComponent(input3)}&red=${encodeURIComponent(red)}&green=${encodeURIComponent(green)}&blue=${encodeURIComponent(blue)}&exponent=${encodeURIComponent(exponent)}&anireps=${encodeURIComponent(anireps)}&spread=${encodeURIComponent(spread)}`;
     fetchMe(fetchUrl);
     console.log(fetchUrl);
   });

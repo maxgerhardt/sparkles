@@ -122,9 +122,6 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         memcpy(&switchModeMessage, incomingData, sizeof(switchModeMessage));
         Serial.println("Switch Mode = "+String(globalModeHandler->modeToText(switchModeMessage.mode)));
     }
-    else {
-        Serial.println("Msg not switch mode: "+String(messageCodeToText(incomingData[0])));
-    }
     oldMsgReceiveTime = msgReceiveTime;
     switch (incomingData[0]) {
         //cases for main
@@ -252,11 +249,11 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         { 
             addError("received timer calibration message\n");
         memcpy(&timerMessage,incomingData,sizeof(timerMessage));
-        if (timerMessage.reset == true) {
+        if (timerMessage.reset == true and timerMessage.counter <=3) {
             addError("Timerreset = true");
             gotTimer = false;
         }
-        if (gotTimer == true and timerMessage.reset == false ) {
+        if (gotTimer == true and timerMessage.reset == false) {
             addError("Timerreset = false");
             break;
         }
@@ -332,18 +329,10 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
             if (DEVICE_MODE == MAIN and memcmp(mac->src_addr, webserverAddress, 6) == 0) {
                 memcpy(&animationMessage, incomingData, sizeof(animationMessage));
                 animationMessage.startTime = micros()+3000000;
-                Serial.println("Animation Message received");
-                Serial.println("Start time: "+String(animationMessage.startTime));
-                Serial.println("Repetitions: "+String(animationMessage.reps));
-                Serial.println("Delay: "+String(animationMessage.delay));
-                Serial.println("Pause: "+String(animationMessage.pause));
-                Serial.println("Speed: "+String(animationMessage.speed));
-                Serial.println("RGB1: "+String(animationMessage.rgb1[0])+","+String(animationMessage.rgb1[1])+","+String(animationMessage.rgb1[2]));
-                Serial.println("RGB2: "+String(animationMessage.rgb2[0])+","+String(animationMessage.rgb2[1])+","+String(animationMessage.rgb2[2]));
-
+                animationMessage.animationreps = 20;
+                pushDataToSendQueue(broadcastAddress, MSG_ANIMATION, -1);
             }
             else {
-
                 if (globalModeHandler->getMode() == MODE_ANIMATE or globalModeHandler->getMode() == MODE_NEUTRAL) {
                 addError("Blinking\n");
                 globalModeHandler->switchMode(MODE_ANIMATE);

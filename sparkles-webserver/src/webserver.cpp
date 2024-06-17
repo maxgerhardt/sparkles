@@ -177,15 +177,18 @@ void webserver::setTime(AsyncWebServerRequest *request) {
 void webserver::sendSyncAsyncAnimation(AsyncWebServerRequest *request) {
   messageHandler->addError("Called SendSyncAsyncAnimation");
   message_animate animationMessage;
+  //memset(animationMessage, 0, sizeof(animationMessage));
+  animationMessage.messageType = MSG_ANIMATION;
   animationMessage.speed = request->getParam("speed")->value().toInt();
-  animationMessage.animationType == SYNC_ASYNC_BLINK;
+  animationMessage.animationType = SYNC_ASYNC_BLINK;
   animationMessage.pause = request->getParam("pause")->value().toInt();
   animationMessage.reps = request->getParam("reps")->value().toInt();
   animationMessage.rgb1[0] = request->getParam("red")->value().toInt();
   animationMessage.rgb1[1] = request->getParam("green")->value().toInt();
   animationMessage.rgb1[2] = request->getParam("blue")->value().toInt();
-  Serial.println("Speed "+String(animationMessage.speed));
-  Serial.println("Red"+String(animationMessage.rgb1[0]));
+  animationMessage.spread_time = request->getParam("spread")->value().toInt();
+  animationMessage.exponent = request->getParam("exponent")->value().toFloat();
+  animationMessage.animationreps = request->getParam("anireps")->value().toInt();
   messageHandler->setAnimation(&animationMessage);
   messageHandler->pushDataToSendQueue(MSG_ANIMATION, -1);
   request->send(200, "text/html", "OK");

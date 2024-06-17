@@ -225,7 +225,7 @@ void loop() {
   messageHandler.processDataFromReceivedQueue();
   messageHandler.handleErrors();
   messageHandler.handleSent();
-
+  handleLed.run();
 if (modeHandler.getMode() == MODE_CALIBRATE) {
   double data = (double)analogRead(audioPin)/512-1;
   peakDetection.add(data); 
@@ -237,7 +237,7 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     lastClap = millis();
     Serial.println("Clap!");
     handleLed.flash(125, 0, 55, 200, 1, 50);
-  }
+  } 
   else if (millis()>(lastClap+5000)) 
   {
         //handleLed.flash(0, 255, 0, 200, 1, 50);
@@ -245,11 +245,10 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     Serial.println("Client still alive");
     modeHandler.printCurrentMode();
     messageHandler.printAddress(myAddress);
-
-
     lastClap = millis();
     Serial.println(messageHandler.getMessageLog());
-        Serial.println("-----");
+    Serial.println("-----");
+    Serial.println("haeh");
 
   }
 
@@ -269,6 +268,8 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     //Serial.println(messageHandler.getMessageLog());
     modeHandler.printCurrentMode();
     messageHandler.printAddress(myAddress);
+    handleLed.printStatus();
+
   }
 
 }

@@ -21,8 +21,10 @@ class ledHandler {
         int repeatCounter = 0;
         int animationRepeatCounter = 0;
         int animationNextStep = 0;
-        int cycleStart = 0;
-        int cycleTotalRuntime = 0;
+        unsigned long localAnimationStart = 0;
+        unsigned long globalAnimationStart = 0;
+        unsigned long localAnimationTimeframe = 0;
+        unsigned long globalAnimationTimeframe = 0;
         unsigned long timerOffset = 0;
         unsigned long repeatRuntime = 0;
         int position;
@@ -56,6 +58,7 @@ class ledHandler {
     float calculateFlash(int targetVal, unsigned long timeElapsed);
     void setPosition(int position);
     void setLocation(int xpos, int ypos, int zpos);
+    void printStatus();
 };
 
 #endif

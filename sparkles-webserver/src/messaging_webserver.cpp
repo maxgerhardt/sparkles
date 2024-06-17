@@ -68,8 +68,6 @@ void messaging::processDataFromSendQueue() {
             esp_now_send(hostAddress, (uint8_t *) &setPositionsMessage, sizeof(setPositionsMessage));
             break;
           case MSG_ANIMATION: 
-            Serial.println("Sending Animation");
-            Serial.println("RGB1"+String(animationMessage.rgb1[0]));
             esp_now_send(hostAddress, (uint8_t *) &animationMessage, sizeof(animationMessage));
         }
     }
