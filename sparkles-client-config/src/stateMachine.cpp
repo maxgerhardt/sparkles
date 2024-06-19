@@ -1,5 +1,5 @@
-#include <Arduino.h>
-#include <stateMachine.h>
+#include "Arduino.h"
+#include "stateMachine.h"
 
  
 modeMachine::modeMachine() {

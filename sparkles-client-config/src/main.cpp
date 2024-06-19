@@ -3,19 +3,19 @@
 #define D1 3
 #define DEVICE V2
 
-#include <Arduino.h>
-#include <esp_now.h>
-#include <WiFi.h>
-#include <PeakDetection.h> 
-#include <Preferences.h>
+#include "Arduino.h"
+#include "esp_now.h"
+#include "WiFi.h"
+#include "PeakDetection.h"
+#include "Preferences.h"
 
 
 //#include "ESP32TimerInterrupt.h"
 #define TIMER_INTERVAL_MS       600
 #define USING_TIM_DIV1 true
-#include <messaging.h>
-#include <ledHandler.h>
-#include <stateMachine.h>
+#include "messaging.h"
+#include "ledHandler.h"
+#include "stateMachine.h"
 
 #define CALIBRATION_FREQUENCY 1000
 
