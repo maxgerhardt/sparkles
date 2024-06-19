@@ -186,3 +186,10 @@ void messaging::setSetTimeMessage(int hours, int minutes, int seconds) {
   setTimeMessage.minutes = minutes;
   setTimeMessage.seconds = seconds;
 }
+
+void setGoodNightWakeUp(int hours, int minutes, int seconds, bool isGoodNight) {
+  setSleepWakeupMessage.hours = hours;
+  setSleepWakeupMessage.minutes = minutes;
+  setSleepWakeupMessage.seconds = seconds;
+  setSleepWakeupMessage.isGoodNight = isGoodNight;
+}

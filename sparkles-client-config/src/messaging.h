@@ -103,7 +103,10 @@ class messaging {
         int timersUpdated =1;
         int timerUpdateCounter = 1; 
         int goToSleepTime = 0;
+        int forcedDebugCounter = 0;
         unsigned long lastTry = 0;
+        unsigned long nextAnimationPing;
+        bool endAnimation;
         //esp8266
         //uint8_t webserverAddress[6] = {0xe8, 0xdb, 0x84, 0x99, 0x5e, 0x44};
         uint8_t webserverAddress[6] = {0x80, 0x65, 0x99, 0xc7, 0xc2, 0x3c};
@@ -184,7 +187,9 @@ class messaging {
         void setBattery();
         void setTimerReceiverUnavailable();
         void setAnimation(message_animate* message);
-
+        void nextAnimation();
+        void forceDebug(int i = 0);
+        void setGoodNightWakeUp(int hours, int minutes, int seconds, bool isGoodNight) {
 
 
 };

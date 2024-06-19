@@ -1,5 +1,6 @@
 
 #include <helperFuncs.h>
+/*
 void ledsOff() {
       ledcWrite(ledPinRed2, 0);
   ledcWrite(ledPinGreen2, 0);
@@ -8,7 +9,7 @@ void ledsOff() {
   ledcWrite(ledPinGreen1, 0);
   ledcWrite(ledPinBlue1, 0);
 
-}
+}*/
 
 
 String modeToText(int mode) {

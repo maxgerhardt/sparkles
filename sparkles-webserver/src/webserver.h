@@ -37,6 +37,9 @@ class webserver {
     void updateDeviceList(AsyncWebServerRequest *request);
     void commandCalibrate(AsyncWebServerRequest *request);
     void commandAnimate(AsyncWebServerRequest *request);
+    void commandGoToSleep(AsyncWebServerRequest *request);
+    void commandGoodNight(AsyncWebServerRequest *request);
+    void commandGoodMorning(AsyncWebServerRequest *request);
     void setTime(AsyncWebServerRequest *request);
     void submitPositions(AsyncWebServerRequest *request);
     void sendSyncAsyncAnimation(AsyncWebServerRequest *request);

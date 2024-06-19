@@ -22,7 +22,7 @@
 #define CLIENT 1
 #define WEBSERVER 2
 
-#define GOODNIGHT_HOUR 22
+#define GOODNIGHT_HOUR 22 
 #define GOODNIGHT_MINUTE 30
 #define GOODMORNING_HOUR 4
 #define GOODMORNING_MINUTE 30
@@ -34,17 +34,22 @@
 #define NUM_CLAPS 20
 #define CLAP_THRESHOLD 1000000
 
+#define V1 1
+#define V2 2
+#define V3 3
 
-/*
-#if (DEVICE == V1)
+
+
+#if (DEVICE_USED == V1)
     const int ledPinBlue1 = 20;  // 16 corresponds to GPIO16
     const int ledPinRed1 = 9; // 17 corresponds to GPIO17
     const int ledPinGreen1 = 3;  // 5 corresponds to GPIO5
     const int ledPinGreen2 = 8;
     const int ledPinRed2 = 19;
     const int ledPinBlue2 = 18;
-#elif (DEVICE == V2)
-*/
+
+#elif (DEVICE_USED == V2)
+
 
     const int ledPinBlue1 = 18;  // 16 corresponds to GPIO16
     const int ledPinRed1 = 38; // 17 cmsgrorresponds to GPIO17
@@ -52,7 +57,14 @@
     const int ledPinGreen2 = 3;
     const int ledPinRed2 = 9;
     const int ledPinBlue2 = 37;
-
+#elif (DEVICE_USED == V3)
+    const int ledPinBlue1 = 17;  // 16 corresponds to GPIO16
+    const int ledPinRed1 = 38; // 17 cmsgrorresponds to GPIO17
+    const int ledPinGreen1 = 8;  // 5 corresponds to GPIO5
+    const int ledPinGreen2 = 3;
+    const int ledPinRed2 = 9;
+    const int ledPinBlue2 = 37;
+#endif
 //#endif
 const int ledChannelRed1 = 0;
 const int ledChannelGreen1 = 1;
@@ -238,6 +250,7 @@ enum animationEnum {
     BLINK,
     CANDLE,
     SYNC_ASYNC_BLINK,
+    SYNC_BLINK,
     LED_ON,
     CONCENTRIC
 };

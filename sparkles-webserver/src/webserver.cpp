@@ -41,6 +41,14 @@ void webserver::configRoutes() {
     server.on("/commandAnimate", HTTP_GET, [this] (AsyncWebServerRequest *request){
       this->commandAnimate(request);
     });
+
+    server.on("/goodNight", HTTP_GET, [this] (AsyncWebServerRequest *request){
+      this->commandGoodNight(request);
+    });
+    server.on("/goodMorning", HTTP_GET, [this] (AsyncWebServerRequest *request){
+      this->commandGoodMorning(request);
+    });
+
     server.on("/submitPositions", HTTP_GET, [this] (AsyncWebServerRequest *request){
       this->submitPositions(request);
     });
@@ -122,6 +130,8 @@ void webserver::commandAnimate(AsyncWebServerRequest *request) {
   }
   }
 
+
+
 void webserver::serveStaticFile(AsyncWebServerRequest *request) {
   // Get the file path from the request
   String path = request->url();
@@ -173,6 +183,24 @@ void webserver::setTime(AsyncWebServerRequest *request) {
   messageHandler->pushDataToSendQueue(MSG_SET_TIME, -1);
   request->send(200, "text/html", "OK");
 }
+
+void webserver::commandGoodNight(AsyncWebServerRequest *request) {
+  messageHandler->addError("Calling good Night");
+  int hours = request->getParam("hours")->value().toInt();
+  int minutes = request->getParam("minutes")->value().toInt();
+  int seconds = request->getParam("seconds")->value().toInt();
+  messageHandler->setGoodNightWakeUp(hours, minutes, seconds, false);
+  messageHandler->pushDataToSendQueue(MSG_SET_SLEEP_WAKEUP, -1);
+}
+void webserver::commandGoodMorning(AsyncWebServerRequest *request) {
+  messageHandler->addError("Calling good Morning");
+  int hours = request->getParam("hours")->value().toInt();
+  int minutes = request->getParam("minutes")->value().toInt();
+  int seconds = request->getParam("seconds")->value().toInt();
+  messageHandler->setGoodNightWakeUp(hours, minutes, seconds, true);
+  messageHandler->pushDataToSendQueue(MSG_SET_SLEEP_WAKEUP, -1);
+}
+
 
 void webserver::sendSyncAsyncAnimation(AsyncWebServerRequest *request) {
   messageHandler->addError("Called SendSyncAsyncAnimation");

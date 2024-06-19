@@ -253,7 +253,7 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
   }
 
 }
-  else if (millis()>(lastClap+2000)) 
+  else if (millis()>(lastClap+10000)) 
   {
   if (didIreset == true) {
     Serial.println("I RESETTED. WTF");
@@ -279,5 +279,10 @@ if (modeHandler.getMode() == MODE_CALIBRATE) {
     handleLed.ledOn(0, 0, 255, 10000, true);
 
   }
+  if (modeHandler.getMode() == MODE_ANIMATE) {
+    messageHandler.nextAnimation();
+  }
+  
+
 
 } 

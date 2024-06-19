@@ -430,6 +430,9 @@ void messaging::goodNight() {
         goToSleepTime = 0;
         globalModeHandler->switchMode(MODE_NEUTRAL);
     }
+    else if ((goToSleepTime != 0) and (millis() % 1000 == 0)) {
+        Serial.println("Time to Sleep "+String(goToSleepTime-millis()));
+    }
 
 }
 
@@ -509,4 +512,11 @@ void messaging::setTimerReceiverUnavailable() {
     clientAddresses[addressId].active = UNREACHABLE;
     clientAddresses[addressId].tries++;
     timerCounter = 0;
+}
+
+void messaging::forceDebug(int i) {
+    return;
+    forcedDebugCounter++;
+    Serial.println("forced debug "+String(forcedDebugCounter)+" - "+String(i));
+    //delay();
 }

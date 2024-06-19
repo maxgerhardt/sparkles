@@ -151,6 +151,14 @@
         <div class="card deviceList">
           <p>
               <span class="reading">
+                  <span id="animate" class="devicenum">Animate</span>
+              </span>
+          </p>
+        </div>
+
+        <div class="card deviceList">
+          <p>
+              <span class="reading">
                   <span id="deviceList" class="devicenum">-------- PLACEHOLDER --------</span>
               </span>
           </p>
@@ -193,6 +201,27 @@
     if (userConfirmed) {
       fetchMe(fetchUrl);
     }
+  });
+
+  document.getElementById('animate').addEventListener('click', function() {
+    var fetchUrl = '/commandAnimate';
+    fetchMe(fetchUrl);
+
+  });
+
+  document.getElementById('submit_goodnight').addEventListener('click', function() {
+    var hours = document.getElementById('hours_goodnight');
+    var minutes = document.getElementById('minutes_goodnight');
+    var seconds = document.getElementById('seconds_goodnight');
+    var fetchUrl = `/goodNight?hours=${encodeURIComponent(hours)}&minutes=${encodeURIComponent(minutes)}&seconds=${encodeURIComponent(seconds)}`;
+      fetchMe(fetchUrl);
+  });
+  document.getElementById('submit_goodmorning').addEventListener('click', function() {
+    var hours = document.getElementById('hours_goodmorning');
+    var minutes = document.getElementById('minutes_goodmorning');
+    var seconds = document.getElementById('seconds_goodmorning');
+    var fetchUrl = `/goodMorning?hours=${encodeURIComponent(hours)}&minutes=${encodeURIComponent(minutes)}&seconds=${encodeURIComponent(seconds)}`;
+      fetchMe(fetchUrl);
   });
 
   document.getElementById('submit_animation_1').addEventListener('click', function() {

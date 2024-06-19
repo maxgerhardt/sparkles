@@ -187,6 +187,7 @@ void setup() {
   timerCounter = 0;
   WiFi.macAddress(myAddress);
   pinMode(SWITCH_PIN, INPUT_PULLDOWN); 
+  randomSeed(analogRead(33));
   
 }
 
@@ -258,5 +259,9 @@ void loop() {
   if (modeHandler.getMode() != MODE_SENDING_TIMER and modeHandler.getMode() != MODE_RESET_TIMER and modeHandler.getMode() != MODE_PING_RESET) {
     messageHandler.handleTimerUpdates();
   }
-  //messageHandler.goodNight();
+  if (modeHandler.getMode() == MODE_ANIMATE) {
+    messageHandler.nextAnimation();
+  }
+  
+  messageHandler.goodNight();
 }

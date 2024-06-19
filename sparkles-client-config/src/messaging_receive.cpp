@@ -90,7 +90,6 @@ void messaging::processDataFromReceivedQueue() {
         while (!dataQueue.empty()) {
             ReceivedData receivedData = dataQueue.front(); // Get the front element
             // Process the received data here...
-            Serial.println("Processing received data with len: "+String(receivedData.len));
             dataQueue.pop(); // Remove the front element from the queue
             receivedDataList.push_back(receivedData);
         }
@@ -98,7 +97,6 @@ void messaging::processDataFromReceivedQueue() {
 
     // Call handleReceive outside the mutex scope
     for (const auto& receivedData : receivedDataList) {
-        Serial.println("calling handle receive");
         handleReceive(receivedData.mac, receivedData.incomingData, receivedData.len, receivedData.msgReceiveTime);
     }
 }
@@ -107,6 +105,7 @@ void messaging::processDataFromReceivedQueue() {
 void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *incomingData, int len, unsigned long msgReceiveTime) {
     if (DEVICE_MODE == CLIENT and incomingData[0] != MSG_ANNOUNCE and incomingData[0] != MSG_TIMER_CALIBRATION) {
         if (memcmp(mac->src_addr, hostAddress, 6) !=0 ) {
+            forceDebug();
             addError("received command from untrusted source\n");
             return;
         }
@@ -117,10 +116,8 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
     addError(" from ");
     addError(stringAddress(mac->src_addr));
     addError("\n");
-    Serial.println("Handling Received "+String(messageCodeToText(incomingData[0])+" from "+stringAddress(mac->src_addr))); 
     if (incomingData[0] == MSG_SWITCH_MODE){
         memcpy(&switchModeMessage, incomingData, sizeof(switchModeMessage));
-        Serial.println("Switch Mode = "+String(globalModeHandler->modeToText(switchModeMessage.mode)));
     }
     oldMsgReceiveTime = msgReceiveTime;
     switch (incomingData[0]) {
@@ -147,7 +144,6 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                     if (globalModeHandler->getMode() == MODE_SEND_ANNOUNCE or globalModeHandler->getMode()== MODE_ANIMATE or globalModeHandler->getMode()== MODE_NEUTRAL) {
                         handleLed->flash(0, 65, 65, 100, 2, 50);
                         memcpy(&timerReceiver, webserverAddress, 6);
-                        Serial.println("THIS?");
                         globalModeHandler->switchMode(MODE_SENDING_TIMER);
                     };
                 break;
@@ -172,11 +168,13 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                     globalModeHandler->switchMode(MODE_ANIMATE);
                     switchModeMessage.mode = MODE_ANIMATE;
                     pushDataToSendQueue(broadcastAddress, MSG_SWITCH_MODE, -1);
-                    animationMessage.delay = 1000;
-                    //TODO rückwärts?
-                    animationMessage.reps = 50;
-                    animationMessage.speed = 1000;
-                    animationMessage.startTime = micros()+3000000;
+                    animationMessage.animationType = SYNC_ASYNC_BLINK;
+                    handleLed->getNextAnimation(&animationMessage);
+                    animationMessage.startTime = micros()+1000000;
+                    animationMessage.num_devices = addressCounter -1;
+
+                    handleLed->printAnimationMessage(animationMessage);
+                    nextAnimationPing = millis()+handleLed->calculate(&animationMessage);
                     pushDataToSendQueue(broadcastAddress, MSG_ANIMATION, -1);
                 break;
                 case CMD_STOP_ANIMATION:
@@ -199,7 +197,18 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                     writeStructsToFile(clientAddresses, NUM_DEVICES, "/clientAddress");
                 break;
                 case CMD_GO_TO_SLEEP:
-                    goToSleep(commandMessage.param*1000000);
+                    if (DEVICE_MODE == 0) {
+                        int* time = getSystemTime();
+                        sleepTime.hours = time[0];
+                        sleepTime.minutes = time[1]+1;
+                        sleepTime.seconds = 15;
+                        wakeupTime.hours = time[0];
+                        wakeupTime.minutes = time[1]+2;
+                        //goodNight();
+                    }
+                    else {
+                        goToSleep(commandMessage.param*1000000);
+                    }
                 break;
                 case CMD_RESET:
                     ESP.restart();
@@ -230,15 +239,11 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
         //cases for client
 
         case MSG_SWITCH_MODE: 
-        Serial.println("Current Mode: "+String(globalModeHandler->modeToText(globalModeHandler->getMode())));
             memcpy(&switchModeMessage, incomingData, sizeof(switchModeMessage));
-             Serial.println("Asking to switch to Mode: "+String(switchModeMessage.mode));
             if (switchModeMessage.mode == MODE_CALIBRATE) {
-                Serial.println("should blink green");
                 handleLed->flash(0, 125, 0, 100, 1, 50);
             }
             else if (switchModeMessage.mode == MODE_NEUTRAL and globalModeHandler->getMode() == MODE_CALIBRATE) {
-                Serial.println("should blink redgreen");
                 handleLed->flash(125, 125, 0, 100, 3, 50);
             }
 
@@ -303,12 +308,10 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                     addError("addresscounter -1 = "+String(addressCounter-1)+" and clapsAsked = "+String(clapsAsked)+"\n");
                     addError("Getting calculate distances for "+String(id)+"\n");
                     if (id > 0 and id<addressCounter) {
-                        Serial.println("RCV Line 253: Calculating distances for id "+String(id)+"\n");
-
+                        
                         calculateDistances(id);
                     }
                     else if (id == addressCounter) {
-                        Serial.println("A - FUCKING - HA");
                     }
                     if (clapsAsked < addressCounter) {
                         getClapTimes(clapsAsked);
@@ -330,7 +333,14 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                 memcpy(&animationMessage, incomingData, sizeof(animationMessage));
                 animationMessage.startTime = micros()+3000000;
                 animationMessage.animationreps = 20;
+                animationMessage.num_devices = addressCounter -1;
+                Serial.println("Starting animation with num devices "+String(animationMessage.num_devices));
+                delay(10000);
                 pushDataToSendQueue(broadcastAddress, MSG_ANIMATION, -1);
+                nextAnimationPing = millis()+handleLed->calculate(&animationMessage);
+                Serial.println("Animation ends at "+String(millis()));
+                globalModeHandler->switchMode(MODE_ANIMATE);
+                endAnimation = true;
             }
             else {
                 if (globalModeHandler->getMode() == MODE_ANIMATE or globalModeHandler->getMode() == MODE_NEUTRAL) {
@@ -338,6 +348,8 @@ void messaging::handleReceive(const esp_now_recv_info * mac, const uint8_t *inco
                 globalModeHandler->switchMode(MODE_ANIMATE);
                 memcpy(&animationMessage, incomingData, sizeof(animationMessage));
                 handleLed->setupAnimation(&animationMessage);
+                nextAnimationPing = millis()+handleLed->calculate(&animationMessage);
+                endAnimation = true;
                 }
             }
         break;

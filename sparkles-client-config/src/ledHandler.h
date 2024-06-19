@@ -34,6 +34,9 @@ class ledHandler {
         int yPos = 0;
         int zPos = 0;
         int offsetMultiplier;
+
+        bool once = false;
+
     public:
     ledHandler();
     void setup();
@@ -48,7 +51,9 @@ class ledHandler {
     void blink();
     void candle(int duration, int reps, int pause, unsigned long startTime, unsigned long timeOffset);
     void syncAsyncBlink();
+    void rowBlink();
     void setupSyncAsyncBlink();
+    void setupRowBlink();
     void setTimeOffset(unsigned long setOffset, int offsetMultiplier);
 
     void ledOn(int r, int g, int b, int duration, int frontback);
@@ -59,6 +64,16 @@ class ledHandler {
     void setPosition(int position);
     void setLocation(int xpos, int ypos, int zpos);
     void printStatus();
+    void setupSyncBlink();
+    void runSyncBlink();
+    unsigned long calculate(message_animate *animationMessage);
+    unsigned long calculateSyncAsyncBlink(message_animate *animationMessage);
+    unsigned long calculateRowBlink(message_animate *animationMessage);
+    void getNextAnimation(message_animate *animationMessage);
+    void createSyncAsyncBlink(message_animate *animationMessage);
+    void createRowBlink(message_animate *animationMessage);
+    void printAnimationMessage(const message_animate &animationMessage);
+
 };
 
 #endif

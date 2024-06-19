@@ -292,8 +292,8 @@ void messaging::receiveTimer(int messageArriveTime) {
         timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
         offsetMultiplier = -1;
       }
-      delay(2000);
-      timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
+      Serial.println("timeOffset "+String(timeOffset));
+      //timeOffset = messageArriveTime-timerMessage.sendTime-delayAvg/2;
       gotTimerMessage.timerOffset = timeOffset;
       gotTimer = true;
       #if DEVICE_MODE != WEBSERVER
@@ -428,7 +428,22 @@ void messaging::setBattery() {
 
 }
 void messaging::setAnimation(message_animate* messageAnimate) {
-    Serial.println("Red bevor"+String(messageAnimate->rgb1[0]));
     memcpy(&animationMessage, messageAnimate, sizeof(animationMessage));
-    Serial.println("Red danach"+String(animationMessage.rgb1[0]));
 }   
+
+void messaging::nextAnimation() {
+    if (millis() < nextAnimationPing) {
+        return;
+    }
+    if (millis() > nextAnimationPing) {
+        if (endAnimation == true) {
+            globalModeHandler->switchMode(MODE_NEUTRAL);
+        }
+        else {
+            handleLed->getNextAnimation(&animationMessage);
+            animationMessage.startTime = micros()+1000000;
+            nextAnimationPing = millis()+handleLed->calculate(&animationMessage);
+            pushDataToSendQueue(broadcastAddress, MSG_ANIMATION, -1);
+        }
+    }
+}

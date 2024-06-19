@@ -139,6 +139,7 @@ void ledHandler::setupAnimation(message_animate *animationSetupMessage) {
   else if (animationMessage.animationType == SYNC_ASYNC_BLINK) {
     Serial.println("Setting up anim");
     setupSyncAsyncBlink();
+    return;
   }
   else {
     return;
@@ -146,26 +147,21 @@ void ledHandler::setupAnimation(message_animate *animationSetupMessage) {
  
 }
 
+
 void ledHandler::setupSyncAsyncBlink() {
-  Serial.println("Setting up");
   repeatCounter = 0;
   localAnimationStart = 0;
   animationNextStep = 0;
   currentAnimation = animationMessage.animationType;
-  unsigned long localAnimationStartMicros = animationMessage.startTime+(timeOffset*offsetMultiplier);
-  Serial.println("local animation start micros "+String(localAnimationStartMicros));
+  unsigned long localAnimationStartMicros = animationMessage.startTime-(timeOffset*offsetMultiplier);
+  //calculate start of first round
+  //was will ich hier
+  localAnimationStart = localAnimationStartMicros/1000;
+  globalAnimationStart = localAnimationStart;
   if (micros() > localAnimationStartMicros) {
     Serial.println("not today");
     return;
   }
-  //calculate start of first round
-  
-  unsigned long microdiff = localAnimationStartMicros - micros();
-  Serial.println("microdiff "+String(microdiff));
-  Serial.println("Millis "+String(millis()));
-  localAnimationStart = millis()+microdiff/1000;
-  Serial.println("localAnimationStart "+String(localAnimationStart));
-  Serial.println("blinkStart "+String(localAnimationStart));
   animationNextStep = localAnimationStart;
   globalAnimationTimeframe = animationMessage.speed+animationMessage.pause;
 
@@ -175,9 +171,11 @@ void ledHandler::setupSyncAsyncBlink() {
   for (int i = 0; i < animationMessage.reps/2;i++) {
     cycleTotalRuntime += 2*((animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*i+animationMessage.speed+animationMessage.pause);
   }*/
+
 }
 
 void ledHandler::run() {
+
   switch (currentAnimation) {
     case OFF:
       ledsOff();
@@ -190,16 +188,58 @@ void ledHandler::run() {
   }
 }
 
-void ledHandler::syncAsyncBlink() {
+unsigned long ledHandler::calculate(message_animate *animationMessage) {
+  Serial.println("calculating for ");
+  switch(animationMessage->animationType) {
+    case OFF:
+    Serial.println("Off");
+      return millis();
+    case SYNC_ASYNC_BLINK:
+      Serial.println("syncasync");
+      return calculateSyncAsyncBlink(animationMessage);
+    break;
+    default: 
+    return 0;
 
-  //wait until next step. if all repeats done: done. 
-  if (millis() < animationNextStep) {
-    return;
   }
 
+}
+
+unsigned long ledHandler::calculateSyncAsyncBlink(message_animate *animationMessage) {
+  unsigned long base_time = (animationMessage->pause+animationMessage->speed)*(animationMessage->reps+1)*(animationMessage->animationreps+1);
+  for (int i = 0; i<animationMessage->animationreps;i++) {
+    for (int j = 0; j < animationMessage->reps;j++) {
+      if (j <= animationMessage->reps/2) {
+        if (i == 0) {
+        }
+        base_time += (animationMessage->spread_time/(animationMessage->reps/2))*animationMessage->num_devices*j;
+      }
+      else {
+        base_time += (animationMessage->spread_time/(animationMessage->reps/2))*animationMessage->num_devices*(animationMessage->reps-j);
+        if (i == 0) {
+        }
+
+      }
+    }
+  }
+  Serial.println("base time "+String(base_time));
+  Serial.println("millis "+String(millis()));
+  return base_time;
+}
+
+void ledHandler::syncAsyncBlink() {
+
+ 
+  //wait until next step. if all repeats done: done. 
+  if (millis() < animationNextStep) {
+   
+    return;
+  }
+ 
   if (millis() > animationNextStep and millis() < localAnimationStart+animationMessage.speed) {
     //redsteps? and backwards?
     //cyclestart berechnen auch abhängig vom spread und ansonsten einfach runterrattern dat ding
+
     int elapsedTime = millis()-localAnimationStart;
     redfloat  = calculateFlash(animationMessage.rgb1[0], elapsedTime);
     greenfloat = calculateFlash(animationMessage.rgb1[1], elapsedTime);
@@ -210,18 +250,23 @@ void ledHandler::syncAsyncBlink() {
   }
 
   //if a repeat should happen...
-  if (millis()  >= globalAnimationStart + globalAnimationTimeframe) {
-    //repeatCounter++;
+  if (millis()  > localAnimationStart+animationMessage.speed) {
+    repeatCounter++;
     globalAnimationStart = globalAnimationStart+globalAnimationTimeframe;
 
     //cycle start noch timen
     //and figure out the start of next cycle
     if (repeatCounter <= animationMessage.reps/2) {
-      localAnimationStart = globalAnimationStart + (animationMessage.spread_time/(animationMessage.reps/2))*position*repeatCounter;
+      localAnimationStart = globalAnimationStart +(animationMessage.spread_time/(animationMessage.reps/2))*position*repeatCounter; 
+      globalAnimationTimeframe = animationMessage.speed+animationMessage.pause+(animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*repeatCounter;
     }
     else {
       localAnimationStart = globalAnimationStart + (animationMessage.spread_time/(animationMessage.reps/2))*position*(animationMessage.reps-repeatCounter);
+      globalAnimationTimeframe = animationMessage.speed+animationMessage.pause+(animationMessage.spread_time/(animationMessage.reps/2))*animationMessage.num_devices*(animationMessage.reps-repeatCounter);
     }
+
+    //globalAnimationStart = globalAnimationStart+globalAnimationTimeframe;
+
   }
 
   
@@ -415,6 +460,34 @@ void ledHandler::setLocation(int xposition, int yposition, int zposition) {
 }
 // IF BOARD == V2
 
+void ledHandler::getNextAnimation(message_animate *animationMessage) {
+  switch (animationMessage->animationType) {
+    case OFF:
+      return;
+    case SYNC_ASYNC_BLINK:
+      createSyncAsyncBlink(animationMessage);
+      return;
+    default:
+      return;
+  }
+}
+  void ledHandler::createSyncAsyncBlink(message_animate *animationMessage) {
+    
+    int red = random(0,256);
+    int blue = random(0,256);
+    int green = random(0,256);
+    animationMessage->rgb1[0] =red;
+    animationMessage->rgb1[1] =  green;
+    animationMessage->rgb1[2] = blue;
+    animationMessage->speed = random(250, 1000);
+    animationMessage->pause = random(100, 1000);
+    animationMessage->spread_time = random(100, 1000);
+    animationMessage->reps = random(10, 50);
+    animationMessage->animationreps = random(5, 20);
+  }
+
+
+
 void ledHandler::printStatus() {
   Serial.println("Status of LEDHandler");
   Serial.println("Current Animation "+String(currentAnimation));
@@ -432,6 +505,55 @@ void ledHandler::printStatus() {
   Serial.println("timerOffset "+String(timeOffset));
   Serial.println("animationMessage.startTime "+String(animationMessage.startTime));
   
+};
+
+void ledHandler::printAnimationMessage(const message_animate &animationMessage) {
+    Serial.print("messageType: ");
+    Serial.println(animationMessage.messageType);
+    
+    Serial.print("animationType: ");
+    Serial.println(animationMessage.animationType);
+    
+    Serial.print("speed: ");
+    Serial.println(animationMessage.speed);
+    
+    Serial.print("delay: ");
+    Serial.println(animationMessage.delay);
+    
+    Serial.print("pause: ");
+    Serial.println(animationMessage.pause);
+    
+    Serial.print("reps: ");
+    Serial.println(animationMessage.reps);
+    
+    Serial.print("rgb1: ");
+    Serial.print(animationMessage.rgb1[0]);
+    Serial.print(", ");
+    Serial.print(animationMessage.rgb1[1]);
+    Serial.print(", ");
+    Serial.println(animationMessage.rgb1[2]);
+    
+    Serial.print("rgb2: ");
+    Serial.print(animationMessage.rgb2[0]);
+    Serial.print(", ");
+    Serial.print(animationMessage.rgb2[1]);
+    Serial.print(", ");
+    Serial.println(animationMessage.rgb2[2]);
+    
+    Serial.print("startTime: ");
+    Serial.println(animationMessage.startTime);
+    
+    Serial.print("num_devices: ");
+    Serial.println(animationMessage.num_devices);
+    
+    Serial.print("spread_time: ");
+    Serial.println(animationMessage.spread_time);
+    
+    Serial.print("exponent: ");
+    Serial.println(animationMessage.exponent);
+    
+    Serial.print("animationreps: ");
+    Serial.println(animationMessage.animationreps);
 }
 
-;
+

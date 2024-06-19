@@ -1,3 +1,5 @@
+#define DEVICE_MODE 2
+#define DEVICE_USED 5
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
